@@ -20,10 +20,10 @@
 //*********** things that might move to config file when it is implemented
 
 // max length of formatted debug message (will be truncated if longer)
-#define RIPC_MAX_DEBUG_LENGTH 1024
+#define RIPC_MAX_DEBUG_LEN 1024
 
-// max length of constructed redis variable name
-#define RIPC_MAX_REDIS_NAME 128
+// max length of constructed redis key name
+#define RIPC_MAX_IPC_PATH_LEN 128
 
 // redis server address
 #define RIPC_SERVER_IP "127.0.0.1"
@@ -132,9 +132,9 @@ int redis_ipc_unsubscribe_events();
 // Debug send can serve as drop-in replacement for printf-style logging,
 // which is why it doesn't take a JSON object. The send function internally
 // generates a json object containing a "message" field and a "timestamp" 
-// field. The name of component posting the message will automatically be 
-// added to the object as "source" field so that subscribers to multiple 
-// debug channels can easily determine which component sent the message.
+// field. The component and thread posting the message will automatically be 
+// added to the object so that subscribers to multiple debug channels can 
+// easily determine who sent the message.
 
 // When sending debug messages, low debug level indicates
 // high message priority, since only messages of lower or equal level

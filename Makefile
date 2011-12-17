@@ -10,7 +10,7 @@ SONAME = $(LIBNAME).$(API_VERSION).so
 STATIC = $(LIBNAME).$(FULL_VERSION).a
 OBJS = redis_ipc.o
 LIBS = -lhiredis -ljson
-DEBUG = # -g -O0
+DEBUG = -g -O0
 
 all: $(SHARED) $(STATIC)
 
