@@ -33,6 +33,10 @@
 // functions
 //*************
 
+// NOTE: whenever a json_object is used as a return value or a parameter,
+//       the caller is responsible for cleaning it up with json_object_put().
+//       This cleanup function is safe to call on a NULL pointer.
+
 // Init should be called from each thread that will be doing redis IPC,
 // with all threads getting same component name but unique thread name.
 // Cleanup is provided to prevent a slow leak from turnover of short-lived
@@ -100,21 +104,22 @@ json_object * redis_ipc_read_status(const char *owner_component);
 int redis_ipc_write_status_field(const char *field_name, json_object *value);
 json_object * redis_ipc_read_status_field(const char *owner_component, const char *field_name);
 
-// Each component will send debug messages to its own debug channel,
-// but can subscribe to any (or all) debug channels.
+// Each component can only send event messages to its own event channel(s),
+// but can subscribe to any (or all) event channels.
 //
 // A component sending an event should supply NULL as subchannel unless
 // it has multiple subchannels defined in redis_ipc.conf,
-// in which case it should supply one of those subchannels. The name of
-// the channel to which an event is posted will automatically get added 
-// to the message as "source" field so that subscribers to multiple 
-// channels can easily determine which channel a message came from.
+// in which case it should supply one of those subchannels. 
 //
 // A component subscribing to events can use NULL as component parameter
 // to watch all event channels for all components. Or, to watch all events
 // from a single component, use NULL for subchannel (as mentioned above,
 // not all components even have subchannels).
 // 
+// The send function will automatically append the following fields,
+// plus the standard ones (timestamp, etc) to the event:
+//   channel (full channel name)
+//
 // A thread watching for events will block indefinitely until the next
 // event is received, because redis protocol does not implement a timeout
 // on waiting for messages. 
@@ -131,11 +136,12 @@ int redis_ipc_unsubscribe_events();
 //
 // Debug send can serve as drop-in replacement for printf-style logging,
 // which is why it doesn't take a JSON object. The send function internally
-// generates a json object containing a "message" field and a "timestamp" 
-// field. The component and thread posting the message will automatically be 
-// added to the object so that subscribers to multiple debug channels can 
-// easily determine who sent the message.
-
+// generates a json object containing following fields, plus the standard
+// ones (timestamp, etc)
+//   message
+//   level
+//   channel (full channel name)
+//
 // When sending debug messages, low debug level indicates
 // high message priority, since only messages of lower or equal level
 // to configured component debug verbosity will actually get sent.

@@ -260,11 +260,45 @@ redisReply * redis_command(const char *format, ...)
     return reply;
 }
 
+// standard fields for json objects that will be useful when
+// troubleshooting component integration issues, if nothing else...
+#define MAX_TIMESTAMP_LEN 64 
+void json_add_common_fields(json_object *obj)
+{
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    char timestamp_buffer[MAX_TIMESTAMP_LEN];
+    struct timeval timestamp;
+
+    // collect timestamp as string
+    memset(&timestamp, 0, sizeof(timestamp));
+    memset(timestamp_buffer, 0, sizeof(timestamp_buffer));
+    gettimeofday(&timestamp, NULL);
+    snprintf(timestamp_buffer, sizeof(timestamp_buffer), "%ld.%06ld", 
+             timestamp.tv_sec, timestamp.tv_usec);
+
+    json_object_object_add(obj, "timestamp", 
+                           json_object_new_string(timestamp_buffer));
+    json_object_object_add(obj, "component", 
+                           json_object_new_string(thread_info->component));
+    json_object_object_add(obj, "thread", 
+                           json_object_new_string(thread_info->thread));
+    json_object_object_add(obj, "tid", json_object_new_int(gettid()));
+}
+
 static int redis_publish(const char *channel_path, json_object *obj)
 {
-    const char *json_text = json_object_to_json_string(obj);
+    const char *json_text = NULL;
     int ret = RIPC_FAIL;
     redisReply *reply = NULL;
+
+    // append channel path
+    json_object_object_add(obj, "channel", 
+                           json_object_new_string(channel_path));
+
+    // append standard fields (such as timestamp)
+    json_add_common_fields(obj);
+
+    json_text = json_object_to_json_string(obj);
 
     // don't forget to free reply
     reply = redis_command("PUBLISH %s %s", channel_path, json_text);
@@ -278,18 +312,36 @@ static int redis_publish(const char *channel_path, json_object *obj)
     return ret;
 }
 
+// caller is responsible for cleaning up the message object
+int redis_ipc_send_event(const char *subchannel, json_object *message)
+{
+    char event_channel_path[RIPC_MAX_IPC_PATH_LEN];
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    int ret = RIPC_FAIL;
 
-#define MAX_TIMESTAMP_LEN 64 
+    // calculate channel name
+    ret = ipc_path(event_channel_path, sizeof(event_channel_path),
+                   RPC_TYPE_EVENT, thread_info->component, NULL, subchannel);
+    if (ret != RIPC_OK)
+        goto redis_ipc_send_event_finish;
+
+    // publish event object
+    ret = redis_publish(event_channel_path, message);
+
+redis_ipc_send_event_finish:
+
+   return ret;
+}
+
+
 int redis_ipc_send_debug(unsigned int debug_level, const char *format, ...)
 {
     char msg_buffer[RIPC_MAX_DEBUG_LEN];
-    char timestamp_buffer[MAX_TIMESTAMP_LEN];
     char debug_channel_path[RIPC_MAX_IPC_PATH_LEN];
     va_list argp;
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     json_object *debug_obj = NULL;
     int ret = RIPC_FAIL;
-    struct timeval timestamp;
 
     // ignore if the debug level is higher than current verbosity
     if (debug_level > get_debug_verbosity())
@@ -297,12 +349,11 @@ int redis_ipc_send_debug(unsigned int debug_level, const char *format, ...)
         return RIPC_OK;  // it's easy to successfully do nothing...
     }
 
-    // collect timestamp as string
-    memset(&timestamp, 0, sizeof(timestamp));
-    memset(timestamp_buffer, 0, sizeof(timestamp_buffer));
-    gettimeofday(&timestamp, NULL);
-    snprintf(timestamp_buffer, sizeof(timestamp_buffer), "%ld.%06ld", 
-             timestamp.tv_sec, timestamp.tv_usec);
+    // calculate channel name
+    ret = ipc_path(debug_channel_path, sizeof(debug_channel_path),
+                   RPC_TYPE_DEBUG, thread_info->component, NULL, NULL);
+    if (ret != RIPC_OK)
+        goto redis_ipc_send_debug_finish;
 
     // format message into string
     memset(msg_buffer, 0, sizeof(msg_buffer));
@@ -318,24 +369,19 @@ int redis_ipc_send_debug(unsigned int debug_level, const char *format, ...)
         goto redis_ipc_send_debug_finish;
     json_object_object_add(debug_obj, "message", 
                            json_object_new_string(msg_buffer));
-    json_object_object_add(debug_obj, "component", 
-                           json_object_new_string(thread_info->component));
-    json_object_object_add(debug_obj, "thread", 
-                           json_object_new_string(thread_info->thread));
     json_object_object_add(debug_obj, "level", 
                            json_object_new_int(debug_level));
-    json_object_object_add(debug_obj, "timestamp", 
-                           json_object_new_string(timestamp_buffer));
 
     // publish debug object
-    ret = ipc_path(debug_channel_path, sizeof(debug_channel_path),
-                   RPC_TYPE_DEBUG, thread_info->component, NULL, NULL);
-    if (ret != RIPC_OK)
-        goto redis_ipc_send_debug_finish;
     ret = redis_publish(debug_channel_path, debug_obj);
 
 redis_ipc_send_debug_finish:
    json_object_put(debug_obj);  // safe to call even if NULL
 
    return ret;
+}
+
+
+int redis_ipc_subscribe_events(const char *component, const char *subchannel)
+{
 }
