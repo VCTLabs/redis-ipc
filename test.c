@@ -33,5 +33,10 @@ int main(int argc, char **argv)
   redis_ipc_send_event(NULL, event);
   json_object_put(event);
 
+  redis_ipc_subscribe_events("printer", NULL);
+  redis_ipc_subscribe_debug("printer");
+  redis_ipc_unsubscribe_events();
+  redis_ipc_unsubscribe_debug();
+
   return 42;
 }

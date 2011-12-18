@@ -381,7 +381,149 @@ redis_ipc_send_debug_finish:
    return ret;
 }
 
+static int redis_subscribe(const char *channel_path)
+{
+    int ret = RIPC_FAIL;
+    redisReply *reply = NULL;
 
+    // don't forget to free reply
+    reply = redis_command("PSUBSCRIBE %s", channel_path);
+
+    if (reply != NULL)
+    {
+        ret = RIPC_OK;
+        freeReplyObject(reply);
+    }
+
+    return ret;
+}
+
+// if component is NULL, subscribe to all event channels
+// if only subchannel is NULL, subscribe to all event channels for component
+// (for some components there may only be one event channel)
 int redis_ipc_subscribe_events(const char *component, const char *subchannel)
 {
+    char event_channel_path[RIPC_MAX_IPC_PATH_LEN];
+    char *component_pattern = NULL;
+    size_t pattern_len = 0;
+    int ret = RIPC_FAIL;
+
+    // calculate channel name
+    if (component == NULL) 
+    {
+        // use wildcard to get all event channels
+        component_pattern = strdup("*");
+    }
+    else
+    {
+        if (subchannel == NULL)
+        {
+            // append wildcard to get all event channels for this component
+            pattern_len = strlen(component)+2;
+            component_pattern = calloc(1, pattern_len);
+            snprintf(component_pattern, pattern_len, "%s%c", component, '*');
+        }
+        else
+        {
+            // exact match for both component and subchannel
+            component_pattern = strdup(component);
+        }
+    }
+    ret = ipc_path(event_channel_path, sizeof(event_channel_path),
+                   RPC_TYPE_EVENT, component_pattern, NULL, subchannel);
+    if (ret != RIPC_OK)
+        goto redis_ipc_subscribe_events_finish;
+
+    // publish event object
+    ret = redis_subscribe(event_channel_path);
+
+redis_ipc_subscribe_events_finish:
+   safe_free(component_pattern);
+
+   return ret;
 }
+
+int redis_ipc_subscribe_debug(const char *component)
+{
+    char debug_channel_path[RIPC_MAX_IPC_PATH_LEN];
+    const char *component_pattern = NULL;
+    size_t pattern_len = 0;
+    int ret = RIPC_FAIL;
+
+    // calculate channel name
+    if (component == NULL) 
+    {
+        // use wildcard to get all debug channels
+        component_pattern = "*";
+    }
+    else
+    {
+        // exact match 
+        component_pattern = component;
+    }
+    ret = ipc_path(debug_channel_path, sizeof(debug_channel_path),
+                   RPC_TYPE_DEBUG, component_pattern, NULL, NULL);
+    if (ret != RIPC_OK)
+        goto redis_ipc_subscribe_debug_finish;
+
+    // publish debug object
+    ret = redis_subscribe(debug_channel_path);
+
+redis_ipc_subscribe_debug_finish:
+
+   return ret;
+}
+
+static int redis_unsubscribe(char *channel_path)
+{
+    int ret = RIPC_FAIL;
+    redisReply *reply = NULL;
+
+    // don't forget to free reply
+    reply = redis_command("PUNSUBSCRIBE %s", channel_path);
+
+    if (reply != NULL)
+    {
+        ret = RIPC_OK;
+        freeReplyObject(reply);
+    }
+
+    return ret;
+}
+
+// unsubscribe from all event channels
+int redis_ipc_unsubscribe_events()
+{
+    char event_channel_path[RIPC_MAX_IPC_PATH_LEN];
+    int ret = RIPC_FAIL;
+
+    ret = ipc_path(event_channel_path, sizeof(event_channel_path),
+                   RPC_TYPE_EVENT, "*", NULL, NULL);
+    if (ret != RIPC_OK)
+        goto redis_ipc_unsubscribe_events_finish;
+
+    ret = redis_unsubscribe(event_channel_path);
+
+redis_ipc_unsubscribe_events_finish:
+
+   return ret;
+}
+
+// unsubscribe from all debug channels
+int redis_ipc_unsubscribe_debug()
+{
+    char debug_channel_path[RIPC_MAX_IPC_PATH_LEN];
+    int ret = RIPC_FAIL;
+
+    ret = ipc_path(debug_channel_path, sizeof(debug_channel_path),
+                   RPC_TYPE_DEBUG, "*", NULL, NULL);
+    if (ret != RIPC_OK)
+        goto redis_ipc_unsubscribe_debug_finish;
+
+    ret = redis_unsubscribe(debug_channel_path);
+
+redis_ipc_unsubscribe_debug_finish:
+
+   return ret;
+}
+

@@ -127,8 +127,8 @@ json_object * redis_ipc_read_status_field(const char *owner_component, const cha
 // The unsubscribe function stops watching all event channels.
 int redis_ipc_send_event(const char *subchannel, json_object *message);
 int redis_ipc_subscribe_events(const char *component, const char *subchannel);
-json_object * redis_ipc_watch_events_blocking();
-int redis_ipc_unsubscribe_events();
+json_object * redis_ipc_watch_events_blocking(void);
+int redis_ipc_unsubscribe_events(void);
 
 // Each component will send debug messages to its own debug channel,
 // but can subscribe to any (or all) debug channels. Use NULL as
@@ -153,6 +153,6 @@ int redis_ipc_unsubscribe_events();
 // The unsubscribe function stops watching all debug channels.
 int redis_ipc_send_debug(unsigned int debug_level, const char *format, ...);
 int redis_ipc_subscribe_debug(const char *component);
-json_object * redis_ipc_receive_debug_blocking();
-int redis_ipc_unsubscribe_debug();
+json_object * redis_ipc_receive_debug_blocking(void);
+int redis_ipc_unsubscribe_debug(void);
 #endif
