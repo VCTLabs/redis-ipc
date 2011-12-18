@@ -120,14 +120,9 @@ json_object * redis_ipc_read_status_field(const char *owner_component, const cha
 // plus the standard ones (timestamp, etc) to the event:
 //   channel (full channel name)
 //
-// A thread watching for events will block indefinitely until the next
-// event is received, because redis protocol does not implement a timeout
-// on waiting for messages. 
-//
 // The unsubscribe function stops watching all event channels.
 int redis_ipc_send_event(const char *subchannel, json_object *message);
 int redis_ipc_subscribe_events(const char *component, const char *subchannel);
-json_object * redis_ipc_watch_events_blocking(void);
 int redis_ipc_unsubscribe_events(void);
 
 // Each component will send debug messages to its own debug channel,
@@ -145,14 +140,20 @@ int redis_ipc_unsubscribe_events(void);
 // When sending debug messages, low debug level indicates
 // high message priority, since only messages of lower or equal level
 // to configured component debug verbosity will actually get sent.
-// 
-// A thread watching for debug messages will block indefinitely until the next
-// debug message is received, because redis protocol does not implement 
-// a timeout on waiting for messages. 
 //
 // The unsubscribe function stops watching all debug channels.
 int redis_ipc_send_debug(unsigned int debug_level, const char *format, ...);
 int redis_ipc_subscribe_debug(const char *component);
-json_object * redis_ipc_receive_debug_blocking(void);
 int redis_ipc_unsubscribe_debug(void);
+
+// This function is the counterpart to both redis_ipc_send_event()
+// and redis_ipc_send_debug() because a received message can come from any  
+// subscribed channel. 
+//
+// A thread listening for published messages will block indefinitely until the 
+// next event is received, because redis protocol does not implement a timeout
+// on waiting for messages. To prevent infinite blocking, at least one channel
+// should have been subscribed before listening for messages.
+json_object * redis_ipc_get_message_blocking(void);
+
 #endif

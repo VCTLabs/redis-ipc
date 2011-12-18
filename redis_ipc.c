@@ -476,8 +476,8 @@ redis_ipc_subscribe_debug_finish:
 
 static int redis_unsubscribe(char *channel_path)
 {
-    int ret = RIPC_FAIL;
     redisReply *reply = NULL;
+    int ret = RIPC_FAIL;
 
     // don't forget to free reply
     reply = redis_command("PUNSUBSCRIBE %s", channel_path);
@@ -527,3 +527,54 @@ redis_ipc_unsubscribe_debug_finish:
    return ret;
 }
 
+// current thread should be subscribed to one or more callers before calling
+// caller is responsible for cleaning up the returned message object
+json_object * redis_ipc_get_message_blocking(void)
+{
+    json_object *message = NULL;
+    redisReply *reply = NULL;
+    const char *message_str = NULL;
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    int ret = RIPC_FAIL;
+
+    // block until a message is available
+    ret = redisGetReply(thread_info->redis_state, &reply);
+    if (ret != REDIS_OK)
+    {
+        // must reconnect to redis server after an error 
+        redisFree(thread_info->redis_state);
+        thread_info->redis_state = redisConnect(RIPC_SERVER_IP, RIPC_SERVER_PORT);
+
+        goto redis_get_channel_message_finish;
+    }
+
+
+    // extract message from reply object
+    //
+    // reply should be an array: 
+    //   string "pmessage" 
+    //   string <psubscribe pattern>
+    //   string <sending channel>
+    //   string <message> ** entry of interest
+    if (reply->type != REDIS_REPLY_ARRAY)
+        goto redis_get_channel_message_finish;
+    if (reply->element[3]->type != REDIS_REPLY_STRING)
+        goto redis_get_channel_message_finish;
+
+    message_str = reply->element[3]->str;
+
+    if (stderr_debug_is_enabled())
+    {
+        fprintf(stderr, "MESSAGE %s\n", message_str);
+    }
+
+    // parse message back into json object
+    message = json_tokener_parse(message_str);
+    if (is_error(message)) message = NULL;
+
+redis_get_channel_message_finish:
+    if (reply != NULL)
+        freeReplyObject(reply);
+
+   return message;
+}
