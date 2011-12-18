@@ -215,18 +215,66 @@ int format_debug_msg(char *msg, size_t max_msg_len,
     return ret;
 }
 
-//@@@@ FIXME: debug will be dynamically configurable from a setting 
-int current_debug_verbosity()
+//@@@@ FIXME: debug will be dynamically configurable from a setting or config file
+int get_debug_verbosity()
 {
     return 5;
 }
 
-static int redis_publish(redisContext *redis_state, 
-                        const char *channel_path, 
-                        json_object *obj)
+//@@@@ FIXME: debug will be dynamically configurable from a setting or config file
+int stderr_debug_is_enabled()
+{
+    return 1;
+}
+
+// run redis command and reset connection upon error
+//
+// if return value is non-null,
+// caller is responsible for calling freeReplyObject() when done with it
+redisReply * redis_command(const char *format, ...)
+{
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    redisReply *reply = NULL;
+    va_list argp;
+    
+    if (stderr_debug_is_enabled())
+    {
+        va_start(argp, format);
+        vfprintf(stderr, format, argp);
+        fprintf(stderr, "\n");
+        va_end(argp);
+    }
+
+    va_start(argp, format);
+    reply = redisvCommand(thread_info->redis_state, format, argp);
+    va_end(argp);
+
+    if (reply == NULL)
+    {
+        // must reconnect to redis server after an error 
+        redisFree(thread_info->redis_state);
+        thread_info->redis_state = redisConnect(RIPC_SERVER_IP, RIPC_SERVER_PORT);
+    }
+
+    return reply;
+}
+
+static int redis_publish(const char *channel_path, json_object *obj)
 {
     const char *json_text = json_object_to_json_string(obj);
-printf("STUB: redis publish: channel=%s msg=%s\n", channel_path, json_text);
+    int ret = RIPC_FAIL;
+    redisReply *reply = NULL;
+
+    // don't forget to free reply
+    reply = redis_command("PUBLISH %s %s", channel_path, json_text);
+
+    if (reply != NULL)
+    {
+        ret = RIPC_OK;
+        freeReplyObject(reply);
+    }
+
+    return ret;
 }
 
 int redis_ipc_send_debug(unsigned int debug_level, const char *format, ...)
@@ -239,7 +287,7 @@ int redis_ipc_send_debug(unsigned int debug_level, const char *format, ...)
     int ret = RIPC_FAIL;
 
     // ignore if the debug level is higher than current verbosity
-    if (debug_level > current_debug_verbosity())
+    if (debug_level > get_debug_verbosity())
     {
         return RIPC_OK;  // it's easy to successfully do nothing...
     }
@@ -273,8 +321,7 @@ int redis_ipc_send_debug(unsigned int debug_level, const char *format, ...)
                    RPC_TYPE_DEBUG, thread_info->component, NULL, NULL);
     if (ret != RIPC_OK)
         goto redis_ipc_send_debug_finish;
-    ret = redis_publish(thread_info->redis_state, 
-                        debug_channel_path, debug_obj);
+    ret = redis_publish(debug_channel_path, debug_obj);
 
 redis_ipc_send_debug_finish:
    json_object_put(debug_obj);  // safe to call even if NULL
