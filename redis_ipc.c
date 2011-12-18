@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
+#include <sys/time.h>
 #include <json/json.h>
 #include <hiredis/hiredis.h>
 #include "redis_ipc.h"
@@ -277,20 +278,31 @@ static int redis_publish(const char *channel_path, json_object *obj)
     return ret;
 }
 
+
+#define MAX_TIMESTAMP_LEN 64 
 int redis_ipc_send_debug(unsigned int debug_level, const char *format, ...)
 {
     char msg_buffer[RIPC_MAX_DEBUG_LEN];
+    char timestamp_buffer[MAX_TIMESTAMP_LEN];
     char debug_channel_path[RIPC_MAX_IPC_PATH_LEN];
     va_list argp;
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     json_object *debug_obj = NULL;
     int ret = RIPC_FAIL;
+    struct timeval timestamp;
 
     // ignore if the debug level is higher than current verbosity
     if (debug_level > get_debug_verbosity())
     {
         return RIPC_OK;  // it's easy to successfully do nothing...
     }
+
+    // collect timestamp as string
+    memset(&timestamp, 0, sizeof(timestamp));
+    memset(timestamp_buffer, 0, sizeof(timestamp_buffer));
+    gettimeofday(&timestamp, NULL);
+    snprintf(timestamp_buffer, sizeof(timestamp_buffer), "%ld.%06ld", 
+             timestamp.tv_sec, timestamp.tv_usec);
 
     // format message into string
     memset(msg_buffer, 0, sizeof(msg_buffer));
@@ -312,9 +324,8 @@ int redis_ipc_send_debug(unsigned int debug_level, const char *format, ...)
                            json_object_new_string(thread_info->thread));
     json_object_object_add(debug_obj, "level", 
                            json_object_new_int(debug_level));
-//@@@ FIXME: add timestamp
-//    json_object_object_add(debug_obj, "timestamp", 
-//                    json_object_new_string(timestamp_buffer);
+    json_object_object_add(debug_obj, "timestamp", 
+                           json_object_new_string(timestamp_buffer));
 
     // publish debug object
     ret = ipc_path(debug_channel_path, sizeof(debug_channel_path),
