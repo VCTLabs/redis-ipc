@@ -22,6 +22,7 @@ struct redis_ipc_per_thread
     char *thread;            // thread name used in redis
     char *result_queue_path; // based on component and thread
     redisContext *redis_state; // state for connection to redis server
+    unsigned int command_ctr;  // counter for number of commands sent by thread
 };
 
 static struct redis_ipc_per_thread *redis_ipc_info = NULL;
@@ -64,59 +65,52 @@ const char *redis_ipc_type_names[] =
    "INVALID",
    "settings",
    "status",
-   "commands",
-   "results",
-   "events",
-   "debug"
+   "queues.commands",
+   "queues.results",
+   "channel.events",
+   "channel.debug"
 };
 
 // generate redis key names aka our IPC "paths" 
+//
+// extra_path arg: 
+//   not used for "settings", "status" types,
+//   mandatory thread name for "results" type, 
+//   optional subqueue name for "commands" type,
+//   optional subchannel name for "events" type
+//
+// all callers are internal and expected to enforce above conventions
 static int ipc_path(char *buf, size_t buf_len, enum redis_ipc_type type, 
                     const char *component, 
-                    // only used for "results" type
-                    const char *thread, 
-                    // only used for "events" type
-                    const char *subchannel)
+                    const char *extra_path) 
 {
     int ret = RIPC_FAIL, path_len = -1;
+    const char *extra_path_separator = NULL;
+
+    if (extra_path != NULL) 
+    {
+        extra_path_separator = ".";
+    }
+    else
+    {
+        extra_path = "";
+        extra_path_separator = "";
+    }
 
     switch (type)
     {
         case RPC_TYPE_SETTING:
         case RPC_TYPE_STATUS:
-            path_len = snprintf(buf, buf_len, "%s.%s", 
-                                redis_ipc_type_names[type],
-                                component);
-            break;
-
         case RPC_TYPE_COMMAND:
-            path_len = snprintf(buf, buf_len, "queues.%s.%s", 
-                                component,
-                                redis_ipc_type_names[type]);
-            break;
-
         case RPC_TYPE_RESULT:
-            if (thread != NULL)
-            {
-                path_len = snprintf(buf, buf_len, "queues.%s.%s.%s", 
-                                    component, thread, 
-                                    redis_ipc_type_names[type]);
-            }
-            break;
-
         case RPC_TYPE_EVENT:
         case RPC_TYPE_DEBUG:
-            if (subchannel != NULL)
-            {
-                path_len = snprintf(buf, buf_len, "channel.%s.%s.%s", 
-                                    component, subchannel, 
-                                    redis_ipc_type_names[type]);
-            }
-            else
-            {
-                path_len = snprintf(buf, buf_len, "channel.%s.%s", 
-                                    component, redis_ipc_type_names[type]);
-            }
+            // last 2 args will be empty strings unless needed to distinguish
+            // among multiple queues/channels of component
+            path_len = snprintf(buf, buf_len, "%s.%s%s%s", 
+                                redis_ipc_type_names[type],
+                                component, extra_path_separator,
+                                extra_path);
             break;
     }
 
@@ -168,7 +162,7 @@ int redis_ipc_init(const char *this_component, const char *this_thread)
     // each thread gets its own results queue in redis
     memset(result_queue_path, 0, sizeof(result_queue_path));
     ret = ipc_path(result_queue_path, sizeof(result_queue_path),
-                  RPC_TYPE_RESULT, this_component, this_thread, NULL);
+                  RPC_TYPE_RESULT, this_component, this_thread);
     if (ret != RIPC_OK)
         goto redis_ipc_init_failed;
     new_info->result_queue_path = strdup(result_queue_path);
@@ -196,35 +190,6 @@ int redis_ipc_cleanup(pid_t tid)
     if (next_info->tid == tid)
     {
         cleanup_per_thread_info(next_info);
-        ret = RIPC_OK;
-    }
-
-    return ret;
-}
-
-int format_debug_msg(char *msg, size_t max_msg_len, 
-                     const char *format, va_list argp)
-{
-    const char *trunc_warning = "[TRUNC]";
-    size_t warning_len = strlen(trunc_warning);
-    size_t warning_offset = max_msg_len - warning_len - 1;
-    int msg_len = -1;
-    int ret = RIPC_FAIL;
-
-    // give up if message buffer is ridiculously small
-    if (max_msg_len < warning_len+1) return RIPC_FAIL;
-
-    msg_len = vsnprintf(msg, max_msg_len, format, argp);
-
-    // flag truncation of message
-    if (msg_len == max_msg_len)
-    {
-        // write warning over end of message
-        strncpy(&msg[warning_offset], trunc_warning, warning_len);
-    }
-
-    if (msg_len > 0)
-    {
         ret = RIPC_OK;
     }
 
@@ -300,11 +265,142 @@ void json_add_common_fields(json_object *obj)
     json_object_object_add(obj, "tid", json_object_new_int(gettid()));
 }
 
+#if 0
+    // extract message from reply object
+    //
+    // reply should be an array: 
+    //   string "pmessage" 
+    //   string <psubscribe pattern>
+    //   string <sending channel>
+    //   string <message> ** entry of interest
+    if (reply->type != REDIS_REPLY_ARRAY)
+        goto redis_get_channel_message_finish;
+    if (reply->element[3]->type != REDIS_REPLY_STRING)
+        goto redis_get_channel_message_finish;
+
+    message_str = reply->element[3]->str;
+
+    if (stderr_debug_is_enabled())
+    {
+        fprintf(stderr, "MESSAGE %s\n", message_str);
+    }
+#endif
+
+static int redis_push(const char *queue_path, json_object *obj)
+{
+    const char *json_text = NULL;
+    redisReply *reply = NULL;
+    int ret = RIPC_FAIL;
+
+    // append standard fields (such as timestamp)
+    json_add_common_fields(obj);
+
+    json_text = json_object_to_json_string(obj);
+
+    // don't forget to free reply
+    reply = redis_command("RPUSH %s %s", queue_path, json_text);
+
+    if (reply != NULL)
+    {
+        ret = RIPC_OK;
+        freeReplyObject(reply);
+    }
+
+    return ret;
+}
+
+static json_object * redis_pop(const char *queue_path, unsigned int timeout)
+{
+    const char *json_text = NULL;
+    json_object *obj = NULL;
+    redisReply *reply = NULL;
+    int ret = RIPC_FAIL;
+
+    // don't forget to free reply
+    reply = redis_command("BLPOP %s %d", queue_path, timeout);
+    if (reply == NULL)
+        goto redis_pop_finish;
+
+    // decode result into json object
+    //@@@@@
+
+redis_pop_finish:
+    if (reply != NULL)
+        freeReplyObject(reply);
+
+    return obj;
+}
+
+json_object * redis_ipc_send_command_blocking(const char *dest_component, 
+                                              const char *subqueue, 
+                                              json_object *command, 
+                                              unsigned int timeout)
+{
+    char command_queue_path[RIPC_MAX_IPC_PATH_LEN];
+    char result_queue_path[RIPC_MAX_IPC_PATH_LEN];
+    char id_buffer[RIPC_MAX_IPC_PATH_LEN];
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    json_object *result = NULL;
+    int ret = RIPC_FAIL, received_result = 0;
+
+    // calculate name of command queue belonging to another component
+    ret = ipc_path(command_queue_path, sizeof(command_queue_path),
+                   RPC_TYPE_COMMAND, dest_component, subqueue);
+    if (ret != RIPC_OK)
+        goto redis_ipc_send_command_blocking_finish;
+
+    // calculate name of own queue for receiving the result
+    ret = ipc_path(result_queue_path, sizeof(result_queue_path),
+                   RPC_TYPE_RESULT, thread_info->component, thread_info->thread);
+    if (ret != RIPC_OK)
+        goto redis_ipc_send_command_blocking_finish;
+
+    // generate unique id used to match command and its result 
+    snprintf(id_buffer, sizeof(id_buffer), "%s-%s-%d-%u", 
+             thread_info->component, thread_info->thread, 
+             thread_info->tid, thread_info->command_ctr++);
+
+    // append generated fields to command
+    json_object_object_add(command, "results_queue", 
+                           json_object_new_string(result_queue_path));
+    json_object_object_add(command, "command_id", 
+                           json_object_new_string(id_buffer));
+
+    // push command onto queue
+    redis_push(command_queue_path, command);
+
+    // receive result
+    while (!received_result)
+    {
+        // wait for entry from results queue
+        result = redis_pop(result_queue_path, timeout);
+        if (result == NULL)
+            goto redis_ipc_send_command_blocking_finish;
+
+        // verify result matches submitted command
+        received_result = 1; //@@@@ FIXME need to compare command_id
+    }
+
+redis_ipc_send_command_blocking_finish:
+
+    return result;
+}
+
+json_object * redis_ipc_receive_command_blocking(const char *subqueue,
+                                              unsigned int timeout)
+{
+}
+
+int redis_ipc_send_result(const json_object *completed_command, json_object *result)
+{
+}
+                        
+
 static int redis_publish(const char *channel_path, json_object *obj)
 {
     const char *json_text = NULL;
-    int ret = RIPC_FAIL;
     redisReply *reply = NULL;
+    int ret = RIPC_FAIL;
 
     // append channel path
     json_object_object_add(obj, "channel", 
@@ -336,7 +432,7 @@ int redis_ipc_send_event(const char *subchannel, json_object *message)
 
     // calculate channel name
     ret = ipc_path(event_channel_path, sizeof(event_channel_path),
-                   RPC_TYPE_EVENT, thread_info->component, NULL, subchannel);
+                   RPC_TYPE_EVENT, thread_info->component, subchannel);
     if (ret != RIPC_OK)
         goto redis_ipc_send_event_finish;
 
@@ -346,6 +442,35 @@ int redis_ipc_send_event(const char *subchannel, json_object *message)
 redis_ipc_send_event_finish:
 
    return ret;
+}
+
+int format_debug_msg(char *msg, size_t max_msg_len, 
+                     const char *format, va_list argp)
+{
+    const char *trunc_warning = "[TRUNC]";
+    size_t warning_len = strlen(trunc_warning);
+    size_t warning_offset = max_msg_len - warning_len - 1;
+    int msg_len = -1;
+    int ret = RIPC_FAIL;
+
+    // give up if message buffer is ridiculously small
+    if (max_msg_len < warning_len+1) return RIPC_FAIL;
+
+    msg_len = vsnprintf(msg, max_msg_len, format, argp);
+
+    // flag truncation of message
+    if (msg_len == max_msg_len)
+    {
+        // write warning over end of message
+        strncpy(&msg[warning_offset], trunc_warning, warning_len);
+    }
+
+    if (msg_len > 0)
+    {
+        ret = RIPC_OK;
+    }
+
+    return ret;
 }
 
 
@@ -366,7 +491,7 @@ int redis_ipc_send_debug(unsigned int debug_level, const char *format, ...)
 
     // calculate channel name
     ret = ipc_path(debug_channel_path, sizeof(debug_channel_path),
-                   RPC_TYPE_DEBUG, thread_info->component, NULL, NULL);
+                   RPC_TYPE_DEBUG, thread_info->component, NULL);
     if (ret != RIPC_OK)
         goto redis_ipc_send_debug_finish;
 
@@ -398,8 +523,8 @@ redis_ipc_send_debug_finish:
 
 static int redis_subscribe(const char *channel_path)
 {
-    int ret = RIPC_FAIL;
     redisReply *reply = NULL;
+    int ret = RIPC_FAIL;
 
     // don't forget to free reply
     reply = redis_command("PSUBSCRIBE %s", channel_path);
@@ -445,7 +570,7 @@ int redis_ipc_subscribe_events(const char *component, const char *subchannel)
         }
     }
     ret = ipc_path(event_channel_path, sizeof(event_channel_path),
-                   RPC_TYPE_EVENT, component_pattern, NULL, subchannel);
+                   RPC_TYPE_EVENT, component_pattern, subchannel);
     if (ret != RIPC_OK)
         goto redis_ipc_subscribe_events_finish;
 
@@ -477,7 +602,7 @@ int redis_ipc_subscribe_debug(const char *component)
         component_pattern = component;
     }
     ret = ipc_path(debug_channel_path, sizeof(debug_channel_path),
-                   RPC_TYPE_DEBUG, component_pattern, NULL, NULL);
+                   RPC_TYPE_DEBUG, component_pattern, NULL);
     if (ret != RIPC_OK)
         goto redis_ipc_subscribe_debug_finish;
 
@@ -513,7 +638,7 @@ int redis_ipc_unsubscribe_events()
     int ret = RIPC_FAIL;
 
     ret = ipc_path(event_channel_path, sizeof(event_channel_path),
-                   RPC_TYPE_EVENT, "*", NULL, NULL);
+                   RPC_TYPE_EVENT, "*", NULL);
     if (ret != RIPC_OK)
         goto redis_ipc_unsubscribe_events_finish;
 
@@ -531,7 +656,7 @@ int redis_ipc_unsubscribe_debug()
     int ret = RIPC_FAIL;
 
     ret = ipc_path(debug_channel_path, sizeof(debug_channel_path),
-                   RPC_TYPE_DEBUG, "*", NULL, NULL);
+                   RPC_TYPE_DEBUG, "*", NULL);
     if (ret != RIPC_OK)
         goto redis_ipc_unsubscribe_debug_finish;
 
