@@ -28,6 +28,8 @@ void spawn_listener_process(void)
   redis_ipc_unsubscribe_events();
   redis_ipc_unsubscribe_debug();
 
+  redis_ipc_cleanup(getpid());
+
   _exit(0);
 }
 
@@ -67,6 +69,7 @@ int main(int argc, char **argv)
   redis_ipc_send_event(NULL, event);
   json_object_put(event);
 
+  redis_ipc_cleanup(getpid());
   wait(&child_status);
 
   return 42;

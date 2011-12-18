@@ -41,14 +41,16 @@
 // with all threads getting same component name but unique thread name.
 // Cleanup is provided to prevent a slow leak from turnover of short-lived
 // threads that each call init to allocate a few per-thread variables.
-// Cleanup is done based on thread ID so that main thread can clean up for
-// terminated threads.
 //
 // The thread name should indicate the purpose of the thread and be 
 // predictable, e.g. live-http-worker-3, rather than randomly generated or
 // based on TID number, because it will be used to generate name of results
 // queue -- and we want same results queues to be re-used if component gets
 // restarted (avoid having to garbage-collect stale, abandoned redis queues)
+//
+// Cleanup is done based on thread ID so that main thread can clean up for
+// terminated threads, as long as it is tracking their IDs. For a
+// single-threaded process, tid == pid. 
 int redis_ipc_init(const char *this_component, const char *this_thread);
 int redis_ipc_cleanup(pid_t tid);
 

@@ -186,6 +186,21 @@ redis_ipc_init_failed:
     return RIPC_FAIL;
 }
 
+int redis_ipc_cleanup(pid_t tid)
+{
+    struct redis_ipc_per_thread *next_info = redis_ipc_info;
+    int ret = RIPC_FAIL;
+
+//@@@@@@ FIXME: switch to using a list, entry for each thread 
+    //while (iterate through thread info list)
+    if (next_info->tid == tid)
+    {
+        cleanup_per_thread_info(next_info);
+        ret = RIPC_OK;
+    }
+
+    return ret;
+}
 
 int format_debug_msg(char *msg, size_t max_msg_len, 
                      const char *format, va_list argp)
