@@ -17,6 +17,8 @@ void spawn_command_handler_process(void)
   // child continues on
   redis_ipc_init("streaming", "recorder");
 
+  command = redis_ipc_receive_command_blocking("video", 0);
+
   result = json_object_new_object();
   json_object_object_add(result, "code",
                          json_object_new_int(-2));

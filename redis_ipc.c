@@ -265,26 +265,6 @@ void json_add_common_fields(json_object *obj)
     json_object_object_add(obj, "tid", json_object_new_int(gettid()));
 }
 
-#if 0
-    // extract message from reply object
-    //
-    // reply should be an array: 
-    //   string "pmessage" 
-    //   string <psubscribe pattern>
-    //   string <sending channel>
-    //   string <message> ** entry of interest
-    if (reply->type != REDIS_REPLY_ARRAY)
-        goto redis_get_channel_message_finish;
-    if (reply->element[3]->type != REDIS_REPLY_STRING)
-        goto redis_get_channel_message_finish;
-
-    message_str = reply->element[3]->str;
-
-    if (stderr_debug_is_enabled())
-    {
-        fprintf(stderr, "MESSAGE %s\n", message_str);
-    }
-#endif
 
 static int redis_push(const char *queue_path, json_object *obj)
 {
@@ -297,7 +277,7 @@ static int redis_push(const char *queue_path, json_object *obj)
 
     json_text = json_object_to_json_string(obj);
 
-    // don't forget to free reply
+    // don't forget to free reply later
     reply = redis_command("RPUSH %s %s", queue_path, json_text);
 
     if (reply != NULL)
@@ -312,23 +292,41 @@ static int redis_push(const char *queue_path, json_object *obj)
 static json_object * redis_pop(const char *queue_path, unsigned int timeout)
 {
     const char *json_text = NULL;
-    json_object *obj = NULL;
+    json_object *entry = NULL;
     redisReply *reply = NULL;
     int ret = RIPC_FAIL;
 
-    // don't forget to free reply
+    // don't forget to free reply later
     reply = redis_command("BLPOP %s %d", queue_path, timeout);
     if (reply == NULL)
         goto redis_pop_finish;
 
-    // decode result into json object
-    //@@@@@
+    // extract queue entry from reply object
+    //
+    // reply should be an array: 
+    //   string <queue path>
+    //   string <entry> 
+    if (reply->type != REDIS_REPLY_ARRAY)
+        goto redis_pop_finish;
+    if (reply->element[1]->type != REDIS_REPLY_STRING)
+        goto redis_pop_finish;
+
+    json_text = reply->element[1]->str;
+
+    if (stderr_debug_is_enabled())
+    {
+        fprintf(stderr, "ENTRY[%s] %s\n", queue_path, json_text);
+    }
+
+    // parse popped entry back into json object
+    entry = json_tokener_parse(json_text);
+    if (is_error(entry)) entry = NULL;
 
 redis_pop_finish:
     if (reply != NULL)
         freeReplyObject(reply);
 
-    return obj;
+    return entry;
 }
 
 json_object * redis_ipc_send_command_blocking(const char *dest_component, 
@@ -367,7 +365,9 @@ json_object * redis_ipc_send_command_blocking(const char *dest_component,
                            json_object_new_string(id_buffer));
 
     // push command onto queue
-    redis_push(command_queue_path, command);
+    ret = redis_push(command_queue_path, command);
+    if (ret != RIPC_OK)
+        goto redis_ipc_send_command_blocking_finish;
 
     // receive result
     while (!received_result)
@@ -389,10 +389,53 @@ redis_ipc_send_command_blocking_finish:
 json_object * redis_ipc_receive_command_blocking(const char *subqueue,
                                               unsigned int timeout)
 {
+    char command_queue_path[RIPC_MAX_IPC_PATH_LEN];
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    json_object *command = NULL;
+    int ret = RIPC_FAIL;
+
+    // calculate name of own command queue 
+    ret = ipc_path(command_queue_path, sizeof(command_queue_path),
+                   RPC_TYPE_COMMAND, thread_info->component, subqueue);
+    if (ret != RIPC_OK)
+        goto redis_ipc_receive_command_blocking_finish;
+
+    // wait for entry from command queue
+    command = redis_pop(command_queue_path, timeout);
+
+redis_ipc_receive_command_blocking_finish:
+
+    return command;
 }
 
 int redis_ipc_send_result(const json_object *completed_command, json_object *result)
 {
+    json_object *id_obj = NULL, *result_queue_obj = NULL;
+    const char *id_str = NULL, *result_queue_path = NULL;
+    int ret = RIPC_FAIL;
+
+    // extract name of result queue 
+    result_queue_obj = json_object_object_get(completed_command, "results_queue");
+    if (result_queue_obj == NULL)
+        goto redis_ipc_send_result_finish;
+    result_queue_path = json_object_get_string(result_queue_obj);
+
+    // extract command id
+    id_obj = json_object_object_get(completed_command, "command_id");
+    if (id_obj == NULL)
+        goto redis_ipc_send_result_finish;
+    id_str = json_object_get_string(id_obj);
+
+    // append command id to result
+    json_object_object_add(result, "command_id", 
+                           json_object_new_string(id_str));
+
+    // push result onto queue
+    ret = redis_push(result_queue_path, result);
+
+redis_ipc_send_result_finish:
+
+    return ret;
 }
                         
 
@@ -411,7 +454,7 @@ static int redis_publish(const char *channel_path, json_object *obj)
 
     json_text = json_object_to_json_string(obj);
 
-    // don't forget to free reply
+    // don't forget to free reply later
     reply = redis_command("PUBLISH %s %s", channel_path, json_text);
 
     if (reply != NULL)
@@ -526,7 +569,7 @@ static int redis_subscribe(const char *channel_path)
     redisReply *reply = NULL;
     int ret = RIPC_FAIL;
 
-    // don't forget to free reply
+    // don't forget to free reply later
     reply = redis_command("PSUBSCRIBE %s", channel_path);
 
     if (reply != NULL)
@@ -619,7 +662,7 @@ static int redis_unsubscribe(char *channel_path)
     redisReply *reply = NULL;
     int ret = RIPC_FAIL;
 
-    // don't forget to free reply
+    // don't forget to free reply later
     reply = redis_command("PUNSUBSCRIBE %s", channel_path);
 
     if (reply != NULL)

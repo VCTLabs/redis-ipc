@@ -80,8 +80,8 @@ int redis_ipc_cleanup(pid_t tid);
 // should submit a result. The original command is passed in as a parameter
 // to provide the command ID and path to results queue. The command ID
 // will automatically be added to the result object before pushing it to the
-// result queue so that the submitter can verify that this result is the
-// expected one (as opposed to a stale result, belonging to a command that 
+// result queue so that the command submitter will only get back the 
+// expected result (as opposed to a stale result, belonging to a command that 
 // took so long that submitter timed out before seeing the result).
 json_object * redis_ipc_send_command_blocking(const char *dest_component, 
                                               const char *subqueue, 
