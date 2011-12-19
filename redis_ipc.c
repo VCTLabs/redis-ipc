@@ -338,7 +338,8 @@ json_object * redis_ipc_send_command_blocking(const char *dest_component,
     char result_queue_path[RIPC_MAX_IPC_PATH_LEN];
     char id_buffer[RIPC_MAX_IPC_PATH_LEN];
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
-    json_object *result = NULL;
+    json_object *result = NULL, *result_id_obj = NULL;
+    const char *result_id_str = NULL;
     int ret = RIPC_FAIL, received_result = 0;
 
     // calculate name of command queue belonging to another component
@@ -377,8 +378,25 @@ json_object * redis_ipc_send_command_blocking(const char *dest_component,
         if (result == NULL)
             goto redis_ipc_send_command_blocking_finish;
 
+        // extract command id from received result
+        result_id_obj = json_object_object_get(result, "command_id");
+        if (result_id_obj == NULL)
+            goto redis_ipc_send_command_blocking_finish;
+        result_id_str = json_object_get_string(result_id_obj);
+        if (result_id_str == NULL)
+            goto redis_ipc_send_command_blocking_finish;
+
         // verify result matches submitted command
-        received_result = 1; //@@@@ FIXME need to compare command_id
+        if (strcmp(result_id_str, id_buffer) == 0)
+        {
+            received_result = 1; 
+        }
+        else
+        {
+           redis_ipc_send_debug(0, "redis_ipc_send_command_blocking():"
+                                   "received stale result id %s, want id %s",
+                                result_id_str, id_buffer);
+        }
     }
 
 redis_ipc_send_command_blocking_finish:
