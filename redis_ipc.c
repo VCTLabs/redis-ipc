@@ -208,10 +208,44 @@ int stderr_debug_is_enabled()
     return 1;
 }
 
-// run redis command and reset connection upon error
+// check for errors in redis command execution;
+// reset connection or free reply object if error is found
+redisReply * validate_redis_reply(redisReply *reply)
+{
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    redisReply *validated_reply = reply;
+
+    // error in connection to server
+    if (reply == NULL)
+    {
+        // must reconnect to redis server after an error 
+        if (stderr_debug_is_enabled())
+        {
+            fprintf(stderr, "[ERROR] '%s', need to reconnect\n",
+                    thread_info->redis_state->errstr);
+        }
+        redisFree(thread_info->redis_state);
+        thread_info->redis_state = redisConnect(RIPC_SERVER_IP, RIPC_SERVER_PORT);
+    }
+
+    // error in command
+    if (reply->type == REDIS_REPLY_ERROR)
+    {
+        if (stderr_debug_is_enabled())
+        {
+            fprintf(stderr, "[ERROR] command failed: %s\n", reply->str);
+        }
+        freeReplyObject(validated_reply);
+        validated_reply = NULL;
+    }
+
+    return validated_reply;
+}
+
+// run redis command and return reply object if command succeeds
 //
 // if return value is non-null,
-// caller is responsible for calling freeReplyObject() when done with it
+// caller is responsible for calling freeReplyObject() when done with reply
 redisReply * redis_command(const char *format, ...)
 {
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
@@ -230,12 +264,38 @@ redisReply * redis_command(const char *format, ...)
     reply = redisvCommand(thread_info->redis_state, format, argp);
     va_end(argp);
 
-    if (reply == NULL)
+    // check for redis errors and avoid returning an error string
+    // (returns NULL instead, harder to overlook...)
+    reply = validate_redis_reply(reply);
+
+    return reply;
+}
+
+// run redis command and return reply object if command succeeds
+//
+// if return value is non-null,
+// caller is responsible for calling freeReplyObject() when done with reply
+redisReply * redis_command_from_list(int argc, const char **argv)
+{
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    redisReply *reply = NULL;
+    va_list argp;
+    int i = 0;
+    
+    if (stderr_debug_is_enabled())
     {
-        // must reconnect to redis server after an error 
-        redisFree(thread_info->redis_state);
-        thread_info->redis_state = redisConnect(RIPC_SERVER_IP, RIPC_SERVER_PORT);
+        for (i = 0; i < argc; i++)
+        {
+            fprintf(stderr, "%s ", argv[i]);
+        }
+        fprintf(stderr, "\n");
     }
+
+    reply = redisCommandArgv(thread_info->redis_state, argc, argv, NULL);
+
+    // check for redis errors and avoid returning an error string
+    // (returns NULL instead, harder to overlook...)
+    reply = validate_redis_reply(reply);
 
     return reply;
 }
@@ -315,7 +375,7 @@ static json_object * redis_pop(const char *queue_path, unsigned int timeout)
 
     if (stderr_debug_is_enabled())
     {
-        fprintf(stderr, "ENTRY[%s] %s\n", queue_path, json_text);
+        fprintf(stderr, "[ENTRY:%s] %s\n", queue_path, json_text);
     }
 
     // parse popped entry back into json object
@@ -342,7 +402,7 @@ json_object * redis_ipc_send_command_blocking(const char *dest_component,
     const char *result_id_str = NULL;
     int ret = RIPC_FAIL, received_result = 0;
 
-    // calculate name of command queue belonging to another component
+    // calculate name of command queue belonging to specified component
     ret = ipc_path(command_queue_path, sizeof(command_queue_path),
                    RPC_TYPE_COMMAND, dest_component, subqueue);
     if (ret != RIPC_OK)
@@ -405,7 +465,7 @@ redis_ipc_send_command_blocking_finish:
 }
 
 json_object * redis_ipc_receive_command_blocking(const char *subqueue,
-                                              unsigned int timeout)
+                                                 unsigned int timeout)
 {
     char command_queue_path[RIPC_MAX_IPC_PATH_LEN];
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
@@ -455,7 +515,146 @@ redis_ipc_send_result_finish:
 
     return ret;
 }
+
+int get_field_count(json_object *obj)
+{
+    int num_fields = 0;
+
+    json_object_object_foreach(obj, key, val)
+    {
+        num_fields++;
+    }
+
+    return num_fields;
+}
+
+int redis_write_hash(const char *hash_path, json_object *obj)
+{
+    int argc = 0, num_fields = 0;
+    const char **argv = NULL;
+    redisReply *reply = NULL;
+    int ret = RIPC_FAIL;
+
+    // find out how many fields we need to pass into redis
+    num_fields = get_field_count(obj);
+
+    // fill out redis command to set multiple fields
+    argv = calloc(2 + num_fields*2, sizeof(char *)); // cmd, hash, keys & values
+    argv[argc] = "HMSET";
+    argc++;
+    argv[argc] = hash_path;
+    argc++;
+    json_object_object_foreach(obj, key, val)
+    {
+        argv[argc] = key;
+        argc++;
+        argv[argc] = json_object_get_string(val);
+        argc++;
+    }
+
+    // don't forget to free reply later
+    reply = redis_command_from_list(argc, argv);
+
+    if (reply != NULL)
+    {
+        ret = RIPC_OK;
+        freeReplyObject(reply);
+    }
+
+    return ret;
+}
                         
+int redis_ipc_write_status(const json_object *fields)
+{
+    char status_hash_path[RIPC_MAX_IPC_PATH_LEN];
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    int ret = RIPC_FAIL;
+
+    // calculate name of own status hash
+    ret = ipc_path(status_hash_path, sizeof(status_hash_path),
+                   RPC_TYPE_STATUS, thread_info->component, NULL);
+    if (ret != RIPC_OK)
+        goto redis_ipc_write_status_finish;
+
+    // replace current status hash with supplied values
+    ret = redis_write_hash(status_hash_path, fields);
+
+redis_ipc_write_status_finish:
+
+    return ret;
+}
+
+json_object * redis_read_hash(const char *hash_path)
+{
+    redisReply *reply = NULL;
+    json_object *fields = NULL;
+    const char *key = NULL, *val = NULL;
+    int i = 0;
+
+    // don't forget to free reply later
+    reply = redis_command("HGETALL %s", hash_path);
+
+    // extract fields from reply object
+    //
+    // reply should be an array with alternating field names and values
+
+    fields = json_object_new_object();
+    if (fields == NULL)
+        goto redis_read_hash_finish;
+    if (reply == NULL)
+        goto redis_read_hash_finish;
+    if (reply->type != REDIS_REPLY_ARRAY)
+        goto redis_read_hash_finish;
+    if (reply->elements % 2) // need to have name-value pairs 
+        goto redis_read_hash_finish;
+
+    if (stderr_debug_is_enabled()) fprintf(stderr, "[HASH]");
+    while (i < reply->elements)
+    {
+        key = reply->element[i++]->str;
+        val = reply->element[i++]->str;
+        json_object_object_add(fields, key, json_object_new_string(val));
+
+        if (stderr_debug_is_enabled()) fprintf(stderr, " %s='%s'", key, val);
+    }
+    if (stderr_debug_is_enabled()) fprintf(stderr, "\n");
+
+redis_read_hash_finish:
+    if (reply != NULL)
+        freeReplyObject(reply);
+
+    return fields;
+}
+
+json_object * redis_ipc_read_status(const char *owner_component)
+{
+    char status_hash_path[RIPC_MAX_IPC_PATH_LEN];
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    json_object *fields = NULL;
+    int ret = RIPC_FAIL;
+
+    // calculate name of status hash belonging to specified component
+    ret = ipc_path(status_hash_path, sizeof(status_hash_path),
+                   RPC_TYPE_STATUS, owner_component, NULL);
+    if (ret != RIPC_OK)
+        goto redis_ipc_read_status_finish;
+
+    // get all fields of status hash 
+    fields = redis_read_hash(status_hash_path);
+
+redis_ipc_read_status_finish:
+
+    return fields;
+}
+
+int redis_ipc_write_status_field(const char *field_name, const char *field_value)
+{
+}
+
+const char * redis_ipc_read_status_field(const char *owner_component, const char *field_name)
+{
+}
+
 
 static int redis_publish(const char *channel_path, json_object *obj)
 {
@@ -766,7 +965,7 @@ json_object * redis_ipc_get_message_blocking(void)
 
     if (stderr_debug_is_enabled())
     {
-        fprintf(stderr, "MESSAGE %s\n", message_str);
+        fprintf(stderr, "[MESSAGE] %s\n", message_str);
     }
 
     // parse message back into json object

@@ -14,8 +14,9 @@ DEBUG = -g -O0
 
 all: $(SHARED) $(STATIC)
 
+# -std=c99 allows json_object_object_foreach() macro from libjson to compile
 $(OBJS) : %.o : %.c %.h
-	$(CC) -c $(CFLAGS) -fPIC $(DEBUG) $<
+	$(CC) -c $(CFLAGS) -std=c99 -fPIC $(DEBUG) $<
 
 $(SHARED) : $(OBJS)
 	$(CC) -o $@ $< $(LIBS) $(LDFLAGS) -shared -Wl,-soname,$(SONAME)

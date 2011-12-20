@@ -33,6 +33,9 @@
 // functions
 //*************
 
+// When a function returns an int, return value RIPC_OK indicates success;
+// when a function returns a *json_object, non-null return indicates success.
+
 // NOTE: whenever a json_object is used as a return value or a parameter,
 //       the caller is responsible for cleaning it up with json_object_put().
 //       This cleanup function is safe to call on a NULL pointer.
@@ -51,8 +54,10 @@
 // Cleanup is done based on thread ID so that main thread can clean up for
 // terminated threads, as long as it is tracking their IDs. For a
 // single-threaded process, tid == pid. 
+
 int redis_ipc_init(const char *this_component, const char *this_thread);
 int redis_ipc_cleanup(pid_t tid);
+
 
 // A component can send a command to any other component, 
 // but it can only receive commands from its own command queue(s).
@@ -83,6 +88,7 @@ int redis_ipc_cleanup(pid_t tid);
 // result queue so that the command submitter will only get back the 
 // expected result (as opposed to a stale result, belonging to a command that 
 // took so long that submitter timed out before seeing the result).
+
 json_object * redis_ipc_send_command_blocking(const char *dest_component, 
                                               const char *subqueue, 
                                               json_object *command, 
@@ -95,22 +101,47 @@ int redis_ipc_send_result(const json_object *completed_command, json_object *res
 // A component can only write a setting if it has been authorized by redis_ipc.conf, 
 // but it can read any setting.
 //
-// If multiple status fields are being accessed, probably should access the full thing
-// rather than multiple calls to individual fields.
-int redis_ipc_write_setting(const char *owner_component, json_object *value);
+// Each setting is a set of fields that are key-value pairs, where both field name and
+// values are stored as strings (of course values could be JSON text if needed).
+//
+// A setting can be written or read in its entirety using the first pair of functions:
+// when writing, the JSON object parameter can hold all the component's setting fields
+// as key-value pairs (although it would also work with a smaller set of fields);
+// when reading, the JSON object returned *will* hold all existing setting fields.
+//
+// A setting can also be written or read a single field at a time using the second
+// pair of functions, which works on strings rather JSON hashes. If multiple setting fields 
+// are being accessed, consider accessing the full thing rather than multiple calls to 
+// individual fields -- it may be more efficient.
+
+int redis_ipc_write_setting(const char *owner_component, const json_object *fields);
 json_object * redis_ipc_read_setting(const char *owner_component);
-int redis_ipc_write_setting_field(const char *owner_component, const char *field_name, json_object *value);
-json_object * redis_ipc_read_setting_field(const char *owner_component, const char *field_name);
+int redis_ipc_write_setting_field(const char *owner_component, const char *field_name, 
+                                  const char *field_value);
+const char * redis_ipc_read_setting_field(const char *owner_component, const char *field_name);
+
 
 // A component can only write its own status, 
 // but it can read any status.
 //
-// If multiple status fields are being accessed, probably should access the full thing
-// rather than multiple calls to individual fields.
-int redis_ipc_write_status(json_object *value);
+// Each status is a set of fields that are key-value pairs, where both field name and
+// values are stored as strings (of course values could be JSON text if needed).
+//
+// A status can be written or read in its entirety using the first pair of functions:
+// when writing, the JSON object parameter can hold all the component's status fields
+// as key-value pairs (although it would also work with a smaller set of fields);
+// when reading, the JSON object returned *will* hold all existing status fields.
+//
+// A status can also be written or read a single field at a time using the second
+// pair of functions, which works on strings rather JSON hashes. If multiple status fields 
+// are being accessed, consider accessing the full thing rather than multiple calls to 
+// individual fields -- it may be more efficient.
+
+int redis_ipc_write_status(const json_object *fields);
 json_object * redis_ipc_read_status(const char *owner_component);
-int redis_ipc_write_status_field(const char *field_name, json_object *value);
-json_object * redis_ipc_read_status_field(const char *owner_component, const char *field_name);
+int redis_ipc_write_status_field(const char *field_name, const char *field_value);
+const char * redis_ipc_read_status_field(const char *owner_component, const char *field_name);
+
 
 // Each component can only send event messages to its own event channel(s),
 // but can subscribe to any (or all) event channels.
@@ -129,9 +160,11 @@ json_object * redis_ipc_read_status_field(const char *owner_component, const cha
 //   channel (full channel name)
 //
 // The unsubscribe function stops watching all event channels.
+
 int redis_ipc_send_event(const char *subchannel, json_object *message);
 int redis_ipc_subscribe_events(const char *component, const char *subchannel);
 int redis_ipc_unsubscribe_events(void);
+
 
 // Each component will send debug messages to its own debug channel,
 // but can subscribe to any (or all) debug channels. Use NULL as
@@ -150,9 +183,11 @@ int redis_ipc_unsubscribe_events(void);
 // to configured component debug verbosity will actually get sent.
 //
 // The unsubscribe function stops watching all debug channels.
+
 int redis_ipc_send_debug(unsigned int debug_level, const char *format, ...);
 int redis_ipc_subscribe_debug(const char *component);
 int redis_ipc_unsubscribe_debug(void);
+
 
 // This function is the counterpart to both redis_ipc_send_event()
 // and redis_ipc_send_debug() because a received message can come from any  
@@ -162,6 +197,7 @@ int redis_ipc_unsubscribe_debug(void);
 // next event is received, because redis protocol does not implement a timeout
 // on waiting for messages. To prevent infinite blocking, at least one channel
 // should have been subscribed before listening for messages.
+
 json_object * redis_ipc_get_message_blocking(void);
 
 #endif
