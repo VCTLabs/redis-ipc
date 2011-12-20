@@ -564,6 +564,36 @@ int redis_write_hash(const char *hash_path, json_object *obj)
     return ret;
 }
                         
+//@@@@ FIXME: name of component(s) allowed to change settings will be in config file
+static int component_can_write_settings(const char *component)
+{
+    return (strcmp(component, "db") == 0);
+}
+
+int redis_ipc_write_setting(const char *owner_component, const json_object *fields)
+{
+    char setting_hash_path[RIPC_MAX_IPC_PATH_LEN];
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    int ret = RIPC_FAIL;
+
+    // verify this component is allowed to update settings
+    if (!component_can_write_settings(thread_info->component))
+        goto redis_ipc_write_setting_finish;
+
+    // calculate name of setting hash corresponding to specified component
+    ret = ipc_path(setting_hash_path, sizeof(setting_hash_path),
+                   RPC_TYPE_SETTING, owner_component, NULL);
+    if (ret != RIPC_OK)
+        goto redis_ipc_write_setting_finish;
+
+    // replace current setting hash with supplied values
+    ret = redis_write_hash(setting_hash_path, fields);
+
+redis_ipc_write_setting_finish:
+
+    return ret;
+}
+
 int redis_ipc_write_status(const json_object *fields)
 {
     char status_hash_path[RIPC_MAX_IPC_PATH_LEN];
@@ -626,10 +656,29 @@ redis_read_hash_finish:
     return fields;
 }
 
+json_object * redis_ipc_read_setting(const char *owner_component)
+{
+    char setting_hash_path[RIPC_MAX_IPC_PATH_LEN];
+    json_object *fields = NULL;
+    int ret = RIPC_FAIL;
+
+    // calculate name of setting hash belonging to specified component
+    ret = ipc_path(setting_hash_path, sizeof(setting_hash_path),
+                   RPC_TYPE_SETTING, owner_component, NULL);
+    if (ret != RIPC_OK)
+        goto redis_ipc_read_setting_finish;
+
+    // get all fields of setting hash 
+    fields = redis_read_hash(setting_hash_path);
+
+redis_ipc_read_setting_finish:
+
+    return fields;
+}
+
 json_object * redis_ipc_read_status(const char *owner_component)
 {
     char status_hash_path[RIPC_MAX_IPC_PATH_LEN];
-    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     json_object *fields = NULL;
     int ret = RIPC_FAIL;
 
@@ -647,14 +696,22 @@ redis_ipc_read_status_finish:
     return fields;
 }
 
+int redis_ipc_write_setting_field(const char *owner_component, const char *field_name, 
+                                  const char *field_value)
+{
+}
+
 int redis_ipc_write_status_field(const char *field_name, const char *field_value)
+{
+}
+
+const char * redis_ipc_read_setting_field(const char *owner_component, const char *field_name)
 {
 }
 
 const char * redis_ipc_read_status_field(const char *owner_component, const char *field_name)
 {
 }
-
 
 static int redis_publish(const char *channel_path, json_object *obj)
 {
