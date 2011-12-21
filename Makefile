@@ -7,6 +7,7 @@ FULL_VERSION = $(API_VERSION).$(MINOR_VERSION).$(PATCH_VERSION)
 
 SHARED = $(LIBNAME).$(FULL_VERSION).so
 SONAME = $(LIBNAME).$(API_VERSION).so
+LDNAME = $(LIBNAME).so
 STATIC = $(LIBNAME).$(FULL_VERSION).a
 OBJS = redis_ipc.o
 LIBS = -lhiredis -ljson
@@ -20,9 +21,21 @@ $(OBJS) : %.o : %.c %.h
 
 $(SHARED) : $(OBJS)
 	$(CC) -o $@ $< $(LIBS) $(LDFLAGS) -shared -Wl,-soname,$(SONAME)
+	# create links used by static linker and dynamic linker
+	ln -s $(SHARED) $(LDNAME)
+	ln -s $(SHARED) $(SONAME)
 
 $(STATIC) : $(OBJS)
 	ar rcs $@ $<
 
+%_test : %_test.c $(SHARED)
+	$(CC) $(CFLAGS) $(DEBUG) $(LIBS) -lredis_ipc -o $@ $<
+
+install:
+	mkdir -p $(DESTDIR)/usr/include
+	install *.h $(DESTDIR)/usr/include
+	mkdir -p $(DESTDIR)/usr/lib
+	cp -a lib* $(DESTDIR)/usr/lib
+
 clean: 
-	rm -f *.o $(SHARED) $(STATIC)
+	rm -f *.o *_test $(LIBNAME)*
