@@ -22,14 +22,14 @@ $(OBJS) : %.o : %.c %.h
 $(SHARED) : $(OBJS)
 	$(CC) -o $@ $< $(LIBS) $(LDFLAGS) -shared -Wl,-soname,$(SONAME)
 	# create links used by static linker and dynamic linker
-	ln -s $(SHARED) $(LDNAME)
-	ln -s $(SHARED) $(SONAME)
+	ln -sf $(SHARED) $(LDNAME)
+	ln -sf $(SHARED) $(SONAME)
 
 $(STATIC) : $(OBJS)
 	ar rcs $@ $<
 
 %_test : %_test.c $(SHARED)
-	$(CC) $(CFLAGS) $(DEBUG) $(LIBS) -lredis_ipc -o $@ $<
+	$(CC) $(CFLAGS) $(DEBUG) $(LIBS) -lredis_ipc $(LDFLAGS) -o $@ $<
 
 install:
 	mkdir -p $(DESTDIR)/usr/include

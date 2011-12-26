@@ -435,6 +435,14 @@ json_object * redis_ipc_send_command_blocking(const char *dest_component,
     {
         // wait for entry from results queue
         result = redis_pop(result_queue_path, timeout);
+        if ( result != NULL && !json_object_is_type(result, json_type_object))
+        {
+            // results are supposed to be hash objects, not whatever this thing is
+            redis_ipc_send_debug(RIPC_DBG_ERROR, "redis_ipc_send_command_blocking():"
+                                 "invalid result '%s'", json_object_get_string(result));
+            json_object_put(result);
+            result = NULL;
+        }
         if (result == NULL)
             goto redis_ipc_send_command_blocking_finish;
 
@@ -453,13 +461,18 @@ json_object * redis_ipc_send_command_blocking(const char *dest_component,
         }
         else
         {
-           redis_ipc_send_debug(0, "redis_ipc_send_command_blocking():"
+           redis_ipc_send_debug(RIPC_DBG_ERROR, "redis_ipc_send_command_blocking():"
                                    "received stale result id %s, want id %s",
                                 result_id_str, id_buffer);
         }
     }
 
 redis_ipc_send_command_blocking_finish:
+    if (result == NULL || ! json_object_is_type(result, json_type_object))
+    {
+        redis_ipc_send_debug(RIPC_DBG_ERROR, "redis_ipc_send_command_blocking():"
+                                "invalid result");
+    }
 
     return result;
 }
@@ -480,6 +493,14 @@ json_object * redis_ipc_receive_command_blocking(const char *subqueue,
 
     // wait for entry from command queue
     command = redis_pop(command_queue_path, timeout);
+    if ( command != NULL && !json_object_is_type(command, json_type_object))
+    {
+        // commands are supposed to be hash objects, not whatever this thing is
+        redis_ipc_send_debug(RIPC_DBG_ERROR, "redis_ipc_receive_command_blocking():"
+                             "invalid command '%s'", json_object_get_string(command));
+        json_object_put(command);
+        command = NULL;
+    }
 
 redis_ipc_receive_command_blocking_finish:
 
@@ -512,6 +533,10 @@ int redis_ipc_send_result(const json_object *completed_command, json_object *res
     ret = redis_push(result_queue_path, result);
 
 redis_ipc_send_result_finish:
+    if (ret != RIPC_OK)
+        redis_ipc_send_debug(RIPC_DBG_ERROR, "redis_ipc_send_result():"
+                                "could not send result for command %s",
+                                json_object_get_string(completed_command));
 
     return ret;
 }
@@ -759,7 +784,7 @@ redis_ipc_read_status_finish:
     return fields;
 }
 
-const char * redis_read_hash_field(const char *hash_path, const char *field_name) 
+char * redis_read_hash_field(const char *hash_path, const char *field_name) 
 {
     redisReply *reply = NULL;
     const char *field_value = NULL;
@@ -775,7 +800,7 @@ const char * redis_read_hash_field(const char *hash_path, const char *field_name
         goto redis_read_hash_field_finish;
     if (reply->type != REDIS_REPLY_STRING)
         goto redis_read_hash_field_finish;
-    field_value = reply->str;
+    field_value = strdup(reply->str);
     if (stderr_debug_is_enabled()) fprintf(stderr, "[HASH_FIELD] %s='%s'\n", field_name, field_value);
 
 redis_read_hash_field_finish:
@@ -785,7 +810,7 @@ redis_read_hash_field_finish:
     return field_value;
 }
 
-const char * redis_ipc_read_setting_field(const char *owner_component, const char *field_name)
+char * redis_ipc_read_setting_field(const char *owner_component, const char *field_name)
 {
     char setting_hash_path[RIPC_MAX_IPC_PATH_LEN];
     const char *field_value = NULL;
@@ -805,7 +830,7 @@ redis_ipc_read_setting_field_finish:
     return field_value;
 }
 
-const char * redis_ipc_read_status_field(const char *owner_component, const char *field_name)
+char * redis_ipc_read_status_field(const char *owner_component, const char *field_name)
 {
     char status_hash_path[RIPC_MAX_IPC_PATH_LEN];
     const char *field_value = NULL;

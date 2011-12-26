@@ -9,6 +9,14 @@
 // constants
 //*************
 
+// debug levels for redis_ipc_send_debug()
+enum { RIPC_DBG_ERROR, 
+       RIPC_DBG_ALERT, 
+       RIPC_DBG_WARN, 
+       RIPC_DBG_INFO, 
+       RIPC_DBG_NOISY,
+       RIPC_DBG_EXTRA_NOISY };
+
 // return codes > 0 are also OK
 #define RIPC_OK     0
 #define RIPC_FAIL (-1)
@@ -34,11 +42,13 @@
 //*************
 
 // When a function returns an int, return value RIPC_OK indicates success;
-// when a function returns a *json_object, non-null return indicates success.
+// when a function returns a json_object*, non-null return indicates success.
 
-// NOTE: whenever a json_object is used as a return value or a parameter,
+// NOTE: whenever a json_object* is used as a return value or a parameter,
 //       the caller is responsible for cleaning it up with json_object_put().
 //       This cleanup function is safe to call on a NULL pointer.
+//       When a char* is used as a return value, caller is responsible for
+//       cleaning it up with free().
 
 // Init should be called from each thread that will be doing redis IPC,
 // with all threads getting same component name but unique thread name.
@@ -118,7 +128,7 @@ int redis_ipc_write_setting(const char *owner_component, const json_object *fiel
 json_object * redis_ipc_read_setting(const char *owner_component);
 int redis_ipc_write_setting_field(const char *owner_component, const char *field_name, 
                                   const char *field_value);
-const char * redis_ipc_read_setting_field(const char *owner_component, const char *field_name);
+char * redis_ipc_read_setting_field(const char *owner_component, const char *field_name);
 
 
 // A component can only write its own status, 
@@ -140,7 +150,7 @@ const char * redis_ipc_read_setting_field(const char *owner_component, const cha
 int redis_ipc_write_status(const json_object *fields);
 json_object * redis_ipc_read_status(const char *owner_component);
 int redis_ipc_write_status_field(const char *field_name, const char *field_value);
-const char * redis_ipc_read_status_field(const char *owner_component, const char *field_name);
+char * redis_ipc_read_status_field(const char *owner_component, const char *field_name);
 
 
 // Each component can only send event messages to its own event channel(s),
