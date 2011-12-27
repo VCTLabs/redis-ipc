@@ -33,7 +33,7 @@ $(STATIC) : $(OBJS)
 
 install:
 	mkdir -p $(DESTDIR)/usr/include
-	install *.h $(DESTDIR)/usr/include
+	install *.h *.hh $(DESTDIR)/usr/include
 	mkdir -p $(DESTDIR)/usr/lib
 	cp -a lib* $(DESTDIR)/usr/lib
 
