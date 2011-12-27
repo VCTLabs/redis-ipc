@@ -227,9 +227,8 @@ redisReply * validate_redis_reply(redisReply *reply)
         redisFree(thread_info->redis_state);
         thread_info->redis_state = redisConnect(RIPC_SERVER_IP, RIPC_SERVER_PORT);
     }
-
     // error in command
-    if (reply->type == REDIS_REPLY_ERROR)
+    else if (reply->type == REDIS_REPLY_ERROR)
     {
         if (stderr_debug_is_enabled())
         {
@@ -787,7 +786,7 @@ redis_ipc_read_status_finish:
 char * redis_read_hash_field(const char *hash_path, const char *field_name) 
 {
     redisReply *reply = NULL;
-    const char *field_value = NULL;
+    char *field_value = NULL;
     int ret = RIPC_FAIL;
 
     // don't forget to free reply later
@@ -813,7 +812,7 @@ redis_read_hash_field_finish:
 char * redis_ipc_read_setting_field(const char *owner_component, const char *field_name)
 {
     char setting_hash_path[RIPC_MAX_IPC_PATH_LEN];
-    const char *field_value = NULL;
+    char *field_value = NULL;
     int ret = RIPC_FAIL;
 
     // calculate name of setting hash belonging to specified component
