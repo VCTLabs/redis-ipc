@@ -5,6 +5,11 @@
 #include <sys/types.h>
 #include <json/json.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 //*************
 // constants
 //*************
@@ -209,5 +214,9 @@ int redis_ipc_unsubscribe_debug(void);
 // should have been subscribed before listening for messages.
 
 json_object * redis_ipc_get_message_blocking(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
