@@ -15,8 +15,6 @@
 
 struct redis_ipc_per_thread
 {
-//@@@@ FIXME: this will turn into a linked list
-//  list_t list_head
     pid_t tid;               // owning thread
     char *component;         // component name used in redis
     char *thread;            // thread name used in redis
@@ -25,7 +23,7 @@ struct redis_ipc_per_thread
     unsigned int command_ctr;  // counter for number of commands sent by thread
 };
 
-static struct redis_ipc_per_thread *redis_ipc_info = NULL;
+static __thread struct redis_ipc_per_thread *redis_ipc_info = NULL;
 
 // gettid() is missing a libc wrapper for some reason
 // (manpage even mentions it)
@@ -37,8 +35,7 @@ static pid_t gettid()
 struct redis_ipc_per_thread * get_per_thread_info()
 {
     struct redis_ipc_per_thread *next_info = redis_ipc_info;
-//@@@@@@ FIXME: switch to using a list, entry for each thread 
-    //while (iterate through thread info list)
+
     if (next_info->tid == gettid())
     {
         return next_info; 
@@ -169,7 +166,7 @@ int redis_ipc_init(const char *this_component, const char *this_thread)
     if (new_info->result_queue_path == NULL)
         goto redis_ipc_init_failed;
 
-    redis_ipc_info = new_info; //@@@@@@ FIXME: switch to using a list, append entry for each new thread
+    redis_ipc_info = new_info; 
 
     return RIPC_OK;
 
@@ -185,8 +182,6 @@ int redis_ipc_cleanup(pid_t tid)
     struct redis_ipc_per_thread *next_info = redis_ipc_info;
     int ret = RIPC_FAIL;
 
-//@@@@@@ FIXME: switch to using a list, entry for each thread 
-    //while (iterate through thread info list)
     if (next_info->tid == tid)
     {
         cleanup_per_thread_info(next_info);

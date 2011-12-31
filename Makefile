@@ -29,7 +29,7 @@ $(STATIC) : $(OBJS)
 	ar rcs $@ $<
 
 %_test : %_test.c $(SHARED)
-	$(CC) $(CFLAGS) $(DEBUG) $(LIBS) -lredis_ipc $(LDFLAGS) -o $@ $<
+	$(CC) $(CFLAGS) $(DEBUG) $(LIBS) -lredis_ipc -lpthread $(LDFLAGS) -o $@ $<
 
 install:
 	mkdir -p $(DESTDIR)/usr/include
