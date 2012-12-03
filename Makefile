@@ -28,7 +28,7 @@ SONAME = $(LIBNAME).$(API_VERSION).so
 LDNAME = $(LIBNAME).so
 STATIC = $(LIBNAME).$(FULL_VERSION).a
 OBJS = redis_ipc.o
-LIBS = -lhiredis -ljson
+LIBS = -lhiredis -ljson -Wl,--hash-style=gnu
 
 all: $(SHARED) $(STATIC)
 
