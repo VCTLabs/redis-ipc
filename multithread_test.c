@@ -1,5 +1,6 @@
 #define _GNU_SOURCE // for gettid()
 #include <sys/types.h>
+#include <unistd.h>
 #include <sys/syscall.h>
 #include <pthread.h>
 #include "redis_ipc.h"

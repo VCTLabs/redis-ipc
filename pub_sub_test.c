@@ -1,4 +1,6 @@
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include "redis_ipc.h"
 
 void spawn_listener_process(void)
