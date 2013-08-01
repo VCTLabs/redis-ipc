@@ -791,9 +791,15 @@ char * redis_read_hash_field(const char *hash_path, const char *field_name)
     //
     // reply should be a string
     if (reply == NULL)
+    {
+        if (stderr_debug_is_enabled()) fprintf(stderr, "[HASH_FIELD] <null result>\n");
         goto redis_read_hash_field_finish;
+    }
     if (reply->type != REDIS_REPLY_STRING)
+    {
+        if (stderr_debug_is_enabled()) fprintf(stderr, "[HASH_FIELD] <non-string result type %d>\n", reply->type);
         goto redis_read_hash_field_finish;
+    }
     field_value = strdup(reply->str);
     if (stderr_debug_is_enabled()) fprintf(stderr, "[HASH_FIELD] %s='%s'\n", field_name, field_value);
 
