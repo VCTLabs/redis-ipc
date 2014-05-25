@@ -1,4 +1,6 @@
-CROSS_COMPILE ?= arm-none-linux-gnueabi-
+## set CROSS_COMPILE and SYSROOT variables when cross-compiling, e.g.
+# make CROSS_COMPILE=arm-none-linux-gnueabi- SYSROOT=/usr/local/arago/arm-2009q1/arm-none-linux-gnueabi
+
 PREFIX  = $(CROSS_COMPILE)
 CC      = $(PREFIX)gcc
 CXX     = $(PREFIX)g++
@@ -8,7 +10,6 @@ AR      = $(PREFIX)ar
 RANLIB  = $(PREFIX)ranlib
 PWD     = $(shell pwd)
 
-SYSROOT ?= /usr/local/arago/arm-2009q1/arm-none-linux-gnueabi
 RPATH_ARG ?= $(SYSROOT)/usr/lib
 
 INCFLAG = -I./include -I$(SYSROOT)/usr/include
