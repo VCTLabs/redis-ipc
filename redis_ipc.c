@@ -36,7 +36,7 @@ struct redis_ipc_per_thread * get_per_thread_info()
 {
     struct redis_ipc_per_thread *next_info = redis_ipc_info;
 
-    if (next_info->tid == gettid())
+    if (next_info != NULL && next_info->tid == gettid())
     {
         return next_info; 
     }
@@ -141,6 +141,9 @@ int redis_ipc_init(const char *this_component, const char *this_thread)
 
     new_info = calloc(1, sizeof(struct redis_ipc_per_thread));
 
+    if (new_info == NULL)
+        goto redis_ipc_init_failed;
+
     // component is name for all threads/processes in same subsystem,
     // thread is uniquely (non-random) assigned name for this thread,
     new_info->component = strdup(this_component);
@@ -171,6 +174,10 @@ int redis_ipc_init(const char *this_component, const char *this_thread)
     return RIPC_OK;
 
 redis_ipc_init_failed:
+    if (stderr_debug_is_enabled())
+    {
+            fprintf(stderr, "[ERROR] redis_ipc_init failed for thread %s\n", this_thread);
+    }
     cleanup_per_thread_info(new_info);
     safe_free(new_info);
 
@@ -182,7 +189,7 @@ int redis_ipc_cleanup(pid_t tid)
     struct redis_ipc_per_thread *next_info = redis_ipc_info;
     int ret = RIPC_FAIL;
 
-    if (next_info->tid == tid)
+    if (next_info != NULL && next_info->tid == tid)
     {
         cleanup_per_thread_info(next_info);
         ret = RIPC_OK;
@@ -396,6 +403,10 @@ json_object * redis_ipc_send_command_blocking(const char *dest_component,
     const char *result_id_str = NULL;
     int ret = RIPC_FAIL, received_result = 0;
 
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_send_command_blocking_finish;
+
     // calculate name of command queue belonging to specified component
     ret = ipc_path(command_queue_path, sizeof(command_queue_path),
                    RPC_TYPE_COMMAND, dest_component, subqueue);
@@ -479,6 +490,10 @@ json_object * redis_ipc_receive_command_blocking(const char *subqueue,
     json_object *command = NULL;
     int ret = RIPC_FAIL;
 
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_receive_command_blocking_finish;
+
     // calculate name of own command queue 
     ret = ipc_path(command_queue_path, sizeof(command_queue_path),
                    RPC_TYPE_COMMAND, thread_info->component, subqueue);
@@ -505,7 +520,12 @@ int redis_ipc_send_result(const json_object *completed_command, json_object *res
 {
     json_object *id_obj = NULL, *result_queue_obj = NULL;
     const char *id_str = NULL, *result_queue_path = NULL;
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     int ret = RIPC_FAIL;
+
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_send_result_finish;
 
     // extract name of result queue 
     result_queue_obj = json_object_object_get(completed_command, "results_queue");
@@ -595,6 +615,10 @@ int redis_ipc_write_setting(const char *owner_component, const json_object *fiel
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     int ret = RIPC_FAIL;
 
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_write_setting_finish;
+
     // verify this component is allowed to update settings
     if (!component_can_write_settings(thread_info->component))
         goto redis_ipc_write_setting_finish;
@@ -618,6 +642,10 @@ int redis_ipc_write_status(const json_object *fields)
     char status_hash_path[RIPC_MAX_IPC_PATH_LEN];
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     int ret = RIPC_FAIL;
+
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_write_status_finish;
 
     // calculate name of own status hash
     ret = ipc_path(status_hash_path, sizeof(status_hash_path),
@@ -658,6 +686,10 @@ int redis_ipc_write_setting_field(const char *owner_component, const char *field
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     int ret = RIPC_FAIL;
 
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_write_setting_field_finish;
+
     // verify this component is allowed to update settings
     if (!component_can_write_settings(thread_info->component))
         goto redis_ipc_write_setting_field_finish;
@@ -681,6 +713,10 @@ int redis_ipc_write_status_field(const char *field_name, const char *field_value
     char status_hash_path[RIPC_MAX_IPC_PATH_LEN];
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     int ret = RIPC_FAIL;
+
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_write_status_field_finish;
 
     // calculate name of own status hash
     ret = ipc_path(status_hash_path, sizeof(status_hash_path),
@@ -742,7 +778,12 @@ json_object * redis_ipc_read_setting(const char *owner_component)
 {
     char setting_hash_path[RIPC_MAX_IPC_PATH_LEN];
     json_object *fields = NULL;
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     int ret = RIPC_FAIL;
+
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_read_setting_finish;
 
     // calculate name of setting hash belonging to specified component
     ret = ipc_path(setting_hash_path, sizeof(setting_hash_path),
@@ -762,7 +803,12 @@ json_object * redis_ipc_read_status(const char *owner_component)
 {
     char status_hash_path[RIPC_MAX_IPC_PATH_LEN];
     json_object *fields = NULL;
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     int ret = RIPC_FAIL;
+
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_read_status_finish;
 
     // calculate name of status hash belonging to specified component
     ret = ipc_path(status_hash_path, sizeof(status_hash_path),
@@ -814,7 +860,12 @@ char * redis_ipc_read_setting_field(const char *owner_component, const char *fie
 {
     char setting_hash_path[RIPC_MAX_IPC_PATH_LEN];
     char *field_value = NULL;
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     int ret = RIPC_FAIL;
+
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_read_setting_field_finish;
 
     // calculate name of setting hash belonging to specified component
     ret = ipc_path(setting_hash_path, sizeof(setting_hash_path),
@@ -834,7 +885,12 @@ char * redis_ipc_read_status_field(const char *owner_component, const char *fiel
 {
     char status_hash_path[RIPC_MAX_IPC_PATH_LEN];
     const char *field_value = NULL;
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     int ret = RIPC_FAIL;
+
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_read_status_field_finish;
 
     // calculate name of status hash belonging to specified component
     ret = ipc_path(status_hash_path, sizeof(status_hash_path),
@@ -883,6 +939,10 @@ int redis_ipc_send_event(const char *subchannel, json_object *message)
     char event_channel_path[RIPC_MAX_IPC_PATH_LEN];
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     int ret = RIPC_FAIL;
+
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_send_event_finish;
 
     // calculate channel name
     ret = ipc_path(event_channel_path, sizeof(event_channel_path),
@@ -936,6 +996,10 @@ int redis_ipc_send_debug(unsigned int debug_level, const char *format, ...)
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     json_object *debug_obj = NULL;
     int ret = RIPC_FAIL;
+
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_send_debug_finish;
 
     // ignore if the debug level is higher than current verbosity
     if (debug_level > get_debug_verbosity())
@@ -1000,7 +1064,12 @@ int redis_ipc_subscribe_events(const char *component, const char *subchannel)
     char event_channel_path[RIPC_MAX_IPC_PATH_LEN];
     char *component_pattern = NULL;
     size_t pattern_len = 0;
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     int ret = RIPC_FAIL;
+
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_subscribe_events_finish;
 
     // calculate channel name
     if (component == NULL) 
@@ -1042,7 +1111,12 @@ int redis_ipc_subscribe_debug(const char *component)
     char debug_channel_path[RIPC_MAX_IPC_PATH_LEN];
     const char *component_pattern = NULL;
     size_t pattern_len = 0;
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     int ret = RIPC_FAIL;
+
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_subscribe_debug_finish;
 
     // calculate channel name
     if (component == NULL) 
@@ -1089,7 +1163,12 @@ static int redis_unsubscribe(char *channel_path)
 int redis_ipc_unsubscribe_events()
 {
     char event_channel_path[RIPC_MAX_IPC_PATH_LEN];
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     int ret = RIPC_FAIL;
+
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_unsubscribe_events_finish;
 
     ret = ipc_path(event_channel_path, sizeof(event_channel_path),
                    RPC_TYPE_EVENT, "*", NULL);
@@ -1107,7 +1186,12 @@ redis_ipc_unsubscribe_events_finish:
 int redis_ipc_unsubscribe_debug()
 {
     char debug_channel_path[RIPC_MAX_IPC_PATH_LEN];
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     int ret = RIPC_FAIL;
+
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_unsubscribe_debug_finish;
 
     ret = ipc_path(debug_channel_path, sizeof(debug_channel_path),
                    RPC_TYPE_DEBUG, "*", NULL);
@@ -1130,6 +1214,10 @@ json_object * redis_ipc_get_message_blocking(void)
     const char *message_str = NULL;
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     int ret = RIPC_FAIL;
+
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_get_channel_message_finish;
 
     // block until a message is available
     ret = redisGetReply(thread_info->redis_state, &reply);
