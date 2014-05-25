@@ -33,6 +33,9 @@ STATIC = $(LIBNAME).$(FULL_VERSION).a
 OBJS = redis_ipc.o
 LIBS = -lhiredis -ljson -Wl,--hash-style=gnu
 
+TESTS = command_result_test settings_status_test pub_sub_test multithread_test json_test 
+
+
 all: $(SHARED) $(STATIC)
 
 $(OBJS) : %.o : %.c %.h
@@ -45,6 +48,8 @@ $(SHARED) : $(OBJS)
 
 $(STATIC) : $(OBJS)
 	ar rcs $@ $<
+
+testprogs : $(TESTS)
 
 %_test : %_test.cpp $(SHARED)
 	$(CXX) $(CXXFLAGS) $(LIBS) -lredis_ipc -lpthread $(LDPATH) -o $@ $<
