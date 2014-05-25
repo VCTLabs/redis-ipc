@@ -13,9 +13,11 @@ PWD     = $(shell pwd)
 RPATH_ARG ?= $(SYSROOT)/usr/lib
 
 INCFLAG = -I./include -I$(SYSROOT)/usr/include
-DEBUGFLAG = -g -O2 -std=gnu99
-CFLAGS  = $(DEBUGFLAG) $(INCFLAG)
-LDPATH = -L$(SYSROOT)/usr/lib -L$(SYSROOT)/lib -Wl,-rpath-link,$(RPATH_ARG)
+DEBUGFLAG = -g -O2 
+# -std=c99 allows json_object_object_foreach() macro from libjson to compile
+CFLAGS  = $(DEBUGFLAG) $(INCFLAG) -std=gnu99
+CXXFLAGS = $(DEBUGFLAG) $(INCFLAG)
+LDPATH = -L. -L$(SYSROOT)/usr/lib -L$(SYSROOT)/lib -Wl,-rpath-link,$(RPATH_ARG)
 
 LIBNAME=libredis_ipc
 API_VERSION = 1
@@ -33,8 +35,6 @@ LIBS = -lhiredis -ljson -Wl,--hash-style=gnu
 
 all: $(SHARED) $(STATIC)
 
-# -std=c99 allows json_object_object_foreach() macro from libjson to compile
-
 $(OBJS) : %.o : %.c %.h
 	$(CC) -c $(CFLAGS) -fPIC $<
 
@@ -45,6 +45,9 @@ $(SHARED) : $(OBJS)
 
 $(STATIC) : $(OBJS)
 	ar rcs $@ $<
+
+%_test : %_test.cpp $(SHARED)
+	$(CXX) $(CXXFLAGS) $(LIBS) -lredis_ipc -lpthread $(LDPATH) -o $@ $<
 
 %_test : %_test.c $(SHARED)
 	$(CC) $(CFLAGS) $(LIBS) -lredis_ipc -lpthread $(LDPATH) -o $@ $<
