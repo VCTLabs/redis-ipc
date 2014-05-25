@@ -1,0 +1,5 @@
+# sample output from multithread_test
+PUBLISH channel.debug.printer { "message": "printer starting to smoke", "level": 1, "channel": "channel.debug.printer", "timestamp": "1401058399.161286", "component": "printer", "thread": "monitor", "tid": 20152 }
+PUBLISH channel.debug.button { "message": "NO don't press that button...", "level": 1, "channel": "channel.debug.button", "timestamp": "1401058399.161285", "component": "button", "thread": "watcher", "tid": 20153 }
+PUBLISH channel.debug.printer { "message": "printer on fire!!", "level": 0, "channel": "channel.debug.printer", "timestamp": "1401058399.161965", "component": "printer", "thread": "monitor", "tid": 20152 }
+PUBLISH channel.debug.button { "message": "I told you not to press it!!", "level": 0, "channel": "channel.debug.button", "timestamp": "1401058399.162194", "component": "button", "thread": "watcher", "tid": 20153 }

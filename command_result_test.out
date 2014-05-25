@@ -1,0 +1,8 @@
+# sample output from command_result_test
+BLPOP queues.commands.streaming.video 0
+RPUSH queues.commands.streaming.video { "method": "control_recording", "params": "start", "results_queue": "queues.results.web.requestor", "command_id": "web-requestor-20157-0", "timestamp": "1401058409.891079", "component": "web", "thread": "requestor", "tid": 20157 }
+BLPOP queues.results.web.requestor 10
+[ENTRY:queues.commands.streaming.video] { "method": "control_recording", "params": "start", "results_queue": "queues.results.web.requestor", "command_id": "web-requestor-20157-0", "timestamp": "1401058409.891079", "component": "web", "thread": "requestor", "tid": 20157 }
+RPUSH queues.results.web.requestor { "code": -2, "message": "Next time, say 'please'", "command_id": "web-requestor-20157-0", "timestamp": "1401058409.892059", "component": "streaming", "thread": "recorder", "tid": 20158 }
+[ENTRY:queues.results.web.requestor] { "code": -2, "message": "Next time, say 'please'", "command_id": "web-requestor-20157-0", "timestamp": "1401058409.892059", "component": "streaming", "thread": "recorder", "tid": 20158 }
+Received result: { "code": -2, "message": "Next time, say 'please'", "command_id": "web-requestor-20157-0", "timestamp": "1401058409.892059", "component": "streaming", "thread": "recorder", "tid": 20158 }

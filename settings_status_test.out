@@ -1,0 +1,14 @@
+# sample output from settings_status_test
+HMSET status.session open until closed procedure complicated 
+HGETALL settings.session
+[HASH]
+HGET settings.session location
+[HASH_FIELD] <non-string result type 4>
+HGETALL status.session
+[HASH] open='until closed' procedure='complicated'
+HMSET settings.printer num_copies until ink runs out paper_type wrinkled 
+HSET settings.printer contrast none
+HGETALL settings.printer
+[HASH] num_copies='until ink runs out' paper_type='wrinkled' contrast='none'
+HGET settings.printer paper_type
+[HASH_FIELD] paper_type='wrinkled'

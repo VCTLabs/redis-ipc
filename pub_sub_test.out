@@ -1,0 +1,9 @@
+# sample output from pub_sub_test
+PSUBSCRIBE channel.events.printer*
+PSUBSCRIBE channel.debug.printer
+PUBLISH channel.debug.printer { "message": "printer starting to smoke", "level": 1, "channel": "channel.debug.printer", "timestamp": "1401058419.059077", "component": "printer", "thread": "monitor", "tid": 20162 }
+[MESSAGE] { "message": "printer starting to smoke", "level": 1, "channel": "channel.debug.printer", "timestamp": "1401058419.059077", "component": "printer", "thread": "monitor", "tid": 20162 }
+PUBLISH channel.events.printer.state { "severity": "warning", "message": "printer is down for the count", "channel": "channel.events.printer.state", "timestamp": "1401058419.060264", "component": "printer", "thread": "monitor", "tid": 20162 }[MESSAGE] { "message": "printer on fire!!", "level": 0, "channel": "channel.debug.printer", "timestamp": "1401058419.059784", "component": "printer", "thread": "monitor", "tid": 20162 }
+PUNSUBSCRIBE channel.events.*
+PUBLISH channel.events.printer.media { "severity": "alert", "message": "there went our expensive paper", "pages_remaining": 0, "channel": "channel.events.printer.media", "timestamp": "1401058419.060719", "component": "printer", "thread": "monitor", "tid": 20162 }PUNSUBSCRIBE channel.debug.*
+PUBLISH channel.events.printer { "severity": "info", "message": "save trees, go digital", "channel": "channel.events.printer", "timestamp": "1401058419.061587", "component": "printer", "thread": "monitor", "tid": 20162 }
