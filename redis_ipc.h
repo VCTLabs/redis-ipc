@@ -39,8 +39,7 @@ enum { RIPC_DBG_ERROR,
 #define RIPC_MAX_IPC_PATH_LEN 128
 
 // redis server address
-#define RIPC_SERVER_IP "127.0.0.1"
-#define RIPC_SERVER_PORT 6379
+#define RIPC_SERVER_PATH "/tmp/redis-ipc/socket"
 
 //*************
 // functions

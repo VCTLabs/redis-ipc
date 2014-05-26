@@ -155,7 +155,7 @@ int redis_ipc_init(const char *this_component, const char *this_thread)
     new_info->tid = gettid();
 
     // each thread gets its own redis connection
-    new_info->redis_state = redisConnect(RIPC_SERVER_IP, RIPC_SERVER_PORT);
+    new_info->redis_state = redisConnectUnix(RIPC_SERVER_PATH);
     if (new_info->redis_state == NULL || new_info->redis_state->err)
         goto redis_ipc_init_failed;
 
@@ -227,7 +227,7 @@ redisReply * validate_redis_reply(redisReply *reply)
                     thread_info->redis_state->errstr);
         }
         redisFree(thread_info->redis_state);
-        thread_info->redis_state = redisConnect(RIPC_SERVER_IP, RIPC_SERVER_PORT);
+        thread_info->redis_state = redisConnectUnix(RIPC_SERVER_PATH);
     }
     // error in command
     else if (reply->type == REDIS_REPLY_ERROR)
@@ -1225,7 +1225,7 @@ json_object * redis_ipc_get_message_blocking(void)
     {
         // must reconnect to redis server after an error 
         redisFree(thread_info->redis_state);
-        thread_info->redis_state = redisConnect(RIPC_SERVER_IP, RIPC_SERVER_PORT);
+        thread_info->redis_state = redisConnectUnix(RIPC_SERVER_PATH);
 
         goto redis_get_channel_message_finish;
     }
