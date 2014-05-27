@@ -48,7 +48,7 @@ relevant for IPC among local applications:
 
 and finally one more which is specifically relevant for embedded software:
 
-* portable -- cross-compiles nicely, `available as openembedded recipe`_
+* portable -- cross-compiles nicely, available as `openembedded recipe`_
 
 Important caveat regarding redis security
 =========================================
@@ -122,12 +122,16 @@ build and install it on your Linux development box.
       make testprogs CROSS_COMPILE=<toolchain prefix> SYSROOT=<cross-compile staging area>
 
     * **CROSS_COMPILE** is everything up to (and including) the last '-' in the tool names,
-      e.g. if the C compiler is arm-none-linux-gnueabi-gcc then **CROSS_COMPILE=arm-none-linux-gnueabi-**
+      e.g. if the C compiler is arm-none-linux-gnueabi-gcc then ::
+      
+        **CROSS_COMPILE=arm-none-linux-gnueabi-**
 
     * **SYSROOT** is the base path of your staging area that has cross-compiled versions of the
       dependency libraries, e.g. if the cross-compiled hiredis library is under 
       /home/sjl/yocto/build/tmp/sysroots/armv5te-poky-linux-gnueabi/usr/lib
-      then **SYSROOT=/home/sjl/yocto/build/tmp/sysroots/armv5te-poky-linux-gnueabi/**
+      then ::
+      
+        **SYSROOT=/home/sjl/yocto/build/tmp/sysroots/armv5te-poky-linux-gnueabi/**
 
 Running redis-ipc
 =================
@@ -202,7 +206,7 @@ command replies, settings, status, and events. The only exception is that
 an individual field within a setting or status object can be accessed as 
 a cstring. json-c library is used as the JSON implementation.
 
-**common API**
+**Common API**
 
 Every thread and process using redis-ipc must individually call the 
 init function prior to any of the other calls ::
@@ -210,7 +214,7 @@ init function prior to any of the other calls ::
   int redis_ipc_init(const char *this_component, const char *this_thread);
 
 When redis-ipc is no longer neaded, there is a corresponding function to free 
-resources 
+resources ::
 
   int redis_ipc_cleanup(pid_t tid);
 
