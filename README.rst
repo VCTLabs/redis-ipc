@@ -122,14 +122,14 @@ build and install it on your Linux development box.
       make testprogs CROSS_COMPILE=<toolchain prefix> SYSROOT=<cross-compile staging area>
 
     * **CROSS_COMPILE** is everything up to (and including) the last '-' in the tool names,
-      e.g. if the C compiler is arm-none-linux-gnueabi-gcc then ::
+      e.g. if the C compiler is arm-none-linux-gnueabi-gcc then
       
         **CROSS_COMPILE=arm-none-linux-gnueabi-**
 
     * **SYSROOT** is the base path of your staging area that has cross-compiled versions of the
       dependency libraries, e.g. if the cross-compiled hiredis library is under 
       /home/sjl/yocto/build/tmp/sysroots/armv5te-poky-linux-gnueabi/usr/lib
-      then ::
+      then
       
         **SYSROOT=/home/sjl/yocto/build/tmp/sysroots/armv5te-poky-linux-gnueabi/**
 
