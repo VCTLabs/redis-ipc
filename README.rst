@@ -93,7 +93,7 @@ build and install it on your Linux development box.
   * hiredis_
   * json-c_
 
-  On a development system with Ubuntu/Debian, this generally amounts to::
+  On a development system with Debian/Ubuntu/Mint, this generally amounts to::
 
     apt-get install libhiredis-dev libjson0-dev
 
@@ -177,16 +177,19 @@ As mentioned in the intro, redis-ipc implements the following mechanisms:
 
 Command queues are a method for any component to request an action from
 another component, and receive a result after the command has been processed.
-Each component that exports actions to other components would have its own
-command queue. 
+Each component that exports actions to other components would own one or
+more command queues. When sending a command, the queue is specified by 
+component and "subqueue" to allow components to manage multiple queues
+that are processed with different priorities.
 
 Settings are hashes representing the current configuration of each component.
 The settings for a single component can all be read atomically and written
 atomically, to avoid bugs where one component gets into an inconsistent state
 by reading settings when partially updates by another component. Note that
-settings changes across multiple are *not* attomic, so complicated designs
-where settings consistency depends on updating multiple components at the same
-time would need to implement that separately, e.g. with some form of locking.
+settings changes across multiple components are *not* atomic, so complicated
+designs where settings consistency depends on updating multiple components at
+the same time would need to implement that separately, e.g. with some form of
+locking.
 
 Status are also hashes, but represent a component's current runtime state 
 instead of representing how a component has been configured. While settings
@@ -194,17 +197,43 @@ are likely written by a single component, each component maintains its own
 status with any state info that is of interest to one or more other components.
 
 Event channels are an efficient way to broadcast events from one component to
-any others that might be interested (i.e. "subscribers). Event channels are
-grouped into normal channels and debug channels, and under those main
-categories, grouped according to component that generates the event. When a
-component sends a message it must also supply a "subchannel" as the most
-specific part of this addressing scheme, with each subchannel hopefully given a
-meaningful name to indicate what sort of messages subscribers should expect.
+any others that might be interested (i.e. "subscribers). At the toplevel, 
+event channels are grouped into normal channels and debug channels that are
+accessed by a separate set of calls. This segregation of normal events from 
+debug messages makes it obvious in the code which messages are only meant for
+debugging the component, and makes it easy to log/observe detailed debug info
+while normal subscribers can listen to normal events without having to discard
+a flood of debug events when debugging is enabled (by runtime configuration or
+special debug compile). 
 
-JSON is used as the format for most data handled by redis-ipc -- commands,
-command replies, settings, status, and events. The only exception is that 
+Most data handled by redis-ipc (commands, command replies, settings, status, 
+and events) is formatted into `JSON objects`_, meaning associative arrays
+containing key/value pairs. The only exception is that 
 an individual field within a setting or status object can be accessed as 
-a cstring. json-c library is used as the JSON implementation.
+a cstring. json-c library is used as the JSON implementation. Actually,
+debug events are another exception, being specified with a numeric priority
+level and a message with printf-style format + arguments.
+
+As typical for a C library dealing with dynamically created objects, reference
+counting is used to ensure memory is released at the proper time. redis-ipc
+returns new JSON objects with one reference that the caller is responsible for 
+freeing with json_object_put(). C++ applications can make use of the json.hh 
+wrapper supplied in redis-ipc that takes and drops references on the underlying
+json-c json_object when appropriate ::
+
+  #include "json.hh"
+
+  ...
+
+  void monitor_printer()
+  {
+    redis_ipc_subscribe_events("printer", NULL);
+    // does not take a new reference on json_object being wrapped
+    // because redis_ipc_get_message_blocking() already took one
+    json next_printer_event(redis_ipc_get_message_blocking());
+    cout << "Event priority:" << next_printer_event.get_field("priority");
+  }
+  // reference to  json_object dropped when next_printer_event goes out of scope
 
 **Common API**
 
@@ -213,21 +242,52 @@ init function prior to any of the other calls ::
 
   int redis_ipc_init(const char *this_component, const char *this_thread);
 
+Example::
+
+  // monitor process (or thread) of printer software component
+  redis_ipc_init("printer", "monitor");
+
 When redis-ipc is no longer neaded, there is a corresponding function to free 
 resources ::
 
   int redis_ipc_cleanup(pid_t tid);
 
+Examples::
+
+  // single process closing down
+  redis_ipc_cleanup(getpid());
+
+  // one thread of multi-thread process closing down
+  // see gettid() definition in redis_ipc.c if your libc lacks it
+  redis_ipc_cleanup(gettid()); 
+
 **Command queue API**
 
-Command queues currently have a blocking implementation. Processes/threads
-that execute commands block until a command arrives ::
+Command queues currently have a blocking implementation. 
+
+The JSON object for a command automatically gets 2 attributes added
+as a part of submission
+
+* command_id : unique ID for command, including component name and thread id 
+  of the submitter
+* results_queue : name of queue on which the result object should be pushed 
+  when command has been processes, also based on component name and thread id
+  (each thread submitting commands has its own queue to wait on)
+
+The JSON object for reporting back a command result to the submitter
+automatically gets the command_id added, to ensure commands and their
+results can be reliably associated.
+
+**Important note**: To avoid memory leaks, callers of command queue API must
+drop references to command objects and result objects when finished with them.
+
+Processes/threads that execute commands block until a command arrives ::
 
   json_object * redis_ipc_receive_command_blocking(const char *subqueue,
                                               unsigned int timeout);
 
-then the requesting process/thread blocks until the command has been
-completed (or timeout for waiting has expired) ::
+then when another process/thread submits a command, it will block until the
+command has been completed (or timeout for waiting has expired) ::
 
   json_object * redis_ipc_send_command_blocking(const char *dest_component, 
                                               const char *subqueue, 
@@ -239,7 +299,35 @@ results with ::
 
   int redis_ipc_send_result(const json_object *completed_command, json_object *result);
 
-**Setting API**
+Example::
+
+  // printer component has 2 queues, "print" and "cancel"
+  // because cancel commands need a separate queue that is checked even 
+  // while printing or else an in-progress job can't be cancelled
+
+  // non-printer component requests printing of file
+  json_object *command = json_object_new_object();
+  json_object_object_add(command, "pagesize",
+                         json_object_new_string("A4"));
+  json_object_object_add(command, "file",
+                         json_object_new_string("/tmp/job1231.pdf"));
+  json_object *result = redis_ipc_send_command_blocking("printer", "print", command, timeout);
+  json_object *job_id_obj = json_object_object_get(result, "job-id");
+  char *job_id_str = json_object_get_string(job_id_obj);
+  json_object_put(command);
+  json_object_put(result);
+  json_object_put(job_id_obj);
+
+  // non-printer component later decides to cancel print job
+  command = json_object_new_object();
+  json_object_object_add(command, "job-id",
+                         json_object_new_string(job_id_str));
+  json_object *result = redis_ipc_send_command_blocking("printer", "cancel", command, timeout);
+  json_object_put(command);
+  json_object_put(result);
+
+
+**Settings API**
 
 Multiple settings for a single component can be updated atomically
 as multiple key/value pairs in a JSON object ::
@@ -285,7 +373,86 @@ as strings ::
 
 **Event API**
 
-@@@TODO
+Event channels currently have a blocking implementation for event listeners. 
+
+Channels for normal events are grouped according to component that
+generates the event. When a component sends a normal message it must also
+supply a "subchannel" as the most specific part of this addressing scheme, with
+each subchannel hopefully given a meaningful name to indicate what sort of
+messages subscribers should expect. 
+
+When a component sends a debug message, it supplies a debug level, so that the
+debug channels can skip sending debug messages that are higher than the
+currently configured debug verbosity (although, at the moment verbosity happens
+to be hard-coded to the value 5, meaning everything 5 and under gets
+broadcast...)
+
+Listeners must sign up ahead of time to get the events of interest;
+there is no backlog for catching up on events posted to a channel before 
+a listener subscribed. Event channels of interest are specified by
+the component generating the events and a subchannel name, where subchannel 
+name may represent a topic that applies to multiple components.
+
+**Important note**: To avoid memory leaks, callers of event API must drop 
+references to event objects when finished with them.
+
+Listeners can subscribe to channels with normal events ::
+
+  int redis_ipc_subscribe_events(const char *component, const char *subchannel)
+
+and/or channels with debug events ::
+
+  int redis_ipc_subscribe_debug(const char *component);
+
+Examples::
+
+  // subscribe to all printer-related events
+  redis_ipc_subscribe_events("printer", NULL);
+
+  // subscribe to all warnings that should be displayed to user
+  redis_ipc_subscribe_events(NULL, "warnings");
+
+  // subscribe specifically to warnings from printer component
+  redis_ipc_subscribe_events("printer", "warnings");
+
+  // subscribe to debug messages from printer component
+  redis_ipc_subscribe_debug("printer");
+
+A component generates a normal event with one or more named attributes 
+contained in a JSON object, and broadcasts it on one of its subchannels ::
+
+  int redis_ipc_send_event(const char *subchannel, json_object *message)
+
+Example::
+
+  // printer component sends a low-on-paper event to its warning subchannel
+  json_object *event = json_object_new_object();
+  json_object_object_add(event, "severity",
+                         json_object_new_string("2"));
+  json_object_object_add(event, "type",
+                         json_object_new_string("LOW-ON-PAPER"));
+  redis_ipc_send_event("warnings", event);
+
+
+or broadcasts a debug event with a debug level and printf-formatted message 
+that then get turned into a JSON object ::
+
+  int redis_ipc_send_debug(unsigned int debug_level, const char *format, ...)
+
+Example::
+
+  // completely hypothetical example, ahem...
+  redis_ipc_send_debug(RIPC_DBG_ERROR, "redis_ipc_send_command_blocking(): invalid result");
+
+Listening components can retrieve the next normal/debug event ::
+
+  json_object * redis_ipc_get_message_blocking(void)
+
+Example::
+
+  json object *message = redis_ipc_get_message_blocking();
+  // do stuff with message
+  json_object_put(message);
 
 Testing/troubleshooting with redis-ipc
 ======================================
@@ -313,3 +480,4 @@ remember to specify the socket path when running redis-cli ::
 .. _hiredis: https://github.com/redis/hiredis
 .. _json-c: https://github.com/json-c/json-c/wiki
 .. _EPEL: https://fedoraproject.org/wiki/EPEL
+.. _JSON objects: https://en.wikipedia.org/wiki/Json
