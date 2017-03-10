@@ -7,7 +7,7 @@
 #include <sys/types.h>
 #include <sys/syscall.h>
 #include <sys/time.h>
-#include <json/json.h>
+#include <json-c/json.h>
 #include <hiredis/hiredis.h>
 #include "redis_ipc.h"
 

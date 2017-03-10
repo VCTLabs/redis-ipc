@@ -1,7 +1,7 @@
 #ifndef __JSON_HH__
 #define __JSON_HH__
 
-#include <json/json.h>
+#include <json-c/json.h>
 #include <string>
 #include <stdexcept>
 

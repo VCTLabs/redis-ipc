@@ -3,7 +3,7 @@
 #define __REDIS_IPC_H__
 
 #include <sys/types.h>
-#include <json/json.h>
+#include <json-c/json.h>
 
 #ifdef __cplusplus
 extern "C" {

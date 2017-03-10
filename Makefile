@@ -31,7 +31,7 @@ SONAME = $(LIBNAME).$(API_VERSION).so
 LDNAME = $(LIBNAME).so
 STATIC = $(LIBNAME).$(FULL_VERSION).a
 OBJS = redis_ipc.o
-LIBS = -lhiredis -ljson -Wl,--hash-style=gnu
+LIBS = -lhiredis -ljson-c -Wl,--hash-style=gnu
 
 TESTS = command_result_test settings_status_test pub_sub_test multithread_test json_test 
 
