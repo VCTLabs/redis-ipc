@@ -1,0 +1,6 @@
+redis-ipc NEWS -- history of user-visible changes.
+
+* Changes in redis-ipc
+
+Initial version, static Makefile, test programs
+
