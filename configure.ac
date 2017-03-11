@@ -22,17 +22,19 @@ AM_PROG_AR
 LT_PREREQ([2.2.6])
 LT_CONFIG_LTDL_DIR([libltdl])
 LT_INIT([dlopen])
-LTDL_INIT([nonrecursive])
+LTDL_INIT([subproject])
 
-AM_MAINTAINER_MODE
+AM_MAINTAINER_MODE([enable])
 
 AC_PROG_CC
+AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
 # Checks for libraries.
 
 # Checks for header files.
+AC_HEADER_STDC
 AC_CHECK_HEADERS([memory.h stdint.h stdlib.h string.h sys/types.h sys/syscall.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -101,8 +103,10 @@ fi
 AC_DEFINE_UNQUOTED(ENABLE_DEBUG, `enable_value $enable_debug`, [Enable debugging])
 AC_DEFINE_UNQUOTED(ENABLE_GPROF, `enable_value $enable_gprof`, [Enable gcc profiling])
 
-AC_CONFIG_FILES([Makefile
-                 src/Makefile])
-##                 test/Makfile])
+#AC_CONFIG_FILES([Makefile src/Makefile test/Makfile])
+AC_CONFIG_FILES([Makefile \
+                 src/Makefile \
+                 test/Makefile])
+
 AC_OUTPUT
 

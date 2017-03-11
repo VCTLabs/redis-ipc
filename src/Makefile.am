@@ -13,7 +13,7 @@ include_HEADERS = redis_ipc.h
 libredis_ipc_la_CPPFLAGS = -I$(includedir)
 libredis_ipc_la_CFLAGS = -Wall -std=gnu99 $(HIREDIS_CFLAGS) $(JSONC_CFLAGS)
 libredis_ipc_la_LIBADD = $(HIREDIS_LIBS) $(JSONC_LIBS)
-#libredis_ipc_la_LDFLAGS = $(HIREDIS_LDFLAGS) $(JSONC_LDFLAGS)
+#libredis_ipc_la_LDFLAGS = $(HIREDIS_CFLAGS) $(JSONC_CFLAGS)
 #libredis_ipc_la_LIBTOOLFLAGS = --tag=disable-static
 
 

@@ -1,25 +1,10 @@
-SUBDIRS = src
-#SUBDIRS = src inc test
+SUBDIRS = src test
 
-AM_TESTS_ENVIRONMENT    = top_srcdir="$(top_srcdir)"
+#AM_TESTS_ENVIRONMENT    = top_srcdir="$(top_srcdir)"
 
 ACLOCAL_AMFLAGS         = -I m4 --install
 
 EXTRA_DIST = autogen.sh README.rst debian inc/json.hh
-
-AM_CPPFLAGS =
-AM_LDFLAGS =
-
-BUILT_SOURCES =
-CLEANFILES =
-MOSTLYCLEANFILES =
-
-include_HEADERS =
-noinst_LTLIBRARIES =
-lib_LTLIBRARIES =
-EXTRA_LTLIBRARIES =
-
-include libltdl/ltdl.mk
 
 #TEST_CFLAGS             = -I$(top_srcdir)/test
 
@@ -43,7 +28,7 @@ export top_srcdir
 #INSTALL_EXEC_HOOKS      =
 #UNINSTALL_HOOKS         =
 #CLEAN_HOOKS             =
-AUTOMAKE_OPTIONS        = subdir-objects
+#AUTOMAKE_OPTIONS        = subdir-objects
 
 ${top_srcdir}/ChangeLog:
 	(cd $(top_srcdir); git log) >> $@
@@ -55,9 +40,4 @@ ${top_srcdir}/ChangeLog:
 all-local:
 	sed -i "/dependency_libs/ s/'.*'/''/" `find . -name '*.la' -o -name '*.lai'`
 
-##	sed -i "/dependency_libs/ s/'.*'/''/" `find . -name '*.lai'`
-
-
-# include test/Makefile.am
-#include src/Makefile.am
 
