@@ -3,11 +3,15 @@
 
 AC_PREREQ([2.68])
 AC_INIT([redis-ipc], [0.0.1], [sjl@vctlabs.com])
-AC_CONFIG_SRCDIR([src/redis-ipc.c])
+AC_CONFIG_SRCDIR([src/redis_ipc.c])
+AC_CONFIG_MACRO_DIR([m4])
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
-# Checks for programs.
+AM_MAINTAINER_MODE
+
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
@@ -31,12 +35,12 @@ AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset strdup])
 
 # Check for hiredis and json-c
-PKG_CHECK_MODULES(HIREDIS, libhiredis, ,
+PKG_CHECK_MODULES(HIREDIS, libhiredis,
   AC_CHECK_HEADER(hiredis/hiredis.h, [HIREDIS_LIBS="-lhiredis"], [hiredis=no])
   AC_CHECK_HEADER(hiredis/hiredis.h, [HIREDIS_CFLAGS="-I$includedir"
                                       HIREDIS_LIBS="-L$libdir -lhiredis"], [hiredis=no])
   AC_SUBST([HIREDIS_CFLAGS])
-  AC_SUBST([HIREDIS_LIBS])
+  AC_SUBST([HIREDIS_LIBS]) ,
 [
   AC_MSG_ERROR(libHIREDIS not found)
 ])
@@ -44,7 +48,7 @@ PKG_CHECK_MODULES(HIREDIS, libhiredis, ,
 
 
 AC_CONFIG_FILES([Makefile
-                 src/Makefile
-                 test/Makfile])
+                 src/Makefile])
+##                 test/Makfile])
 AC_OUTPUT
 
