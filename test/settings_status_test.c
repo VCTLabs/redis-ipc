@@ -52,5 +52,5 @@ int main(int argc, char **argv)
 
   redis_ipc_cleanup(getpid());
 
-  return 42;
+  return 0;
 }

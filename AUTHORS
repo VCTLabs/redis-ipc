@@ -1,0 +1,9 @@
+Authors of redis-ipc
+
+Stephanie Lockwood-Childs <sjl@vctlabs.com>
+
+ - pretty much everything
+
+Stephen Arnold <sarnold@vctlabs.com>
+
+ - occasional build fixes and autotools port

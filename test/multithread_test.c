@@ -42,5 +42,5 @@ int main(int argc, char **argv)
   pthread_join(printer_thread_info, NULL);
   pthread_join(button_thread_info, NULL);
   
-  return 42;
+  return 0;
 }

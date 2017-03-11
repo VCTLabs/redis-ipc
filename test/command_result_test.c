@@ -61,10 +61,11 @@ int main(int argc, char **argv)
   else
   {
     printf("Timed out waiting for result\n");
+    return 42;
   }
 
   redis_ipc_cleanup(getpid());
   wait(&child_status);
 
-  return 42;
+  return 0;
 }
