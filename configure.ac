@@ -103,7 +103,6 @@ fi
 AC_DEFINE_UNQUOTED(ENABLE_DEBUG, `enable_value $enable_debug`, [Enable debugging])
 AC_DEFINE_UNQUOTED(ENABLE_GPROF, `enable_value $enable_gprof`, [Enable gcc profiling])
 
-#AC_CONFIG_FILES([Makefile src/Makefile test/Makfile])
 AC_CONFIG_FILES([Makefile \
                  src/Makefile \
                  test/Makefile])
