@@ -5,9 +5,22 @@ AM_TESTS_ENVIRONMENT    = top_srcdir="$(top_srcdir)"
 
 ACLOCAL_AMFLAGS         = -I m4 --install
 
-EXTRA_DIST = autogen.sh README.rst debian
+EXTRA_DIST = autogen.sh README.rst debian inc/json.hh
 
-AM_CPPFLAGS             = -I$(top_srcdir)/src
+AM_CPPFLAGS =
+AM_LDFLAGS =
+
+BUILT_SOURCES =
+CLEANFILES =
+MOSTLYCLEANFILES =
+
+include_HEADERS =
+noinst_LTLIBRARIES =
+lib_LTLIBRARIES =
+EXTRA_LTLIBRARIES =
+
+include libltdl/ltdl.mk
+
 #TEST_CFLAGS             = -I$(top_srcdir)/test
 
 #TEST_LDADD              = -L$(top_srcdir)/src -lredis_ipc
@@ -33,15 +46,17 @@ export top_srcdir
 AUTOMAKE_OPTIONS        = subdir-objects
 
 ${top_srcdir}/ChangeLog:
-        (cd $(top_srcdir); git log) >> $@
+	(cd $(top_srcdir); git log) >> $@
 
 #install-exec-hook: ${INSTALL_EXEC_HOOKS}
 #uninstall-hook: ${UNINSTALL_HOOKS}
 
 # Clear dependency_libs for multiarch
 all-local:
-	sed -i "/dependency_libs/ s/'.*'/''/" `find . -name '*.la'`
-	sed -i "/dependency_libs/ s/'.*'/''/" `find . -name '*.lai'`
+	sed -i "/dependency_libs/ s/'.*'/''/" `find . -name '*.la' -o -name '*.lai'`
+
+##	sed -i "/dependency_libs/ s/'.*'/''/" `find . -name '*.lai'`
+
 
 # include test/Makefile.am
 #include src/Makefile.am
