@@ -3,5 +3,5 @@ redis-ipc (0.0.1-1) trusty; urgency=medium
   * Initial release.
   * https://github.com/VCTLabs/redis-ipc
 
- -- Steve Arnold (nerdboy) <nerdboy@gentoo.org> Fri Mar 10 23:03:44 PST 2017
+ -- Steve Arnold (nerdboy) <nerdboy@gentoo.org>  Fri, 10 Mar 2017 23:03:44 -0800
 
