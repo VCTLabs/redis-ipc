@@ -94,7 +94,10 @@ int redis_ipc_cleanup(pid_t tid);
 // is received, it will be logged as an error to submitter component's 
 // debug channel then freed, and the wait on results queue will restart
 // (expiration time will be reset to original).
-//
+
+int get_debug_verbosity();
+int stderr_debug_is_enabled();
+
 // After receiving and executing a command, the receiving component
 // should submit a result. The original command is passed in as a parameter
 // to provide the command ID and path to results queue. The command ID
