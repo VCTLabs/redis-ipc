@@ -57,7 +57,7 @@ class redis_client(object):
         self.thread=thread
 
         # process number of this component (a python program)
-        self.process_number=str(os.getpid())
+        self.process_number=os.getpid()
 
         # construct name of queue where replies to commands should arrive
         self.results_queue = "queues.results.%s.%s" % (component, thread)
