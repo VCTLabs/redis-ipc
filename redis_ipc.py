@@ -130,3 +130,53 @@ class redis_client(object):
 
         pass
         
+class redis_server(object):
+    
+    def __init__(self,component):
+        """
+        component : friendly name for calling program
+                    (e.g. how it is labeled on system architecture diagrams
+                     as opposed to exact executable name)
+        """
+
+        self.component=component
+
+        # process number of this component (a python program)
+        self.process_number=os.getpid()
+
+        # construct name of queue where commands should arrive
+        self.command_queue = "queues.commands.%s." % component
+
+        #@@@ initialize redis connection
+
+    def redis_ipc_receive_command(self):
+        """
+        blocks for command to arrive in own command queue, 
+        return it as Python dictionary
+        """
+        #@@@@ use self.command_queue as name of queue to wait on
+
+        pass
+        
+    def redis_ipc_send_reply(self,cmd,result):
+        """
+        arguments are mandatory
+        cmd    - command that was processed so result is now available
+        result - the generated result
+                     
+        this routine does not block
+        it just sends the reply to the back of the queue
+        """
+
+        # command contains name of reply queue
+        dest_queue = cmd["results_queue"]
+
+        # tie reply to its command with matching command_id
+        result["command_id"] = cmd["command_id"]
+
+        # turn command into a JSON dictionary before sending it
+        msg=pdic2jdic(result)
+
+        # send it via Redis
+        #@@@@
+
