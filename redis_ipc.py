@@ -11,10 +11,6 @@ import pdb   ########## debug  ( no kidding)
 """
 
 # global functions
-def is_json_msg(m):   # do we need this???
-    global component
-    pass
-    
 def pdic2jdic(pdic):
     """
     pdic   -    a Python dictionary
@@ -48,13 +44,28 @@ MsgTimeout  =  RedisIpcExc("redis message request timed out")
 # the main feature here is a class which will provide the wanted access
 class redis_client(object):
     
-    def __init__(self,component):
-        # component : queue name for listening
+    def __init__(self,component,thread="main"):
+        """
+        component : friendly name for calling program
+                    (e.g. how it is labeled on system architecture diagrams
+                     as opposed to exact executable name)
+        thread: friendly name for specific thread of execution,
+                allowing IPC from multiple threads in a multi-threaded program
+        """
+
         self.component=component
+        self.thread=thread
+
         # process number of this component (a python program)
         self.process_number=str(os.getpid())
 
-    def generate_msg_id(self):
+        # construct name of queue where replies to commands should arrive
+        self.results_queue = "queues.results.%s.%s" % (component, thread)
+
+        #@@@ initialize redis connection
+
+
+    def __generate_msg_id(self):
         # unique id for message
         # component name, process number, timestamp
         ts=str(time.time())   # floating timestamp
@@ -63,46 +74,49 @@ class redis_client(object):
         
     def redis_ipc_send_and_receive(self,dest,cmd,tmout):
         """
-        dest     -   the name of a component queue (string)
+        dest     -   name of the component to handle this command (string)
         cmd      -   the command to send (a Python dictionary)
         tmout    -   timeout for receiving a response, floating seconds
-                     this method calls the method 
-                     redis_ipc_receive_command_blocking
-                     with this timeout
-                     
-        calls the (unblocking) redis_ipc_send_command
-        for the actual send
         """
-        # export the Python dictionary to a JSON dictionary
-        msg=pdic2jdic(cmd)
+        # add standard fields to the command dictionary
+        cmd["timestamp"] = "2020-11-23-11:23" #@@@@ generate real timestamp
+        cmd["component"] = self.component
+        cmd["thread"] = self.thread
+        cmd["tid"] = self.process_number
+        cmd["results_queue"] = self.results_queue
+        cmd["command_id"] = self.__generate_msg_id()
+
+        # calculate name of command queue
+        dest_queue = "queues.commands.%s" % dest
+
         # send off the JSON message
-        self.redis_ipc_send(dest, msg)
-        # we expect a response
-        # call for it with a blocking request, i.e, wait for the answer
+        self.__redis_ipc_send_command(dest_queue,cmd)
+
+        # wait on results queue for the answer
         # an exception is raised by the request function if it times out
-        response=self.redis_ipc_receive_command_blocking(dest,tmout)
+        response=self.__redis_ipc_receive_reply(cmd,tmout)
         return response
         
-    def redis_ipc_send(self,dest, cmd):
+    def __redis_ipc_send_command(self,dest_queue, cmd):
         """
         arguments are mandatory
-        dest     -   queue name for recipient queue
-        cmd      -   a command known to the receiving component
-                     it is a JSON dictionary
+        dest_queue -   command queue serviced by destination component 
+        cmd        -   a command known to the receiving component
                      
         this routine does not block
         it just sends the command to the back of the queue
         """
-        # the command is a Python dictionary
-        # turn it into a JSON dictionary before sending it
-        # send it via Redis
-        pass
+        # turn command into a JSON dictionary before sending it
+        msg=pdic2jdic(cmd)
 
-    def redis_ipc_receive_command_blocking(self,qq,tmout):
+        # send it via Redis
+        #@@@@
+
+    def __redis_ipc_receive_reply(self,cmd,tmout):
         """
         arguments are mandatory
-        qq the components receive queue
-        tmout   -   timeout for receiving a response, floating seconds
+        cmd           - command for which we await a reply
+        tmout         - timeout for receiving a response, floating seconds
         
         the response is a JSON dictionary
         turn it into a Python dictionary
@@ -110,8 +124,9 @@ class redis_client(object):
         
         This function will raise an exception if it times out
         """
+        #@@@@ use self.results_queue as name of queue to wait on
+
+        #@@@@ throw out received messages until reply["command_id"] == cmd["command_id"]
+
         pass
         
-   
-        
-    
