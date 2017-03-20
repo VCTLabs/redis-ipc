@@ -21,7 +21,7 @@ def pdic2jdic(pdic):
         raise NotDict
     try:
         jd=json.dumps(pdic)
-    except:
+    except (TypeError,ValueError):
         raise BadMessage
     return jd
     
@@ -33,7 +33,7 @@ def jdic2pdic(jdic):
     """
     try:
         pd=json.loads(jdic)
-    except,(TypeError,ValueError):
+    except (TypeError,ValueError):
         raise BadMessage
     if type(pd) != type({}):
         raise NotDict
