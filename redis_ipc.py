@@ -65,7 +65,6 @@ MsgTimeout  =  RedisIpcExc("redis message request timed out")
 
 # the main feature here is a class which will provide the wanted access
 class redis_client(object):
-    
     def __init__(self,component,thread="main"):
         """
         component : friendly name for calling program
@@ -74,7 +73,7 @@ class redis_client(object):
         thread: friendly name for specific thread of execution,
                 allowing IPC from multiple threads in a multi-threaded program
         """
-
+        global redis_connect
         self.component=component
         self.thread=thread
 
@@ -85,7 +84,7 @@ class redis_client(object):
         self.results_queue = "queues.results.%s.%s" % (component, thread)
 
         # initialize redis connection
-        self.redis_conn=redis_ipc.redis_connect()
+        self.redis_conn=redis_connect()
 
     def __generate_msg_id(self):
         # unique id for message
@@ -177,7 +176,8 @@ class redis_server(object):
                     (e.g. how it is labeled on system architecture diagrams
                      as opposed to exact executable name)
         """
-
+        pdb.set_trace()
+        global redis_connect
         self.component=component
 
         # process number of this component (a python program)
@@ -187,7 +187,7 @@ class redis_server(object):
         self.command_queue = "queues.commands.%s." % component
 
         # initialize redis connection
-        self.redis_conn=redis_ipc.redis_connect()
+        self.redis_conn=redis_connect()
 
     def redis_ipc_receive_command(self):
         """
