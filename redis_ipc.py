@@ -39,21 +39,17 @@ def jdic2pdic(jdic):
         raise NotDict
     return pd
 
-def redis_connect():
+def redis_connect(unix_socket_path="/tmp/redis-ipc/socket"):
     """
     attempt to open a connection to the Redis server
     raise an exception if this does not work
     return the connection object if it does work
     """
-    conn=redis.Connection()
     try:
-        conn.connect()
+        conn=redis.StrictRedis(unix_socket_path=unix_socket_path)
     except redis.ConnectionError:
-         del conn
-         raise NoRedis
-    del conn
-    sr=redis.StrictRedis()
-    return sr
+        raise NoRedis
+    return conn
     
 # exceptions
 class RedisIpcExc(Exception):
@@ -90,7 +86,7 @@ class redis_client(object):
         # unique id for message
         # component name, process number, timestamp
         ts=str(time.time())   # floating timestamp
-        the_id=self.component + ':' + self.process_number + ':' + ts
+        the_id=self.component + ':' + str(self.process_number) + ':' + ts
         return the_id,ts
         
     def redis_ipc_send_and_receive(self, dest, cmd, tmout):
@@ -132,7 +128,7 @@ class redis_client(object):
         msg=pdic2jdic(cmd)
 
         # send it via Redis
-        self.redis_conn(dest_queue,msg)  # no waiting
+        self.redis_conn.rpush(dest_queue,msg)  # no waiting
 
     def __redis_ipc_receive_reply(self, cmd, tmout):
         """
@@ -155,17 +151,15 @@ class redis_client(object):
         
         # use self.results_queue as name of queue to wait on
         # throw out received messages until reply["command_id"] == cmd["command_id"]
-        got_it=False
-        while not got_it:
-            jrep=None
-            jrep=self.redis_conn.blpop()               
-            if jrep==None:
+        while True:
+            redis_reply=self.redis_conn.blpop(self.results_queue, tmout)
+            if redis_reply==None:
                 raise MsgTimeout
-            prep=redis_ipc.jdic2pdic(jrep)
-            if prep["command_id"] != cmd["command_id"]:
+            decoded_reply=jdic2pdic(redis_reply[1])
+            if decoded_reply["command_id"] != cmd["command_id"]:
                 continue  # skip this message, not our response
             # take it
-            return prep  # good enough
+            return decoded_reply  # good enough
             
             
 class redis_server(object):
@@ -176,7 +170,6 @@ class redis_server(object):
                     (e.g. how it is labeled on system architecture diagrams
                      as opposed to exact executable name)
         """
-        pdb.set_trace()
         global redis_connect
         self.component=component
 
@@ -184,7 +177,7 @@ class redis_server(object):
         self.process_number=os.getpid()
 
         # construct name of queue where commands should arrive
-        self.command_queue = "queues.commands.%s." % component
+        self.command_queue = "queues.commands.%s" % component
 
         # initialize redis connection
         self.redis_conn=redis_connect()
@@ -195,9 +188,9 @@ class redis_server(object):
         return it as Python dictionary
         """
         # get serialized command message
-        jcmd=self.redis_conn.blpop(self.command_queue)
-        pcmd=redic_ipc.jdic2pdic(jcmd)
-        return pcmd
+        redis_reply=self.redis_conn.blpop(self.command_queue)
+        decoded_reply=jdic2pdic(redis_reply[1])
+        return decoded_reply
         
     def redis_ipc_send_reply(self, cmd, result):
         """
