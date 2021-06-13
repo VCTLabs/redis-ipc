@@ -1,0 +1,33 @@
+name: smoke
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-18.04, ubuntu-20.04]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install deps
+      run: |
+        sudo apt-get install -y libhiredis-dev libjson-c-dev autopoint autoconf automake
+
+    - name: Configure
+      run: ./autogen.sh
+
+    - name: Build
+      run: make

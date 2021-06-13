@@ -3,13 +3,13 @@ name: ci
 on:
   workflow_dispatch:
   # pull_request:
-  push:
-    branches:
-      - master
-    paths-ignore:
-      - '**.md'
-      - '**.rst'
-      - '**.sh'
+  #push:
+    #branches:
+      #- master
+    #paths-ignore:
+      #- '**.md'
+      #- '**.rst'
+      #- '**.sh'
 
 jobs:
   build:
@@ -102,7 +102,7 @@ jobs:
             export "CC=clang-${{ matrix.version }}" >> $GITHUB_ENV
             export "CCC=clang++-${{ matrix.version }}" >> $GITHUB_ENV
           fi
-          brew install json-c hiredis
+          brew install json-c hiredis libtool
           ./autogen.sh
 
       - name: Build and test MacOS clang
