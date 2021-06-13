@@ -27,7 +27,7 @@ static __thread struct redis_ipc_per_thread *redis_ipc_info = NULL;
 
 // gettid() is missing a libc wrapper for some reason
 // (manpage even mentions it)
-static pid_t gettid()
+extern pid_t gettid()
 {
   return syscall(SYS_gettid);
 }
@@ -381,7 +381,7 @@ static json_object * redis_pop(const char *queue_path, unsigned int timeout)
 
     // parse popped entry back into json object
     entry = json_tokener_parse(json_text);
-    if (is_error(entry)) entry = NULL;
+    if (!entry) entry = NULL;
 
 redis_pop_finish:
     if (reply != NULL)
@@ -555,7 +555,7 @@ redis_ipc_send_result_finish:
     return ret;
 }
 
-int get_field_count(json_object *obj)
+int get_field_count(const json_object *obj)
 {
     int num_fields = 0;
 
@@ -567,7 +567,7 @@ int get_field_count(json_object *obj)
     return num_fields;
 }
 
-int redis_write_hash(const char *hash_path, json_object *obj)
+int redis_write_hash(const char *hash_path, const json_object *obj)
 {
     int argc = 0, num_fields = 0;
     const char **argv = NULL;
@@ -1252,7 +1252,7 @@ json_object * redis_ipc_get_message_blocking(void)
 
     // parse message back into json object
     message = json_tokener_parse(message_str);
-    if (is_error(message)) message = NULL;
+    if (!message) message = NULL;
 
 redis_get_channel_message_finish:
     if (reply != NULL)
