@@ -109,8 +109,10 @@ jobs:
         if: runner.os == 'MacOS' &&  matrix.compiler == 'xcode' 
         run: |
           make
+          make check
 
       - name: Build and test MacOS gcc
         if: runner.os == 'MacOS' &&  matrix.compiler == 'gcc'
         run: |
           make
+          make check
