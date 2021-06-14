@@ -397,7 +397,7 @@ json_object * redis_ipc_send_command_blocking(const char *dest_component,
     char result_queue_path[RIPC_MAX_IPC_PATH_LEN];
     char id_buffer[RIPC_MAX_IPC_PATH_LEN];
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
-    json_object *result = NULL, *result_id_obj = NULL;
+    struct json_object *result = NULL, *result_id_obj = NULL;
     const char *result_id_str = NULL;
     int ret = RIPC_FAIL, received_result = 0;
 
@@ -553,7 +553,7 @@ redis_ipc_send_result_finish:
     return ret;
 }
 
-int get_field_count(const json_object *obj)
+int get_field_count(struct json_object *obj)
 {
     int num_fields = 0;
 
@@ -565,7 +565,7 @@ int get_field_count(const json_object *obj)
     return num_fields;
 }
 
-int redis_write_hash(const char *hash_path, const json_object *obj)
+int redis_write_hash(const char *hash_path, struct json_object *obj)
 {
     int argc = 0, num_fields = 0;
     const char **argv = NULL;
@@ -607,7 +607,7 @@ static int component_can_write_settings(const char *component)
     return (strcmp(component, "db") == 0);
 }
 
-int redis_ipc_write_setting(const char *owner_component, const json_object *fields)
+int redis_ipc_write_setting(const char *owner_component, struct json_object *fields)
 {
     char setting_hash_path[RIPC_MAX_IPC_PATH_LEN];
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
@@ -635,7 +635,7 @@ redis_ipc_write_setting_finish:
     return ret;
 }
 
-int redis_ipc_write_status(const json_object *fields)
+int redis_ipc_write_status(struct json_object *fields)
 {
     char status_hash_path[RIPC_MAX_IPC_PATH_LEN];
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();

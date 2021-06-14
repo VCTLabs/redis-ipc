@@ -131,7 +131,7 @@ int redis_ipc_send_result(struct json_object *completed_command, json_object *re
 // are being accessed, consider accessing the full thing rather than multiple calls to 
 // individual fields -- it may be more efficient.
 
-int redis_ipc_write_setting(const char *owner_component, const json_object *fields);
+int redis_ipc_write_setting(const char *owner_component, struct json_object *fields);
 json_object * redis_ipc_read_setting(const char *owner_component);
 int redis_ipc_write_setting_field(const char *owner_component, const char *field_name, 
                                   const char *field_value);
@@ -154,7 +154,7 @@ char * redis_ipc_read_setting_field(const char *owner_component, const char *fie
 // are being accessed, consider accessing the full thing rather than multiple calls to 
 // individual fields -- it may be more efficient.
 
-int redis_ipc_write_status(const json_object *fields);
+int redis_ipc_write_status(struct json_object *fields);
 json_object * redis_ipc_read_status(const char *owner_component);
 int redis_ipc_write_status_field(const char *field_name, const char *field_value);
 char * redis_ipc_read_status_field(const char *owner_component, const char *field_name);
