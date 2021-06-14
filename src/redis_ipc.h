@@ -112,7 +112,7 @@ json_object * redis_ipc_send_command_blocking(const char *dest_component,
                                               unsigned int timeout);
 json_object * redis_ipc_receive_command_blocking(const char *subqueue,
                                               unsigned int timeout);
-int redis_ipc_send_result(const json_object *completed_command, json_object *result);
+int redis_ipc_send_result(struct json_object *completed_command, json_object *result);
                         
 
 // A component can only write a setting if it has been authorized by redis_ipc.conf, 

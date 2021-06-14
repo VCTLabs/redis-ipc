@@ -280,7 +280,6 @@ redisReply * redis_command_from_list(int argc, const char **argv)
 {
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     redisReply *reply = NULL;
-    va_list argp;
     int i = 0;
     
     if (stderr_debug_is_enabled())
@@ -355,7 +354,6 @@ static json_object * redis_pop(const char *queue_path, unsigned int timeout)
     const char *json_text = NULL;
     json_object *entry = NULL;
     redisReply *reply = NULL;
-    int ret = RIPC_FAIL;
 
     // don't forget to free reply later
     reply = redis_command("BLPOP %s %d", queue_path, timeout);
@@ -516,7 +514,7 @@ redis_ipc_receive_command_blocking_finish:
     return command;
 }
 
-int redis_ipc_send_result(const json_object *completed_command, json_object *result)
+int redis_ipc_send_result(struct json_object *completed_command, json_object *result)
 {
     json_object *id_obj = NULL, *result_queue_obj = NULL;
     const char *id_str = NULL, *result_queue_path = NULL;
@@ -828,7 +826,6 @@ char * redis_read_hash_field(const char *hash_path, const char *field_name)
 {
     redisReply *reply = NULL;
     char *field_value = NULL;
-    int ret = RIPC_FAIL;
 
     // don't forget to free reply later
     reply = redis_command("HGET %s %s", hash_path, field_name);
@@ -1110,7 +1107,6 @@ int redis_ipc_subscribe_debug(const char *component)
 {
     char debug_channel_path[RIPC_MAX_IPC_PATH_LEN];
     const char *component_pattern = NULL;
-    size_t pattern_len = 0;
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     int ret = RIPC_FAIL;
 
