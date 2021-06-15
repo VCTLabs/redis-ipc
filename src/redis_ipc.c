@@ -379,7 +379,6 @@ static json_object * redis_pop(const char *queue_path, unsigned int timeout)
 
     // parse popped entry back into json object
     entry = json_tokener_parse(json_text);
-    if (!entry) entry = NULL;
 
 redis_pop_finish:
     if (reply != NULL)
@@ -1248,7 +1247,6 @@ json_object * redis_ipc_get_message_blocking(void)
 
     // parse message back into json object
     message = json_tokener_parse(message_str);
-    if (!message) message = NULL;
 
 redis_get_channel_message_finish:
     if (reply != NULL)
