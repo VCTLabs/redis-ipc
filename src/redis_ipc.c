@@ -449,8 +449,8 @@ json_object * redis_ipc_send_command_blocking(const char *dest_component,
             goto redis_ipc_send_command_blocking_finish;
 
         // extract command id from received result
-        result_id_obj = json_object_object_get(result, "command_id");
-        if (result_id_obj == NULL)
+        json_bool found = json_object_object_get_ex(result, "command_id", &result_id_obj);
+        if (!found)
             goto redis_ipc_send_command_blocking_finish;
         result_id_str = json_object_get_string(result_id_obj);
         if (result_id_str == NULL)
@@ -525,16 +525,20 @@ int redis_ipc_send_result(struct json_object *completed_command, json_object *re
         goto redis_ipc_send_result_finish;
 
     // extract name of result queue 
-    result_queue_obj = json_object_object_get(completed_command, "results_queue");
-    if (result_queue_obj == NULL)
+    json_bool res_found = json_object_object_get_ex(completed_command, "results_queue", &result_queue_obj);
+    if (!res_found)
         goto redis_ipc_send_result_finish;
     result_queue_path = json_object_get_string(result_queue_obj);
+    if (result_queue_path == NULL)
+        goto redis_ipc_send_result_finish;
 
     // extract command id
-    id_obj = json_object_object_get(completed_command, "command_id");
-    if (id_obj == NULL)
+    json_bool id_found = json_object_object_get_ex(completed_command, "command_id", &id_obj);
+    if (!id_found)
         goto redis_ipc_send_result_finish;
     id_str = json_object_get_string(id_obj);
+    if (id_str == NULL)
+        goto redis_ipc_send_result_finish;
 
     // append command id to result
     json_object_object_add(result, "command_id", 
