@@ -976,7 +976,7 @@ int format_debug_msg(char *msg, size_t max_msg_len,
     if (msg_len == max_msg_len)
     {
         // write warning over end of message
-        strncpy(&msg[warning_offset], trunc_warning, warning_len);
+        memcpy(&msg[warning_offset], trunc_warning, warning_len);
     }
 
     if (msg_len > 0)
