@@ -22,9 +22,15 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Environment
+      run: |
+        echo $GITHUB_ENV
+        bash -c set
+
     - name: Install deps
       run: |
-        sudo apt-get install -y libhiredis-dev libjson-c-dev autopoint autoconf automake
+        sudo apt-get install -y libhiredis-dev libjson-c-dev autopoint
+        sudo apt-get install -y redis-tools redis-server autoconf automake
 
     - name: Configure
       run: ./autogen.sh
