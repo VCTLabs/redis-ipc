@@ -27,7 +27,7 @@ jobs:
         echo $GITHUB_ENV
         bash -c set
 
-    - name: Install deps
+    - name: Dependencies
       run: |
         sudo apt-get install -y libhiredis-dev libjson-c-dev autopoint
         sudo apt-get install -y redis-tools redis-server autoconf automake
@@ -38,6 +38,15 @@ jobs:
     - name: Build
       run: make
 
+    - name: Message bus
+      run: |
+        mkdir -p /tmp/redis-ipc
+        redis-server --port 0 --pidfile /run/redis.pid --unixsocket /tmp/redis-ipc/socket --unixsocketperm 600 &
+
     - name: Test
       run: |
-        make check || cat ./test/test-suite.log
+        make check
+
+    - name: Cleanup
+      run: |
+        killall redis-server
