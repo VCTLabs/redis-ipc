@@ -27,10 +27,24 @@ jobs:
         echo $GITHUB_ENV
         bash -c set
 
-    - name: Dependencies
+    - name: Backports
+      if: matrix.os == 'ubuntu-20.04'
       run: |
-        sudo apt-get install -y libhiredis-dev libjson-c-dev autopoint
-        sudo apt-get install -y redis-tools redis-server autoconf automake
+        sudo apt-get -qq update
+        sudo apt-get install -y software-properties-common
+        sudo add-apt-repository -y -s ppa:nerdboy/embedded
+        sudo apt-get install -y libjson-c-dev
+
+    - name: Upstream
+      if: matrix.os == 'ubuntu-18.04'
+      run: |
+        sudo apt-get -qq update
+        sudo apt-get install -y libjson-c-dev
+
+    - name: Common dependencies
+      run: |
+        sudo apt-get install -y libhiredis-dev autoconf automake autopoint
+        sudo apt-get install -y redis-tools redis-server
 
     - name: Configure
       run: ./autogen.sh
