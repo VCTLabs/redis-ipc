@@ -1,6 +1,7 @@
 name: smoke
 
 on:
+  workflow_dispatch:
   push:
     branches: [ master ]
   pull_request:
@@ -24,9 +25,10 @@ jobs:
 
     - name: Environment
       run: |
-        echo $GITHUB_ENV
         bash -c set
 
+    # we split the deps for now, because there is no json-c backport
+    # for bionic (yet)
     - name: Backports
       if: matrix.os == 'ubuntu-20.04'
       run: |
