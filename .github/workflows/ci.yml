@@ -72,6 +72,7 @@ jobs:
       - name:  Install and setup Linux packages
         if: runner.os == 'Linux'
         run: |
+          sudo apt-get -qq update
           if [ "${{ matrix.compiler }}" = "gcc" ]; then
             sudo apt-get install -y g++-${{ matrix.version }} g++-${{ matrix.version }}-multilib
             echo "CC=gcc-${{ matrix.version }}" >> $GITHUB_ENV
@@ -81,14 +82,11 @@ jobs:
             echo "CC=clang-${{ matrix.version }}" >> $GITHUB_ENV
             echo "CXX=clang++-${{ matrix.version }}" >> $GITHUB_ENV
           fi
-          sudo apt-get install -y libhiredis-dev libjson-c-dev autopoint autoconf automake
-          ./autogen.sh
+          sudo apt-get install -y libhiredis-dev autoconf automake autopoint redis-tools redis-server
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository -y -s ppa:nerdboy/embedded
+          sudo apt-get install -y libjson-c-dev
 
-      - name: Build and test Linux
-        if: runner.os == 'Linux'
-        run: |
-          make
-      
       - name:  Install and setup MacOS packages
         if: runner.os == 'macOS'
         run: |
@@ -102,17 +100,21 @@ jobs:
             export "CC=clang-${{ matrix.version }}" >> $GITHUB_ENV
             export "CCC=clang++-${{ matrix.version }}" >> $GITHUB_ENV
           fi
-          brew install json-c hiredis libtool
+          brew install json-c hiredis libtool redis
+
+      - name: Configure
+        run: |
           ./autogen.sh
 
-      - name: Build and test MacOS clang
-        if: runner.os == 'MacOS' &&  matrix.compiler == 'xcode' 
+      - name: Message bus
         run: |
-          make
-          make check
+          mkdir -p /tmp/redis-ipc
+          redis-server --port 0 --pidfile /run/redis.pid --unixsocket /tmp/redis-ipc/socket --unixsocketperm 600 &
 
-      - name: Build and test MacOS gcc
-        if: runner.os == 'MacOS' &&  matrix.compiler == 'gcc'
+      - name: Build
         run: |
           make
+
+      - name: Test
+        run: |
           make check
