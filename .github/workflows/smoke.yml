@@ -66,3 +66,21 @@ jobs:
     - name: Cleanup
       run: |
         killall redis-server
+
+  check:
+    name: Collect metrics
+    runs-on: ubuntu-20.04
+    needs: [build]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - uses: sarnold/cccc-action@main
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN}}
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: metrics
+        path: ./metrics
