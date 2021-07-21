@@ -1,4 +1,6 @@
-#define _GNU_SOURCE // for gettid()
+#ifndef _GNU_SOURCE
+#  define _GNU_SOURCE 1 // for gettid()
+#endif
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
