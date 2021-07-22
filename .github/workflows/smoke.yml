@@ -64,9 +64,19 @@ jobs:
       run: |
         make check
 
+    - name: Generate coverage
+      run: |
+        ./configure --with-coverage
+        make clean
+        make cov
+
     - name: Cleanup
       run: |
         killall redis-server
+
+    - uses: codecov/codecov-action@v2
+      with:
+        verbose: true
 
   check:
     name: Collect metrics
