@@ -47,10 +47,12 @@ jobs:
     - name: Common dependencies
       run: |
         sudo apt-get install -y libhiredis-dev autoconf automake
-        sudo apt-get install -y redis-tools redis-server
+        sudo apt-get install -y redis-tools redis-server gcovr lcov
 
     - name: Configure
-      run: ./autogen.sh
+      run: |
+        ./autogen.sh
+        ./configure
 
     - name: Build
       run: make
@@ -69,6 +71,10 @@ jobs:
         ./configure --with-coverage
         make clean
         make cov
+
+    - name: Display coverage
+      run: |
+        gcovr --filter src/
 
     - name: Cleanup
       run: |

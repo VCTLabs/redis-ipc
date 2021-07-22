@@ -1,5 +1,7 @@
 #! /bin/sh
 
+set -e
+
 srcdir=`dirname $0`
 test -z "$srcdir" && srcdir=.
 
@@ -12,7 +14,7 @@ abort () {
     exit 1
 }
 
-set -x
+#set -x
 libtoolize --ltdl --force --copy || abort "libtoolize"
 aclocal || abort "aclocal"
 autoheader || abort "autoheader"
@@ -20,17 +22,13 @@ automake --gnu --add-missing --copy || abort "automake"
 autoconf || abort "autoconf"
 
 if test -z "$*"; then
-        echo "I am going to run ./configure with no arguments - if you wish "
-        echo "to pass any to it, please specify them on the $0 command line."
+        echo "You still need to run ./configure - if you wish to pass any arguments"
+        echo "to it, please specify them on the $0 command line."
 fi
 
-cd "$THEDIR"
+#set +x
 
-$srcdir/configure "$@" || abort "configure"
-
-set +x
-
-echo "Now type:"
+echo "After running ./configure, type:"
 echo
 echo "make"
 echo "make install"
