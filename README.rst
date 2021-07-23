@@ -10,8 +10,8 @@
     :target: https://github.com/VCTLabs/redis-ipc/releases
     :alt: GitHub tag (latest SemVer, including pre-release)
 
-.. image:: https://img.shields.io/github/workflow/status/VCTLabs/redis-ipc/smoke
-    :target: https://github.com/VCTLabs/redis-ipc/actions?query=workflow:smoke
+.. image:: https://github.com/VCTLabs/redis-ipc/actions/workflows/smoke.yml/badge.svg
+    :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/smoke.yml
     :alt: GitHub CI Workflow Status
 
 .. image:: https://img.shields.io/codecov/c/github/VCTLabs/redis-ipc
