@@ -1,5 +1,23 @@
-redis-ipc 
-=========
+===========
+ redis-ipc
+===========
+
+.. image:: https://img.shields.io/github/license/VCTLabs/redis-ipc
+    :target: https://github.com/VCTLabs/redis-ipc/blob/master/COPYING
+    :alt: License
+
+.. image:: https://img.shields.io/github/v/tag/VCTLabs/redis-ipc?color=green&include_prereleases&label=latest%20release
+    :target: https://github.com/VCTLabs/redis-ipc/releases
+    :alt: GitHub tag (latest SemVer, including pre-release)
+
+.. image:: https://img.shields.io/github/workflow/status/VCTLabs/redis-ipc/smoke
+    :target: https://github.com/VCTLabs/redis-ipc/actions?query=workflow:smoke
+    :alt: GitHub CI Workflow Status
+
+.. image:: https://img.shields.io/codecov/c/github/VCTLabs/redis-ipc
+    :target: https://codecov.io/gh/VCTLabs/redis-ipc
+    :alt: Codecov test coverage
+
 
 redis-ipc is an example of how redis_ can be used as an advanced IPC 
 mechanism on an embedded Linux system, for instance as a substitute for the

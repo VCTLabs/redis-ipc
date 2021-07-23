@@ -1,3 +1,6 @@
+// Copyright (c) 2011-2021 Vanguard Computer Technology Labs <answers@vctlabs.com>
+//
+// SPDX-License-Identifier: GPL-2.0-only
 
 #ifndef __REDIS_IPC_H__
 #define __REDIS_IPC_H__
