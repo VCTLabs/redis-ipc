@@ -2,8 +2,8 @@
  redis-ipc
 ===========
 
-.. image:: https://img.shields.io/github/license/VCTLabs/redis-ipc
-    :target: https://github.com/VCTLabs/redis-ipc/blob/master/LICENSE
+.. image:: https://badges.frapsoft.com/os/gpl/gpl.png?v=103
+    :target: https://opensource.org/licenses/GPL-2.0/
     :alt: License
 
 .. image:: https://img.shields.io/github/v/tag/VCTLabs/redis-ipc?color=green&include_prereleases&label=latest%20release
