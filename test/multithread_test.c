@@ -5,12 +5,14 @@
 #include <pthread.h>
 #include "redis_ipc.h"
 
-// gettid() is missing a libc wrapper for some reason
+// gettid() is missing a libc wrapper before glibc 2.30
 // (manpage even mentions it)
-static pid_t gettid()
+#if (__GLIBC_MINOR__ < 30)
+pid_t gettid()
 {
   return syscall(SYS_gettid);
 }
+#endif
 
 void *run_printer_thread(void *data)
 {

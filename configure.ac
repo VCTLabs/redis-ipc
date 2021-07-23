@@ -75,10 +75,24 @@ AC_ARG_ENABLE(debug,
 AC_ARG_ENABLE(gprof,
               [  --enable-gprof      Enable gcc profiling.],, enable_gprof="no")
 
-AC_ARG_ENABLE(gcov,
-              [  --enable-gcov       Enable coverage profiling (default: no)]
-              ,,enable_gcov="no")
-
+# Test coverage generate. Flag: --with-coverage
+AC_ARG_WITH([coverage],
+            AS_HELP_STRING([--with-coverage], [Generate test covearge report with lcov.]),
+            [with_cov=true], []
+            )
+AM_CONDITIONAL([WITH_COVERAGE], [test x$with_cov = xtrue])
+if test x$with_cov = xtrue; then
+  AC_PATH_PROG(LCOV, lcov)
+  AC_PATH_PROG(GCOV, gcov)
+  AC_PATH_PROG(GENHTML, genhtml)
+  COVERAGE_CFLAGS="--coverage"
+  COVERAGE_OPTFLAGS="-O0"
+  AC_SUBST([GCOV])
+  AC_SUBST([LCOV])
+  AC_SUBST([GENHTML])
+  AC_SUBST([COVERAGE_CFLAGS])
+  AC_SUBST([COVERAGE_OPTFLAGS])
+fi
 
 enable_value()
 {

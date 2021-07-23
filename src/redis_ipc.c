@@ -25,12 +25,14 @@ struct redis_ipc_per_thread
 
 static __thread struct redis_ipc_per_thread *redis_ipc_info = NULL;
 
-// gettid() is missing a libc wrapper for some reason
+// gettid() is missing a libc wrapper before glibc 2.30
 // (manpage even mentions it)
-static pid_t gettid()
+#if (__GLIBC_MINOR__ < 30)
+pid_t gettid()
 {
   return syscall(SYS_gettid);
 }
+#endif
 
 struct redis_ipc_per_thread * get_per_thread_info()
 {
@@ -381,7 +383,6 @@ static json_object * redis_pop(const char *queue_path, unsigned int timeout)
 
     // parse popped entry back into json object
     entry = json_tokener_parse(json_text);
-    if (is_error(entry)) entry = NULL;
 
 redis_pop_finish:
     if (reply != NULL)
@@ -1252,7 +1253,6 @@ json_object * redis_ipc_get_message_blocking(void)
 
     // parse message back into json object
     message = json_tokener_parse(message_str);
-    if (is_error(message)) message = NULL;
 
 redis_get_channel_message_finish:
     if (reply != NULL)
