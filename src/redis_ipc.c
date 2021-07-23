@@ -25,12 +25,14 @@ struct redis_ipc_per_thread
 
 static __thread struct redis_ipc_per_thread *redis_ipc_info = NULL;
 
-// gettid() is missing a libc wrapper for some reason
+// gettid() is missing a libc wrapper before glibc 2.30
 // (manpage even mentions it)
+#if (__GLIBC_MINOR__ < 30)
 pid_t gettid()
 {
   return syscall(SYS_gettid);
 }
+#endif
 
 struct redis_ipc_per_thread * get_per_thread_info()
 {
