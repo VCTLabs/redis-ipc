@@ -3,7 +3,7 @@
 ===========
 
 .. image:: https://img.shields.io/github/license/VCTLabs/redis-ipc
-    :target: https://github.com/VCTLabs/redis-ipc/blob/master/COPYING
+    :target: https://github.com/VCTLabs/redis-ipc/blob/master/LICENSE
     :alt: License
 
 .. image:: https://img.shields.io/github/v/tag/VCTLabs/redis-ipc?color=green&include_prereleases&label=latest%20release
