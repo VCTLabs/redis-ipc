@@ -7,7 +7,7 @@
 
 // gettid() is missing a libc wrapper for some reason
 // (manpage even mentions it)
-static pid_t gettid()
+pid_t gettid()
 {
   return syscall(SYS_gettid);
 }
