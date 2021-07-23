@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2021 Vanguard Computer Technology Labs <answers@vctlabs.com>
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 #define _GNU_SOURCE // for gettid()
 #include <unistd.h>
 #include <stdio.h>
