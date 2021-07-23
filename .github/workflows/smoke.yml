@@ -72,9 +72,15 @@ jobs:
         make clean
         make cov
 
-    - name: Display coverage
+    - name: Display coverage bionic
+      if: matrix.os == 'ubuntu-18.04'
       run: |
         gcovr --filter src/
+
+    - name: Display coverage
+      if: matrix.os == 'ubuntu-20.04'
+      run: |
+        gcovr --filter src/.libs/
 
     - name: Cleanup
       run: |
