@@ -1,12 +1,14 @@
-# This is a Python module to provide client access to the Redis server
-# it is treated as a library
+""""
+This is a Python module to provide client access to the Redis server.
+"""
 
 import os
-import redis
-import json
 import time
-import pdb  ## required for debug  (no kidding)
+import json
+import redis
 
+# instead of global pdb import, add this where you want to start debugger:
+# import pdb; pdb.set_trace()
 
 # global data
 """
@@ -18,14 +20,14 @@ def pdic2jdic(pdic):
     """
     pdic   -    a Python dictionary
 
-    returns a JSON dictionary
+    returns a JSON string
     """
     if not isinstance(pdic, dict):
         raise NotDict
     try:
         jd = json.dumps(pdic)
     except (TypeError, ValueError):
-        raise BadMessage
+        raise BadMessage from None
     return jd
 
 
@@ -38,7 +40,7 @@ def jdic2pdic(jdic):
     try:
         pd = json.loads(jdic)
     except (TypeError, ValueError):
-        raise BadMessage
+        raise BadMessage from None
     if not isinstance(pd, dict):
         raise NotDict
     return pd
@@ -53,7 +55,7 @@ def redis_connect(unix_socket_path="/tmp/redis-ipc/socket"):
     try:
         conn = redis.StrictRedis(unix_socket_path=unix_socket_path)
     except redis.ConnectionError:
-        raise NoRedis
+        raise NoRedis from None
     return conn
 
 
@@ -69,16 +71,17 @@ MsgTimeout = RedisIpcExc("redis message request timed out")
 
 
 # the main feature here is a class which will provide the wanted access
-class redis_client(object):
+class RedisClient():
+    """
+    component : friendly name for calling program
+                (e.g. how it is labeled on system architecture diagrams
+                 as opposed to exact executable name)
+    thread: friendly name for specific thread of execution,
+            allowing IPC from multiple threads in a multi-threaded program
+    """
+
     def __init__(self, component, thread="main"):
-        """
-        component : friendly name for calling program
-                    (e.g. how it is labeled on system architecture diagrams
-                     as opposed to exact executable name)
-        thread: friendly name for specific thread of execution,
-                allowing IPC from multiple threads in a multi-threaded program
-        """
-        global redis_connect
+        # global redis_connect
         self.component = component
         self.thread = thread
 
@@ -171,15 +174,15 @@ class redis_client(object):
             return decoded_reply  # good enough
 
 
-class redis_server(object):
+class RedisServer():
+    """
+    component : friendly name for calling program
+                (e.g. how it is labeled on system architecture diagrams
+                 as opposed to exact executable name)
+    """
 
     def __init__(self, component):
-        """
-        component : friendly name for calling program
-                    (e.g. how it is labeled on system architecture diagrams
-                     as opposed to exact executable name)
-        """
-        global redis_connect
+        # global redis_connect
         self.component = component
 
         # process number of this component (a python program)
