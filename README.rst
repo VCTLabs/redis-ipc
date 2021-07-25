@@ -1,23 +1,9 @@
 ===========
  redis-ipc
 ===========
+|ci| |codeql| |cov|
 
-.. image:: https://badges.frapsoft.com/os/gpl/gpl.png?v=103
-    :target: https://opensource.org/licenses/GPL-2.0/
-    :alt: License
-
-.. image:: https://img.shields.io/github/v/tag/VCTLabs/redis-ipc?color=green&include_prereleases&label=latest%20release
-    :target: https://github.com/VCTLabs/redis-ipc/releases
-    :alt: GitHub tag (latest SemVer, including pre-release)
-
-.. image:: https://github.com/VCTLabs/redis-ipc/actions/workflows/smoke.yml/badge.svg
-    :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/smoke.yml
-    :alt: GitHub CI Workflow Status
-
-.. image:: https://img.shields.io/codecov/c/github/VCTLabs/redis-ipc
-    :target: https://codecov.io/gh/VCTLabs/redis-ipc
-    :alt: Codecov test coverage
-
+|tag| |license|
 
 redis-ipc is an example of how redis_ can be used as an advanced IPC 
 mechanism on an embedded Linux system, for instance as a substitute for the
@@ -555,3 +541,23 @@ When finished with the above, don't forget to kill the redis server::
 .. _json-c: https://github.com/json-c/json-c/wiki
 .. _EPEL: https://fedoraproject.org/wiki/EPEL
 .. _JSON objects: https://en.wikipedia.org/wiki/Json
+
+.. |ci| image:: https://github.com/VCTLabs/redis-ipc/actions/workflows/smoke.yml/badge.svg
+    :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/smoke.yml
+    :alt: GitHub CI Smoke Test Status
+
+.. |codeql| image:: https://github.com/VCTLabs/redis-ipc/actions/workflows/codeql.yml/badge.svg
+    :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/codeql.yml
+    :alt: GitHub CI CodeQL Status
+
+.. |cov| image:: https://img.shields.io/codecov/c/github/VCTLabs/redis-ipc
+    :target: https://codecov.io/gh/VCTLabs/redis-ipc
+    :alt: Codecov test coverage
+
+.. |license| image:: https://badges.frapsoft.com/os/gpl/gpl.png?v=103
+    :target: https://opensource.org/licenses/GPL-2.0/
+    :alt: License
+
+.. |tag| image:: https://img.shields.io/github/v/tag/VCTLabs/redis-ipc?color=green&include_prereleases&label=latest%20release
+    :target: https://github.com/VCTLabs/redis-ipc/releases
+    :alt: GitHub tag (latest SemVer, including pre-release)
