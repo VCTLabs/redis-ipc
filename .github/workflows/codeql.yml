@@ -10,13 +10,13 @@ on:
 
 jobs:
   analyze:
-    name: Analyze
+    name: Analyze C++
     runs-on: ubuntu-18.04
 
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'cpp', 'python']
+        language: [ 'cpp']
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python' ]
 
     steps:

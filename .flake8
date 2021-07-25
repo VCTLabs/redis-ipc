@@ -7,8 +7,8 @@ ignore =
        # Whitespace round parameter '=' can be excessive
        #E252,
        # Multiple # in a comment is OK
-       E266,
-       E262,
+       #E266,
+       #E262,
        # Not excited by the "two blank lines" rule
        #E302,
        #E305,
@@ -19,6 +19,6 @@ ignore =
        # Lines ending with binary operators are OK
        #W504,
        # ignore missing debug import (only for pdb)
-       F401,
+       #F401,
 
 max-line-length = 84

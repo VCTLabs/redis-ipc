@@ -3,7 +3,7 @@
 ===========
 |ci| |codeql| |cov|
 
-|tag| |license|
+|license| |python| |tag|
 
 redis-ipc is an example of how redis_ can be used as an advanced IPC 
 mechanism on an embedded Linux system, for instance as a substitute for the
@@ -561,3 +561,7 @@ When finished with the above, don't forget to kill the redis server::
 .. |tag| image:: https://img.shields.io/github/v/tag/VCTLabs/redis-ipc?color=green&include_prereleases&label=latest%20release
     :target: https://github.com/VCTLabs/redis-ipc/releases
     :alt: GitHub tag (latest SemVer, including pre-release)
+
+.. |python| image:: https://img.shields.io/badge/python-3.6+-blue.svg
+    :target: https://www.python.org/downloads/
+    :alt: Python
