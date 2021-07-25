@@ -60,7 +60,7 @@ jobs:
     - name: Message bus
       run: |
         mkdir -p /tmp/redis-ipc
-        redis-server --port 0 --pidfile /run/redis.pid --unixsocket /tmp/redis-ipc/socket --unixsocketperm 600 &
+        redis-server --port 0 --pidfile /tmp/redis.pid --unixsocket /tmp/redis-ipc/socket --unixsocketperm 600 &
 
     - name: Test
       run: |
@@ -84,7 +84,7 @@ jobs:
 
     - name: Cleanup
       run: |
-        killall redis-server
+        cat /tmp/redis.pid | xargs kill
 
     - uses: codecov/codecov-action@v2
       with:
