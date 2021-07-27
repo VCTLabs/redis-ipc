@@ -1,9 +1,11 @@
 ===========
  redis-ipc
 ===========
-|ci| |codeql| |cov|
+|ci| |codeql| |bandit| |cov|
 
-|license| |python| |tag|
+|std| |python| |style|
+
+|tag| |license|
 
 redis-ipc is an example of how redis_ can be used as an advanced IPC 
 mechanism on an embedded Linux system, for instance as a substitute for the
@@ -554,6 +556,10 @@ When finished with the above, don't forget to kill the redis server::
     :target: https://codecov.io/gh/VCTLabs/redis-ipc
     :alt: Codecov test coverage
 
+.. |bandit| image:: https://github.com/VCTLabs/redis-ipc/actions/workflows/bandit.yml/badge.svg
+    :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/bandit.yml
+    :alt: Security check - Bandit
+
 .. |license| image:: https://badges.frapsoft.com/os/gpl/gpl.png?v=103
     :target: https://opensource.org/licenses/GPL-2.0/
     :alt: License
@@ -565,3 +571,11 @@ When finished with the above, don't forget to kill the redis server::
 .. |python| image:: https://img.shields.io/badge/python-3.6+-blue.svg
     :target: https://www.python.org/downloads/
     :alt: Python
+
+.. |style| image:: https://img.shields.io/badge/Py%20code%20style-pylint-00000.svg
+    :target: https://github.com/pycqa/pylint/
+    :alt: Python Style
+
+.. |std| image:: https://img.shields.io/badge/Standards-C++11%20%20C99-00000.svg
+    :target: https://isocpp.org/wiki/faq/cpp11
+    :alt: Other standards
