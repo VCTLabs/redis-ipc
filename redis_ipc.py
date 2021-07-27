@@ -46,7 +46,8 @@ def jdic2pdic(jdic):
     return pd
 
 
-def redis_connect(unix_socket_path="/tmp/redis-ipc/socket"):
+# default /tmp path is only used in a trusted/isolated test environment
+def redis_connect(unix_socket_path="/tmp/redis-ipc/socket"):  # nosec
     """
     attempt to open a connection to the Redis server
     raise an exception if this does not work
