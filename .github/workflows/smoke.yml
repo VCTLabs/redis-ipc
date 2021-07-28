@@ -99,9 +99,16 @@ jobs:
       with:
         fetch-depth: 0
 
-    - uses: sarnold/cccc-action@main
+    - uses: sarnold/cccc-action@0.2
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN}}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        file_extensions: |
+          .hh
+          .h
+          .c
+        source_dirs: |
+          src
+          inc
 
     - uses: actions/upload-artifact@v2
       with:
