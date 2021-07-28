@@ -1,23 +1,13 @@
 ===========
  redis-ipc
 ===========
+|ci| |codeql| |pylint|
 
-.. image:: https://badges.frapsoft.com/os/gpl/gpl.png?v=103
-    :target: https://opensource.org/licenses/GPL-2.0/
-    :alt: License
+|bandit| |cov|
 
-.. image:: https://img.shields.io/github/v/tag/VCTLabs/redis-ipc?color=green&include_prereleases&label=latest%20release
-    :target: https://github.com/VCTLabs/redis-ipc/releases
-    :alt: GitHub tag (latest SemVer, including pre-release)
+|std| |python| |style|
 
-.. image:: https://github.com/VCTLabs/redis-ipc/actions/workflows/smoke.yml/badge.svg
-    :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/smoke.yml
-    :alt: GitHub CI Workflow Status
-
-.. image:: https://img.shields.io/codecov/c/github/VCTLabs/redis-ipc
-    :target: https://codecov.io/gh/VCTLabs/redis-ipc
-    :alt: Codecov test coverage
-
+|tag| |license|
 
 redis-ipc is an example of how redis_ can be used as an advanced IPC 
 mechanism on an embedded Linux system, for instance as a substitute for the
@@ -489,6 +479,62 @@ remember to specify the socket path when running redis-cli ::
 
   redis-cli -s /tmp/redis-ipc/socket
 
+
+redis_ipc.py
+============
+
+A python module with redis-ipc client/server classes.  Requires `redis-py`
+and a running `redis` server.  From the repository directory, you should
+either add "." to your PYTHON_PATH or copy the python module to `site-packages`.
+
+To start a local redis server first, run the following *before* you start
+the python interpreter::
+
+    $ redis-server --port 0 --pidfile /tmp/redis.pid --unixsocket /tmp/redis-ipc/socket --unixsocketperm 600 &
+
+The above will background the redis server, but you may need to hit
+<Enter> once to get the prompt back. Then type `python` in the source
+directory in *2 separate terminal windows* and continue below.
+
+For example, to run from the source directory, start a server from the
+first terminal::
+
+    >>> import sys
+    >>> sys.path.append('.')
+    >>> from redis_ipc import RedisServer as rs
+    >>> myServer = rs("my_component")
+    >>> result = myServer.redis_ipc_receive_command()  # doctest: +SKIP
+    >>> myServer.redis_ipc_send_reply(result, result)  # doctest: +SKIP
+
+Then from a second terminal, start a client::
+
+    >>> import sys
+    >>> sys.path.append('.')
+    >>> from redis_ipc import RedisClient as rc
+    >>> myClient = rc("my_component")
+    >>> myClient.redis_ipc_send_and_receive("my_component", {}, 30)  # doctest: +SKIP
+    {'timestamp': '1627166512.0108066', 'component': 'my_component', 'thread': 'main', 'tid': 24544, 'results_queue': 'queues.results.my_component.main', 'command_id': 'my_component:24544:1627166512.0108066'}
+
+
+Note that both of the above will block for the timeout period (30 sec in
+this example) if they're waiting for the other side to send/reply.
+
+If there is no running redis server, then you will get the following::
+
+    >>> import sys
+    >>> sys.path.append('.')
+    >>> from redis_ipc import RedisServer as rs
+    >>> myServer = rs("my_component")
+    >>> result = myServer.redis_ipc_receive_command()  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    ...
+    redis.exceptions.ConnectionError: Error 2 connecting to unix socket: /tmp/redis-ipc/socket. No such file or directory.
+
+When finished with the above, don't forget to kill the redis server::
+
+    $ cat /tmp/redis.pid | xargs kill
+
+
 .. _redis: http://redis.io/
 .. _low overhead: http://www.bango29.com/squeezing-cubieboard-for-performance/
 .. _language bindings: http://redis.io/clients
@@ -499,3 +545,43 @@ remember to specify the socket path when running redis-cli ::
 .. _json-c: https://github.com/json-c/json-c/wiki
 .. _EPEL: https://fedoraproject.org/wiki/EPEL
 .. _JSON objects: https://en.wikipedia.org/wiki/Json
+
+.. |ci| image:: https://github.com/VCTLabs/redis-ipc/actions/workflows/smoke.yml/badge.svg
+    :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/smoke.yml
+    :alt: GitHub CI Smoke Test Status
+
+.. |codeql| image:: https://github.com/VCTLabs/redis-ipc/actions/workflows/codeql.yml/badge.svg
+    :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/codeql.yml
+    :alt: GitHub CI CodeQL Status
+
+.. |pylint| image:: https://github.com/VCTLabs/redis-ipc/actions/workflows/pylint.yml/badge.svg
+    :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/pylint.yml
+    :alt: GitHub CI Pyliint Status
+
+.. |cov| image:: https://img.shields.io/codecov/c/github/VCTLabs/redis-ipc
+    :target: https://codecov.io/gh/VCTLabs/redis-ipc
+    :alt: Codecov test coverage
+
+.. |bandit| image:: https://github.com/VCTLabs/redis-ipc/actions/workflows/bandit.yml/badge.svg
+    :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/bandit.yml
+    :alt: Security check - Bandit
+
+.. |license| image:: https://badges.frapsoft.com/os/gpl/gpl.png?v=103
+    :target: https://opensource.org/licenses/GPL-2.0/
+    :alt: License
+
+.. |tag| image:: https://img.shields.io/github/v/tag/VCTLabs/redis-ipc?color=green&include_prereleases&label=latest%20release
+    :target: https://github.com/VCTLabs/redis-ipc/releases
+    :alt: GitHub tag (latest SemVer, including pre-release)
+
+.. |python| image:: https://img.shields.io/badge/python-3.6+-blue.svg
+    :target: https://www.python.org/downloads/
+    :alt: Python
+
+.. |style| image:: https://img.shields.io/badge/Py%20code%20style-pylint-00000.svg
+    :target: https://github.com/pycqa/pylint/
+    :alt: Python Style
+
+.. |std| image:: https://img.shields.io/badge/Standards-C++11%20%20C99-00000.svg
+    :target: https://isocpp.org/wiki/faq/cpp11
+    :alt: Other standards
