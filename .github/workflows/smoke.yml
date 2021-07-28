@@ -99,13 +99,10 @@ jobs:
       with:
         fetch-depth: 0
 
-    - uses: sarnold/cccc-action@0.2
+    - uses: sarnold/cccc-action@main
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        file_extensions: |
-          .hh
-          .h
-          .c
+        target_branch: gh-pages
         source_dirs: |
           src
           inc
