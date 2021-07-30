@@ -30,3 +30,7 @@ jobs:
     - name: Run pylint
       run: |
         tox -e lint
+
+    - name: Run doctests
+      run: |
+        tox -e py38-linux
