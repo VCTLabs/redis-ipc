@@ -18,10 +18,10 @@ extern "C" {
 //*************
 
 // debug levels for redis_ipc_send_debug()
-enum { RIPC_DBG_ERROR, 
-       RIPC_DBG_ALERT, 
-       RIPC_DBG_WARN, 
-       RIPC_DBG_INFO, 
+enum { RIPC_DBG_ERROR,
+       RIPC_DBG_ALERT,
+       RIPC_DBG_WARN,
+       RIPC_DBG_INFO,
        RIPC_DBG_NOISY,
        RIPC_DBG_EXTRA_NOISY };
 
@@ -30,7 +30,7 @@ enum { RIPC_DBG_ERROR,
 #define RIPC_FAIL (-1)
 
 // location of config file
-//#define RIPC_CONF_PATH "/etc/redis_ipc.conf"
+// #define RIPC_CONF_PATH "/etc/redis_ipc.conf"
 #define RIPC_CONF_PATH "./redis_ipc.conf"
 
 //*********** things that might move to config file when it is implemented
@@ -62,7 +62,7 @@ enum { RIPC_DBG_ERROR,
 // Cleanup is provided to prevent a slow leak from turnover of short-lived
 // threads that each call init to allocate a few per-thread variables.
 //
-// The thread name should indicate the purpose of the thread and be 
+// The thread name should indicate the purpose of the thread and be
 // predictable, e.g. live-http-worker-3, rather than randomly generated or
 // based on TID number, because it will be used to generate name of results
 // queue -- and we want same results queues to be re-used if component gets
@@ -70,31 +70,31 @@ enum { RIPC_DBG_ERROR,
 //
 // Cleanup is done based on thread ID so that main thread can clean up for
 // terminated threads, as long as it is tracking their IDs. For a
-// single-threaded process, tid == pid. 
+// single-threaded process, tid == pid.
 
 int redis_ipc_init(const char *this_component, const char *this_thread);
 int redis_ipc_cleanup(pid_t tid);
 
 
-// A component can send a command to any other component, 
+// A component can send a command to any other component,
 // but it can only receive commands from its own command queue(s).
 //
 // A component sending a command should supply NULL as subqueue unless
 // it has multiple command queues defined in redis_ipc.conf,
 // in which case it should supply one of those queues. The same goes
-// for a component waiting for commands -- if it only has one command 
+// for a component waiting for commands -- if it only has one command
 // queue, subqueue should be NULL.
 //
 // The timeout field is in seconds, or use zero to indicate no timeout
 // for blocking.
 //
-// When submitting a command, the name of submitter's results queue 
+// When submitting a command, the name of submitter's results queue
 // and a unique command ID will automatically be inserted into the command
 // as fields "results_queue" and "command_id" respectively.
 //
-// The submitter will block on its results until result has been received 
+// The submitter will block on its results until result has been received
 // or timeout has been exceeded. If a result with _different_ command ID
-// is received, it will be logged as an error to submitter component's 
+// is received, it will be logged as an error to submitter component's
 // debug channel then freed, and the wait on results queue will restart
 // (expiration time will be reset to original).
 
@@ -105,20 +105,20 @@ int stderr_debug_is_enabled();
 // should submit a result. The original command is passed in as a parameter
 // to provide the command ID and path to results queue. The command ID
 // will automatically be added to the result object before pushing it to the
-// result queue so that the command submitter will only get back the 
-// expected result (as opposed to a stale result, belonging to a command that 
+// result queue so that the command submitter will only get back the
+// expected result (as opposed to a stale result, belonging to a command that
 // took so long that submitter timed out before seeing the result).
 
-json_object * redis_ipc_send_command_blocking(const char *dest_component, 
-                                              const char *subqueue, 
-                                              json_object *command, 
+json_object * redis_ipc_send_command_blocking(const char *dest_component,
+                                              const char *subqueue,
+                                              json_object *command,
                                               unsigned int timeout);
 json_object * redis_ipc_receive_command_blocking(const char *subqueue,
                                               unsigned int timeout);
 int redis_ipc_send_result(const json_object *completed_command, json_object *result);
-                        
 
-// A component can only write a setting if it has been authorized by redis_ipc.conf, 
+
+// A component can only write a setting if it has been authorized by redis_ipc.conf,
 // but it can read any setting.
 //
 // Each setting is a set of fields that are key-value pairs, where both field name and
@@ -130,18 +130,18 @@ int redis_ipc_send_result(const json_object *completed_command, json_object *res
 // when reading, the JSON object returned *will* hold all existing setting fields.
 //
 // A setting can also be written or read a single field at a time using the second
-// pair of functions, which works on strings rather JSON hashes. If multiple setting fields 
-// are being accessed, consider accessing the full thing rather than multiple calls to 
-// individual fields -- it may be more efficient.
+// pair of functions, which works on strings rather JSON hashes. If multiple setting
+// fields are being accessed, consider accessing the full thing rather than multiple
+// calls to individual fields -- it may be more efficient.
 
 int redis_ipc_write_setting(const char *owner_component, const json_object *fields);
 json_object * redis_ipc_read_setting(const char *owner_component);
-int redis_ipc_write_setting_field(const char *owner_component, const char *field_name, 
+int redis_ipc_write_setting_field(const char *owner_component, const char *field_name,
                                   const char *field_value);
 char * redis_ipc_read_setting_field(const char *owner_component, const char *field_name);
 
 
-// A component can only write its own status, 
+// A component can only write its own status,
 // but it can read any status.
 //
 // Each status is a set of fields that are key-value pairs, where both field name and
@@ -153,9 +153,9 @@ char * redis_ipc_read_setting_field(const char *owner_component, const char *fie
 // when reading, the JSON object returned *will* hold all existing status fields.
 //
 // A status can also be written or read a single field at a time using the second
-// pair of functions, which works on strings rather JSON hashes. If multiple status fields 
-// are being accessed, consider accessing the full thing rather than multiple calls to 
-// individual fields -- it may be more efficient.
+// pair of functions, which works on strings rather JSON hashes. If multiple status
+// fields are being accessed, consider accessing the full thing rather than multiple
+// calls to individual fields -- it may be more efficient.
 
 int redis_ipc_write_status(const json_object *fields);
 json_object * redis_ipc_read_status(const char *owner_component);
@@ -168,13 +168,13 @@ char * redis_ipc_read_status_field(const char *owner_component, const char *fiel
 //
 // A component sending an event should supply NULL as subchannel unless
 // it has multiple subchannels defined in redis_ipc.conf,
-// in which case it should supply one of those subchannels. 
+// in which case it should supply one of those subchannels.
 //
 // A component subscribing to events can use NULL as component parameter
 // to watch all event channels for all components. Or, to watch all events
 // from a single component, use NULL for subchannel (as mentioned above,
 // not all components even have subchannels).
-// 
+//
 // The send function will automatically append the following fields,
 // plus the standard ones (timestamp, etc) to the event:
 //   channel (full channel name)
@@ -210,10 +210,10 @@ int redis_ipc_unsubscribe_debug(void);
 
 
 // This function is the counterpart to both redis_ipc_send_event()
-// and redis_ipc_send_debug() because a received message can come from any  
-// subscribed channel. 
+// and redis_ipc_send_debug() because a received message can come from any
+// subscribed channel.
 //
-// A thread listening for published messages will block indefinitely until the 
+// A thread listening for published messages will block indefinitely until the
 // next event is received, because redis protocol does not implement a timeout
 // on waiting for messages. To prevent infinite blocking, at least one channel
 // should have been subscribed before listening for messages.
@@ -224,4 +224,4 @@ json_object * redis_ipc_get_message_blocking(void);
 }
 #endif
 
-#endif
+#endif  // __REDIS_IPC_H__

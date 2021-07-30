@@ -1,0 +1,5 @@
+# python development/tools requirements file
+pylint
+bandit
+flake8
+pycodestyle
