@@ -1,0 +1,32 @@
+name: cpplint
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [ master ]
+
+jobs:
+  cpplint:
+
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install cpplint
+      run: |
+        python -m pip install --upgrade pip wheel
+        pip install cpplint
+    
+    - name: Run cpplint
+      run: |
+        cpplint --output=gsed src/* inc/*

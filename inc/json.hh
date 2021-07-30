@@ -14,18 +14,18 @@ class json {
     // normally want to take reference on underlying json_object*,
     // except for case of initializing from an exising raw json_object*
     // such as those returned by redis_ipc -- those start out with a reference
-    json(bool is_array = false) {
+    explicit json(bool is_array = false) {
         if (is_array) obj = json_object_new_array();
         else
             obj = json_object_new_object();
     }
     json(const json &copy) { obj = copy.obj; json_object_get(obj); }
-    json(const char *json_text) {
+    explicit json(const char *json_text) {
         if (json_text) obj = json_tokener_parse(json_text);
         else
             obj = json_object_new_object();
     }
-    json(json_object *c_obj) : obj(c_obj) {}
+    explicit json(json_object *c_obj) : obj(c_obj) {}
     // release reference on underlying json_object*,
     // if this was last reference it will get freed
     ~json() { json_object_put(obj); }

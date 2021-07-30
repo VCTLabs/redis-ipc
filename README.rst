@@ -1,7 +1,7 @@
 ===========
  redis-ipc
 ===========
-|ci| |codeql| |pylint|
+|ci| |codeql| |cpplint| |pylint|
 
 |bandit| |cov|
 
@@ -556,7 +556,11 @@ When finished with the above, don't forget to kill the redis server::
 
 .. |pylint| image:: https://github.com/VCTLabs/redis-ipc/actions/workflows/pylint.yml/badge.svg
     :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/pylint.yml
-    :alt: GitHub CI Pyliint Status
+    :alt: GitHub CI Pylint Status
+
+.. |cpplint| image:: https://github.com/VCTLabs/redis-ipc/actions/workflows/cpplint.yml/badge.svg
+    :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/cpplint.yml
+    :alt: GitHub CI Cpplint Status
 
 .. |cov| image:: https://img.shields.io/codecov/c/github/VCTLabs/redis-ipc
     :target: https://codecov.io/gh/VCTLabs/redis-ipc
