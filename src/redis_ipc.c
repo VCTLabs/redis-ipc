@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-2.0-only
 
-#define _GNU_SOURCE // for gettid()
+#define _GNU_SOURCE  // for gettid()
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,12 +19,12 @@
 
 struct redis_ipc_per_thread
 {
-    pid_t tid;               // owning thread
-    char *component;         // component name used in redis
-    char *thread;            // thread name used in redis
-    char *result_queue_path; // based on component and thread
-    redisContext *redis_state; // state for connection to redis server
-    unsigned int command_ctr;  // counter for number of commands sent by thread
+    pid_t tid;                // owning thread
+    char *component;          // component name used in redis
+    char *thread;             // thread name used in redis
+    char *result_queue_path;  // based on component and thread
+    redisContext *redis_state;  // state for connection to redis server
+    unsigned int command_ctr;   // counter for number of commands sent by thread
 };
 
 static __thread struct redis_ipc_per_thread *redis_ipc_info = NULL;
@@ -44,7 +44,7 @@ struct redis_ipc_per_thread * get_per_thread_info()
 
     if (next_info != NULL && next_info->tid == gettid())
     {
-        return next_info; 
+        return next_info;
     }
 
     return NULL;
@@ -63,7 +63,7 @@ enum redis_ipc_type
     RPC_TYPE_DEBUG
 };
 
-const char *redis_ipc_type_names[] = 
+const char *redis_ipc_type_names[] =
 {
    "INVALID",
    "settings",
@@ -74,28 +74,26 @@ const char *redis_ipc_type_names[] =
    "channel.debug"
 };
 
-// generate redis key names aka our IPC "paths" 
+// generate redis key names aka our IPC "paths"
 //
-// extra_path arg: 
+// extra_path arg:
 //   not used for "settings", "status" types,
-//   mandatory thread name for "results" type, 
+//   mandatory thread name for "results" type,
 //   optional subqueue name for "commands" type,
 //   optional subchannel name for "events" type
 //
 // all callers are internal and expected to enforce above conventions
-static int ipc_path(char *buf, size_t buf_len, enum redis_ipc_type type, 
-                    const char *component, 
-                    const char *extra_path) 
+static int ipc_path(char *buf, size_t buf_len, enum redis_ipc_type type,
+                    const char *component,
+                    const char *extra_path)
 {
     int ret = RIPC_FAIL, path_len = -1;
     const char *extra_path_separator = NULL;
 
-    if (extra_path != NULL) 
+    if (extra_path != NULL)
     {
         extra_path_separator = ".";
-    }
-    else
-    {
+    } else {
         extra_path = "";
         extra_path_separator = "";
     }
@@ -110,7 +108,7 @@ static int ipc_path(char *buf, size_t buf_len, enum redis_ipc_type type,
         case RPC_TYPE_DEBUG:
             // last 2 args will be empty strings unless needed to distinguish
             // among multiple queues/channels of component
-            path_len = snprintf(buf, buf_len, "%s.%s%s%s", 
+            path_len = snprintf(buf, buf_len, "%s.%s%s%s",
                                 redis_ipc_type_names[type],
                                 component, extra_path_separator,
                                 extra_path);
@@ -138,7 +136,7 @@ void cleanup_per_thread_info(struct redis_ipc_per_thread *thread_info)
     }
 }
 
-// initialize per-thread state 
+// initialize per-thread state
 int redis_ipc_init(const char *this_component, const char *this_thread)
 {
     struct redis_ipc_per_thread *new_info = NULL;
@@ -168,21 +166,21 @@ int redis_ipc_init(const char *this_component, const char *this_thread)
     // each thread gets its own results queue in redis
     memset(result_queue_path, 0, sizeof(result_queue_path));
     ret = ipc_path(result_queue_path, sizeof(result_queue_path),
-                  RPC_TYPE_RESULT, this_component, this_thread);
+                   RPC_TYPE_RESULT, this_component, this_thread);
     if (ret != RIPC_OK)
         goto redis_ipc_init_failed;
     new_info->result_queue_path = strdup(result_queue_path);
     if (new_info->result_queue_path == NULL)
         goto redis_ipc_init_failed;
 
-    redis_ipc_info = new_info; 
+    redis_ipc_info = new_info;
 
     return RIPC_OK;
 
 redis_ipc_init_failed:
     if (stderr_debug_is_enabled())
     {
-            fprintf(stderr, "[ERROR] redis_ipc_init failed for thread %s\n", this_thread);
+        fprintf(stderr, "[ERROR] redis_ipc_init failed for thread %s\n", this_thread);
     }
     cleanup_per_thread_info(new_info);
     safe_free(new_info);
@@ -226,7 +224,7 @@ redisReply * validate_redis_reply(redisReply *reply)
     // error in connection to server
     if (reply == NULL)
     {
-        // must reconnect to redis server after an error 
+        // must reconnect to redis server after an error
         if (stderr_debug_is_enabled())
         {
             fprintf(stderr, "[ERROR] '%s', need to reconnect\n",
@@ -258,7 +256,7 @@ redisReply * redis_command(const char *format, ...)
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     redisReply *reply = NULL;
     va_list argp;
-    
+
     if (stderr_debug_is_enabled())
     {
         va_start(argp, format);
@@ -288,7 +286,7 @@ redisReply * redis_command_from_list(int argc, const char **argv)
     redisReply *reply = NULL;
     va_list argp;
     int i = 0;
-    
+
     if (stderr_debug_is_enabled())
     {
         for (i = 0; i < argc; i++)
@@ -309,7 +307,7 @@ redisReply * redis_command_from_list(int argc, const char **argv)
 
 // standard fields for json objects that will be useful when
 // troubleshooting component integration issues, if nothing else...
-#define MAX_TIMESTAMP_LEN 64 
+#define MAX_TIMESTAMP_LEN 64
 void json_add_common_fields(json_object *obj)
 {
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
@@ -320,14 +318,14 @@ void json_add_common_fields(json_object *obj)
     memset(&timestamp, 0, sizeof(timestamp));
     memset(timestamp_buffer, 0, sizeof(timestamp_buffer));
     gettimeofday(&timestamp, NULL);
-    snprintf(timestamp_buffer, sizeof(timestamp_buffer), "%ld.%06ld", 
+    snprintf(timestamp_buffer, sizeof(timestamp_buffer), "%ld.%06ld",
              timestamp.tv_sec, timestamp.tv_usec);
 
-    json_object_object_add(obj, "timestamp", 
+    json_object_object_add(obj, "timestamp",
                            json_object_new_string(timestamp_buffer));
-    json_object_object_add(obj, "component", 
+    json_object_object_add(obj, "component",
                            json_object_new_string(thread_info->component));
-    json_object_object_add(obj, "thread", 
+    json_object_object_add(obj, "thread",
                            json_object_new_string(thread_info->thread));
     json_object_object_add(obj, "tid", json_object_new_int(gettid()));
 }
@@ -370,9 +368,9 @@ static json_object * redis_pop(const char *queue_path, unsigned int timeout)
 
     // extract queue entry from reply object
     //
-    // reply should be an array: 
+    // reply should be an array:
     //   string <queue path>
-    //   string <entry> 
+    //   string <entry>
     if (reply->type != REDIS_REPLY_ARRAY)
         goto redis_pop_finish;
     if (reply->element[1]->type != REDIS_REPLY_STRING)
@@ -395,9 +393,9 @@ redis_pop_finish:
     return entry;
 }
 
-json_object * redis_ipc_send_command_blocking(const char *dest_component, 
-                                              const char *subqueue, 
-                                              json_object *command, 
+json_object * redis_ipc_send_command_blocking(const char *dest_component,
+                                              const char *subqueue,
+                                              json_object *command,
                                               unsigned int timeout)
 {
     char command_queue_path[RIPC_MAX_IPC_PATH_LEN];
@@ -424,15 +422,15 @@ json_object * redis_ipc_send_command_blocking(const char *dest_component,
     if (ret != RIPC_OK)
         goto redis_ipc_send_command_blocking_finish;
 
-    // generate unique id used to match command and its result 
-    snprintf(id_buffer, sizeof(id_buffer), "%s-%s-%d-%u", 
-             thread_info->component, thread_info->thread, 
+    // generate unique id used to match command and its result
+    snprintf(id_buffer, sizeof(id_buffer), "%s-%s-%d-%u",
+             thread_info->component, thread_info->thread,
              thread_info->tid, thread_info->command_ctr++);
 
     // append generated fields to command
-    json_object_object_add(command, "results_queue", 
+    json_object_object_add(command, "results_queue",
                            json_object_new_string(result_queue_path));
-    json_object_object_add(command, "command_id", 
+    json_object_object_add(command, "command_id",
                            json_object_new_string(id_buffer));
 
     // push command onto queue
@@ -445,8 +443,7 @@ json_object * redis_ipc_send_command_blocking(const char *dest_component,
     {
         // wait for entry from results queue
         result = redis_pop(result_queue_path, timeout);
-        if ( result != NULL && !json_object_is_type(result, json_type_object))
-        {
+        if (result != NULL && !json_object_is_type(result, json_type_object)) {
             // results are supposed to be hash objects, not whatever this thing is
             redis_ipc_send_debug(RIPC_DBG_ERROR, "redis_ipc_send_command_blocking():"
                                  "invalid result '%s'", json_object_get_string(result));
@@ -465,12 +462,9 @@ json_object * redis_ipc_send_command_blocking(const char *dest_component,
             goto redis_ipc_send_command_blocking_finish;
 
         // verify result matches submitted command
-        if (strcmp(result_id_str, id_buffer) == 0)
-        {
-            received_result = 1; 
-        }
-        else
-        {
+        if (strcmp(result_id_str, id_buffer) == 0) {
+            received_result = 1;
+        } else {
            redis_ipc_send_debug(RIPC_DBG_ERROR, "redis_ipc_send_command_blocking():"
                                    "received stale result id %s, want id %s",
                                 result_id_str, id_buffer);
@@ -478,8 +472,7 @@ json_object * redis_ipc_send_command_blocking(const char *dest_component,
     }
 
 redis_ipc_send_command_blocking_finish:
-    if (result == NULL || ! json_object_is_type(result, json_type_object))
-    {
+    if (result == NULL || ! json_object_is_type(result, json_type_object)) {
         redis_ipc_send_debug(RIPC_DBG_ERROR, "redis_ipc_send_command_blocking():"
                                 "invalid result");
     }
@@ -499,7 +492,7 @@ json_object * redis_ipc_receive_command_blocking(const char *subqueue,
     if (thread_info == NULL)
         goto redis_ipc_receive_command_blocking_finish;
 
-    // calculate name of own command queue 
+    // calculate name of own command queue
     ret = ipc_path(command_queue_path, sizeof(command_queue_path),
                    RPC_TYPE_COMMAND, thread_info->component, subqueue);
     if (ret != RIPC_OK)
@@ -507,11 +500,11 @@ json_object * redis_ipc_receive_command_blocking(const char *subqueue,
 
     // wait for entry from command queue
     command = redis_pop(command_queue_path, timeout);
-    if ( command != NULL && !json_object_is_type(command, json_type_object))
-    {
+    if (command != NULL && !json_object_is_type(command, json_type_object)) {
         // commands are supposed to be hash objects, not whatever this thing is
         redis_ipc_send_debug(RIPC_DBG_ERROR, "redis_ipc_receive_command_blocking():"
-                             "invalid command '%s'", json_object_get_string(command));
+                                 "invalid command '%s'",
+                             json_object_get_string(command));
         json_object_put(command);
         command = NULL;
     }
@@ -532,7 +525,7 @@ int redis_ipc_send_result(const json_object *completed_command, json_object *res
     if (thread_info == NULL)
         goto redis_ipc_send_result_finish;
 
-    // extract name of result queue 
+    // extract name of result queue
     result_queue_obj = json_object_object_get(completed_command, "results_queue");
     if (result_queue_obj == NULL)
         goto redis_ipc_send_result_finish;
@@ -545,7 +538,7 @@ int redis_ipc_send_result(const json_object *completed_command, json_object *res
     id_str = json_object_get_string(id_obj);
 
     // append command id to result
-    json_object_object_add(result, "command_id", 
+    json_object_object_add(result, "command_id",
                            json_object_new_string(id_str));
 
     // push result onto queue
@@ -583,7 +576,7 @@ int redis_write_hash(const char *hash_path, json_object *obj)
     num_fields = get_field_count(obj);
 
     // fill out redis command to set multiple fields
-    argv = calloc(2 + num_fields*2, sizeof(char *)); // cmd, hash, keys & values
+    argv = calloc(2 + num_fields*2, sizeof(char *));  // cmd, hash, keys & values
     argv[argc] = "HMSET";
     argc++;
     argv[argc] = hash_path;
@@ -607,7 +600,7 @@ int redis_write_hash(const char *hash_path, json_object *obj)
 
     return ret;
 }
-                        
+
 //@@@@ FIXME: name of component(s) allowed to change settings will be in config file
 static int component_can_write_settings(const char *component)
 {
@@ -666,7 +659,7 @@ redis_ipc_write_status_finish:
     return ret;
 }
 
-int redis_write_hash_field(const char *hash_path, const char *field_name, 
+int redis_write_hash_field(const char *hash_path, const char *field_name,
                            const char *field_value)
 {
     redisReply *reply = NULL;
@@ -684,7 +677,7 @@ int redis_write_hash_field(const char *hash_path, const char *field_name,
     return ret;
 }
 
-int redis_ipc_write_setting_field(const char *owner_component, const char *field_name, 
+int redis_ipc_write_setting_field(const char *owner_component, const char *field_name,
                                   const char *field_value)
 {
     char setting_hash_path[RIPC_MAX_IPC_PATH_LEN];
@@ -705,7 +698,7 @@ int redis_ipc_write_setting_field(const char *owner_component, const char *field
     if (ret != RIPC_OK)
         goto redis_ipc_write_setting_field_finish;
 
-    // update current setting hash with supplied field 
+    // update current setting hash with supplied field
     ret = redis_write_hash_field(setting_hash_path, field_name, field_value);
 
 redis_ipc_write_setting_field_finish:
@@ -729,7 +722,7 @@ int redis_ipc_write_status_field(const char *field_name, const char *field_value
     if (ret != RIPC_OK)
         goto redis_ipc_write_status_field_finish;
 
-    // update current status hash with supplied field 
+    // update current status hash with supplied field
     ret = redis_write_hash_field(status_hash_path, field_name, field_value);
 
 redis_ipc_write_status_field_finish:
@@ -758,7 +751,7 @@ json_object * redis_read_hash(const char *hash_path)
         goto redis_read_hash_finish;
     if (reply->type != REDIS_REPLY_ARRAY)
         goto redis_read_hash_finish;
-    if (reply->elements % 2) // need to have name-value pairs 
+    if (reply->elements % 2)  // need to have name-value pairs
         goto redis_read_hash_finish;
 
     if (stderr_debug_is_enabled()) fprintf(stderr, "[HASH]");
@@ -796,7 +789,7 @@ json_object * redis_ipc_read_setting(const char *owner_component)
     if (ret != RIPC_OK)
         goto redis_ipc_read_setting_finish;
 
-    // get all fields of setting hash 
+    // get all fields of setting hash
     fields = redis_read_hash(setting_hash_path);
 
 redis_ipc_read_setting_finish:
@@ -821,7 +814,7 @@ json_object * redis_ipc_read_status(const char *owner_component)
     if (ret != RIPC_OK)
         goto redis_ipc_read_status_finish;
 
-    // get all fields of status hash 
+    // get all fields of status hash
     fields = redis_read_hash(status_hash_path);
 
 redis_ipc_read_status_finish:
@@ -829,7 +822,7 @@ redis_ipc_read_status_finish:
     return fields;
 }
 
-char * redis_read_hash_field(const char *hash_path, const char *field_name) 
+char * redis_read_hash_field(const char *hash_path, const char *field_name)
 {
     redisReply *reply = NULL;
     char *field_value = NULL;
@@ -848,11 +841,13 @@ char * redis_read_hash_field(const char *hash_path, const char *field_name)
     }
     if (reply->type != REDIS_REPLY_STRING)
     {
-        if (stderr_debug_is_enabled()) fprintf(stderr, "[HASH_FIELD] <non-string result type %d>\n", reply->type);
+        if (stderr_debug_is_enabled())
+            fprintf(stderr, "[HASH_FIELD] <non-string result type %d>\n", reply->type);
         goto redis_read_hash_field_finish;
     }
     field_value = strdup(reply->str);
-    if (stderr_debug_is_enabled()) fprintf(stderr, "[HASH_FIELD] %s='%s'\n", field_name, field_value);
+    if (stderr_debug_is_enabled())
+        fprintf(stderr, "[HASH_FIELD] %s='%s'\n", field_name, field_value);
 
 redis_read_hash_field_finish:
     if (reply != NULL)
@@ -878,7 +873,7 @@ char * redis_ipc_read_setting_field(const char *owner_component, const char *fie
     if (ret != RIPC_OK)
         goto redis_ipc_read_setting_field_finish;
 
-    // get all fields of setting hash 
+    // get all fields of setting hash
     field_value = redis_read_hash_field(setting_hash_path, field_name);
 
 redis_ipc_read_setting_field_finish:
@@ -903,7 +898,7 @@ char * redis_ipc_read_status_field(const char *owner_component, const char *fiel
     if (ret != RIPC_OK)
         goto redis_ipc_read_status_field_finish;
 
-    // get all fields of status hash 
+    // get all fields of status hash
     field_value = redis_read_hash_field(status_hash_path, field_name);
 
 redis_ipc_read_status_field_finish:
@@ -918,7 +913,7 @@ static int redis_publish(const char *channel_path, json_object *obj)
     int ret = RIPC_FAIL;
 
     // append channel path
-    json_object_object_add(obj, "channel", 
+    json_object_object_add(obj, "channel",
                            json_object_new_string(channel_path));
 
     // append standard fields (such as timestamp)
@@ -963,7 +958,7 @@ redis_ipc_send_event_finish:
    return ret;
 }
 
-int format_debug_msg(char *msg, size_t max_msg_len, 
+int format_debug_msg(char *msg, size_t max_msg_len,
                      const char *format, va_list argp)
 {
     const char *trunc_warning = "[TRUNC]";
@@ -1030,9 +1025,9 @@ int redis_ipc_send_debug(unsigned int debug_level, const char *format, ...)
     debug_obj = json_object_new_object();
     if (debug_obj == NULL)
         goto redis_ipc_send_debug_finish;
-    json_object_object_add(debug_obj, "message", 
+    json_object_object_add(debug_obj, "message",
                            json_object_new_string(msg_buffer));
-    json_object_object_add(debug_obj, "level", 
+    json_object_object_add(debug_obj, "level",
                            json_object_new_int(debug_level));
 
     // publish debug object
@@ -1077,22 +1072,16 @@ int redis_ipc_subscribe_events(const char *component, const char *subchannel)
         goto redis_ipc_subscribe_events_finish;
 
     // calculate channel name
-    if (component == NULL) 
-    {
+    if (component == NULL) {
         // use wildcard to get all event channels
         component_pattern = strdup("*");
-    }
-    else
-    {
-        if (subchannel == NULL)
-        {
+    } else {
+        if (subchannel == NULL) {
             // append wildcard to get all event channels for this component
             pattern_len = strlen(component)+2;
             component_pattern = calloc(1, pattern_len);
             snprintf(component_pattern, pattern_len, "%s%c", component, '*');
-        }
-        else
-        {
+        } else {
             // exact match for both component and subchannel
             component_pattern = strdup(component);
         }
@@ -1124,14 +1113,11 @@ int redis_ipc_subscribe_debug(const char *component)
         goto redis_ipc_subscribe_debug_finish;
 
     // calculate channel name
-    if (component == NULL) 
-    {
+    if (component == NULL) {
         // use wildcard to get all debug channels
         component_pattern = "*";
-    }
-    else
-    {
-        // exact match 
+    } else {
+        // exact match
         component_pattern = component;
     }
     ret = ipc_path(debug_channel_path, sizeof(debug_channel_path),
@@ -1228,7 +1214,7 @@ json_object * redis_ipc_get_message_blocking(void)
     ret = redisGetReply(thread_info->redis_state, &reply);
     if (ret != REDIS_OK)
     {
-        // must reconnect to redis server after an error 
+        // must reconnect to redis server after an error
         redisFree(thread_info->redis_state);
         thread_info->redis_state = redisConnectUnix(RIPC_SERVER_PATH);
 
@@ -1238,8 +1224,8 @@ json_object * redis_ipc_get_message_blocking(void)
 
     // extract message from reply object
     //
-    // reply should be an array: 
-    //   string "pmessage" 
+    // reply should be an array:
+    //   string "pmessage"
     //   string <psubscribe pattern>
     //   string <sending channel>
     //   string <message> ** entry of interest
