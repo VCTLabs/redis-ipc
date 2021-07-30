@@ -14,7 +14,7 @@ class json {
     // normally want to take reference on underlying json_object*,
     // except for case of initializing from an exising raw json_object*
     // such as those returned by redis_ipc -- those start out with a reference
-    json(bool is_array=false) {
+    json(bool is_array = false) {
         if (is_array) obj = json_object_new_array();
         else
             obj = json_object_new_object();

@@ -65,13 +65,13 @@ enum redis_ipc_type
 
 const char *redis_ipc_type_names[] =
 {
-   "INVALID",
-   "settings",
-   "status",
-   "queues.commands",
-   "queues.results",
-   "channel.events",
-   "channel.debug"
+    "INVALID",
+    "settings",
+    "status",
+    "queues.commands",
+    "queues.results",
+    "channel.events",
+    "channel.debug"
 };
 
 // generate redis key names aka our IPC "paths"
@@ -443,7 +443,8 @@ json_object * redis_ipc_send_command_blocking(const char *dest_component,
     {
         // wait for entry from results queue
         result = redis_pop(result_queue_path, timeout);
-        if (result != NULL && !json_object_is_type(result, json_type_object)) {
+        if (result != NULL && !json_object_is_type(result, json_type_object))
+        {
             // results are supposed to be hash objects, not whatever this thing is
             redis_ipc_send_debug(RIPC_DBG_ERROR, "redis_ipc_send_command_blocking():"
                                  "invalid result '%s'", json_object_get_string(result));
@@ -462,9 +463,12 @@ json_object * redis_ipc_send_command_blocking(const char *dest_component,
             goto redis_ipc_send_command_blocking_finish;
 
         // verify result matches submitted command
-        if (strcmp(result_id_str, id_buffer) == 0) {
+        if (strcmp(result_id_str, id_buffer) == 0)
+        {
             received_result = 1;
-        } else {
+        }
+        else
+        {
            redis_ipc_send_debug(RIPC_DBG_ERROR, "redis_ipc_send_command_blocking():"
                                    "received stale result id %s, want id %s",
                                 result_id_str, id_buffer);
@@ -472,7 +476,8 @@ json_object * redis_ipc_send_command_blocking(const char *dest_component,
     }
 
 redis_ipc_send_command_blocking_finish:
-    if (result == NULL || ! json_object_is_type(result, json_type_object)) {
+    if (result == NULL || !json_object_is_type(result, json_type_object))
+    {
         redis_ipc_send_debug(RIPC_DBG_ERROR, "redis_ipc_send_command_blocking():"
                                 "invalid result");
     }
@@ -500,7 +505,8 @@ json_object * redis_ipc_receive_command_blocking(const char *subqueue,
 
     // wait for entry from command queue
     command = redis_pop(command_queue_path, timeout);
-    if (command != NULL && !json_object_is_type(command, json_type_object)) {
+    if (command != NULL && !json_object_is_type(command, json_type_object))
+    {
         // commands are supposed to be hash objects, not whatever this thing is
         redis_ipc_send_debug(RIPC_DBG_ERROR, "redis_ipc_receive_command_blocking():"
                                  "invalid command '%s'",
@@ -955,7 +961,7 @@ int redis_ipc_send_event(const char *subchannel, json_object *message)
 
 redis_ipc_send_event_finish:
 
-   return ret;
+    return ret;
 }
 
 int format_debug_msg(char *msg, size_t max_msg_len,
@@ -1034,9 +1040,9 @@ int redis_ipc_send_debug(unsigned int debug_level, const char *format, ...)
     ret = redis_publish(debug_channel_path, debug_obj);
 
 redis_ipc_send_debug_finish:
-   json_object_put(debug_obj);  // safe to call even if NULL
+    json_object_put(debug_obj);  // safe to call even if NULL
 
-   return ret;
+    return ret;
 }
 
 static int redis_subscribe(const char *channel_path)
@@ -1072,16 +1078,22 @@ int redis_ipc_subscribe_events(const char *component, const char *subchannel)
         goto redis_ipc_subscribe_events_finish;
 
     // calculate channel name
-    if (component == NULL) {
+    if (component == NULL)
+    {
         // use wildcard to get all event channels
         component_pattern = strdup("*");
-    } else {
-        if (subchannel == NULL) {
+    }
+    else
+    {
+        if (subchannel == NULL)
+        {
             // append wildcard to get all event channels for this component
             pattern_len = strlen(component)+2;
             component_pattern = calloc(1, pattern_len);
             snprintf(component_pattern, pattern_len, "%s%c", component, '*');
-        } else {
+        }
+        else
+        {
             // exact match for both component and subchannel
             component_pattern = strdup(component);
         }
@@ -1095,9 +1107,9 @@ int redis_ipc_subscribe_events(const char *component, const char *subchannel)
     ret = redis_subscribe(event_channel_path);
 
 redis_ipc_subscribe_events_finish:
-   safe_free(component_pattern);
+    safe_free(component_pattern);
 
-   return ret;
+    return ret;
 }
 
 int redis_ipc_subscribe_debug(const char *component)
@@ -1113,10 +1125,13 @@ int redis_ipc_subscribe_debug(const char *component)
         goto redis_ipc_subscribe_debug_finish;
 
     // calculate channel name
-    if (component == NULL) {
+    if (component == NULL)
+    {
         // use wildcard to get all debug channels
         component_pattern = "*";
-    } else {
+    }
+    else
+    {
         // exact match
         component_pattern = component;
     }
@@ -1130,7 +1145,7 @@ int redis_ipc_subscribe_debug(const char *component)
 
 redis_ipc_subscribe_debug_finish:
 
-   return ret;
+    return ret;
 }
 
 static int redis_unsubscribe(char *channel_path)
@@ -1170,7 +1185,7 @@ int redis_ipc_unsubscribe_events()
 
 redis_ipc_unsubscribe_events_finish:
 
-   return ret;
+    return ret;
 }
 
 // unsubscribe from all debug channels
@@ -1193,7 +1208,7 @@ int redis_ipc_unsubscribe_debug()
 
 redis_ipc_unsubscribe_debug_finish:
 
-   return ret;
+    return ret;
 }
 
 // current thread should be subscribed to one or more callers before calling
@@ -1248,5 +1263,5 @@ redis_get_channel_message_finish:
     if (reply != NULL)
         freeReplyObject(reply);
 
-   return message;
+    return message;
 }
