@@ -19,13 +19,17 @@ class json {
         else
             obj = json_object_new_object();
     }
+
     json(const json &copy) { obj = copy.obj; json_object_get(obj); }
+
     explicit json(const char *json_text) {
         if (json_text) obj = json_tokener_parse(json_text);
         else
             obj = json_object_new_object();
     }
+
     explicit json(json_object *c_obj) : obj(c_obj) {}
+
     // release reference on underlying json_object*,
     // if this was last reference it will get freed
     ~json() { json_object_put(obj); }

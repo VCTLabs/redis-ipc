@@ -1,0 +1,19 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+UseTab: Never
+
+BreakBeforeBraces: Linux
+AllowShortIfStatementsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+IndentCaseLabels: false
+
+KeepEmptyLinesAtTheStartOfBlocks: true
+SpacesBeforeTrailingComments: 2
+ColumnLimit: 120
+
+Language: Cpp
+Standard: Cpp11
+# Force pointers to the type for C++.
+DerivePointerAlignment: true
+PointerAlignment: Right
+AccessModifierOffset: -3
