@@ -1,0 +1,29 @@
+name: "Coverity"
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+#  schedule:
+#    - cron: '21 20 * * 5'
+
+jobs:
+  convert:
+    name: Convert and upload coverity results
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Convert Coverity Results to SARIF
+      uses: gautambaghel/coverity-scan-results-to-sarif@1.0.0
+      with:
+        pipeline-results-json: coverity-results.json
+        output-results-sarif: coverity-results.sarif
+        
+    - name: Upload SARIF file to GitHub UI
+      uses: github/codeql-action/upload-sarif@v1
+      with:
+        sarif_file: coverity-results.sarif
