@@ -34,7 +34,7 @@ static __thread struct redis_ipc_per_thread *redis_ipc_info = NULL;
 #if (__GLIBC_MINOR__ < 30)
 pid_t gettid()
 {
-  return syscall(SYS_gettid);
+    return syscall(SYS_gettid);
 }
 #endif
 
@@ -93,7 +93,9 @@ static int ipc_path(char *buf, size_t buf_len, enum redis_ipc_type type,
     if (extra_path != NULL)
     {
         extra_path_separator = ".";
-    } else {
+    }
+    else
+    {
         extra_path = "";
         extra_path_separator = "";
     }
