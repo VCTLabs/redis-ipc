@@ -26,6 +26,53 @@ IPC mechanisms:
 
 "But, but... redis for *embedded* applications??"
 
+Quick Start Package Install
+===========================
+
+Packages are available for Ubuntu_, and the latest can be installed on Gentoo
+using the ebuilds in `this portage overlay`_. To build from source, see
+`Building redis-ipc`_ below.
+
+
+.. _Ubuntu: https://launchpad.net/~nerdboy/+archive/ubuntu/embedded
+.. _this portage overlay: https://github.com/VCTLabs/python-overlay/
+
+
+Prerequisites
+-------------
+
+A supported linux distribution, mainly something that uses either `.ebuilds`
+(eg, Gentoo or funtoo) or `.deb` packages, starting with at least Ubuntu
+bionic or Debian stretch (see the above PPA package repo on Launchpad).
+
+Make sure you have the ``add-apt-repository`` command installed and then add
+the PPA:
+
+::
+
+  $ sudo apt-get install software-properties-common
+  $ sudo add-apt-repository -y -s ppa:nerdboy/embedded
+  $ sudo apt-get install libredis-ipc-dev redis-tools redis-server
+
+
+.. note:: Since the package series currently published are for bionic/focal,
+          building from source is recommended if installing on Debian.
+
+
+If you get a key error you will also need to manually import the PPA
+signing key like so:
+
+::
+
+  $ sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys <PPA_KEY>
+
+where <PPA_KEY> is the key shown in the launchpad PPA page under "Adding
+this PPA to your system", eg, ``41113ed57774ed19`` for `Embedded device ppa`_.
+
+
+.. _Embedded device ppa: https://launchpad.net/~nerdboy/+archive/ubuntu/embedded
+
+
 Digression into the wonders of redis
 ====================================
 
@@ -116,6 +163,10 @@ build and install it on your Linux development box.
 * Check out redis-ipc source code (no tarball releases yet)::
 
     git clone https://github.com/VCTLabs/redis-ipc.git
+
+* Generate and run configure::
+
+    ./autogen.sh && ./configure
 
 * Run the compile
 
