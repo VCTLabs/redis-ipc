@@ -5,6 +5,7 @@ SUBDIRS = src test
 ACLOCAL_AMFLAGS         = -I m4 --install
 
 EXTRA_DIST = autogen.sh README.rst debian inc/json.hh
+pkgconfig_DATA = redis-ipc.pc
 
 export top_srcdir
 

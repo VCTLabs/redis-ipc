@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: redis-ipc
+Description: redis-ipc is an advanced IPC client using redis
+Version: 0.0.2
+Cflags: -std=c++11 -pthread -I${includedir}
+Libs: -pthread -L${libdir} -lredis_ipc
