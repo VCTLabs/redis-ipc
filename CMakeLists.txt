@@ -22,12 +22,16 @@ option(BUILD_TESTING "buiuld and run tests" ON)
 #set(INSTALL_PKGCONFIG_DIR "${CMAKE_INSTALL_PREFIX}/share/pkgconfig" CACHE PATH "Install directory for pkgconfig (.pc) files")
 set(EXTRA_TARGET_LINK_LIBRARIES)
 
-find_package(json-c)
+find_package(PkgConfig)
+
+pkg_check_modules(json-c IMPORTED_TARGET json-c)
 if (json-c_FOUND)
+  list(APPEND THIRD_PARTY_LIBS PkgConfig::json-c)
+else()
+  find_package(json-c)
   list(APPEND THIRD_PARTY_LIBS json-c)
 endif()
 
-find_package(PkgConfig)
 pkg_check_modules(HIREDIS IMPORTED_TARGET hiredis)
 if (HIREDIS_FOUND)
   list(APPEND THIRD_PARTY_LIBS PkgConfig::HIREDIS)
