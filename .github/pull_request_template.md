@@ -20,7 +20,7 @@ tests in commits of their own.
 <!---
 See `.gitchangelog.rc` in the top-level repo directory for guidance on
 commit message summary formatting and tags.  Please use the appropriate
-action and/or audience markers in in the first line of your commit messages.
+action and/or audience markers in the first line of your commit messages.
 
 See also, e.g., https://chris.beams.io/posts/git-commit/ for general
 guidelines on commit messages.
