@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 
+# used for both library and pkgconfig file
+set(LIBRARY_VERSION 0.0.3)
+set(LIBRARY_SOVERSION 0)
+
 if(POLICY CMP0048)
   cmake_policy(SET CMP0048 NEW)
 endif()
@@ -86,8 +90,8 @@ target_link_libraries(redis_ipc ${EXTRA_TARGET_LINK_LIBRARIES})
 target_compile_definitions(redis_ipc PRIVATE VERSION_INFO=${SCM_VERSION_INFO})
 
 # this looks weird, but needed for correct SOVERSION links
-set_target_properties(redis_ipc PROPERTIES VERSION 0.0.3)
-set_target_properties(redis_ipc PROPERTIES SOVERSION 0)
+set_target_properties(redis_ipc PROPERTIES VERSION ${LIBRARY_VERSION})
+set_target_properties(redis_ipc PROPERTIES SOVERSION ${LIBRARY_SOVERSION})
 
 if(BUILD_TESTING)
   set(TEST_TARGETS
@@ -133,7 +137,7 @@ install(TARGETS ${RIPC_LIBS} EXPORT redis_ipcConfig
 install(EXPORT redis_ipcConfig
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/redis_ipc NAMESPACE redis_ipc::)
 
-#set(RIPC_PC ${CMAKE_CURRENT_BINARY_DIR}/redis_ipc.pc)
-#configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/redis_ipc.pc.in ${RIPC_PC} @ONLY)
-#install(FILES ${RIPC_PC} DESTINATION "${INSTALL_PKGCONFIG_DIR}")
 
+set(RIPC_PC ${CMAKE_CURRENT_BINARY_DIR}/redis-ipc.pc)
+configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/redis-ipc.pc.in ${RIPC_PC} @ONLY)
+install(FILES ${RIPC_PC} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
