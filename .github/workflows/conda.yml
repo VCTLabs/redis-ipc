@@ -9,36 +9,54 @@ on:
 
 jobs:
   build:
+    name: redis-ipc ${{ matrix.python-version }} ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-latest, windows-2016, macos-latest]
-        python-version: ["3.7", "3.9"]
-
-    runs-on: ${{ matrix.platform }}
-
-    # The setup-miniconda action needs this to activate miniconda
-    defaults:
-      run:
-        shell: "bash -l {0}"
+        os: ['ubuntu-latest', 'macos-latest', 'windows-2016', 'windows-2019']
+        python-version: ['3.7']
+        include:
+          - os: 'ubuntu-latest'
+            generator: 'Ninja'
+            build_type: 'RelWithDebInfo'
+          - os: 'macos-latest'
+            generator: 'Ninja'
+            build_type: 'RelWithDebInfo'
+          - os: 'windows-2016'
+            generator: 'Visual Studio 15 2017 Win64'
+            build_type: 'Release'
+          - os: 'windows-2019'
+            generator: 'Visual Studio 16 2019'
+            build_type: 'Release'
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
+    - uses: actions/checkout@v2
 
-      - name: Get conda
-        uses: conda-incubator/setup-miniconda@v2.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-          channels: conda-forge
-          channel-priority: strict
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true
+        python-version: ${{ matrix.python-version }}
+        channels: conda-forge
+        channel-priority: strict
 
-      - name: Prepare
-        run: conda install conda-build conda-verify
+    - name: install prerequisites
+      shell: pwsh
+      run: conda install cmake ninja c-compiler cxx-compiler json-c libhiredis
 
-      - name: Build
-        run: conda build conda/
+    - name: print info
+      shell: pwsh
+      run: |
+        conda info
+        conda list
 
-      - name: Install
-        run: conda install -c ${CONDA_PREFIX}/conda-bld/ redis-ipc
+    - name: build and test
+      shell: pwsh
+      run: >
+        ctest
+        --build-config "${{ matrix.build_type }}"
+        --build-generator "${{ matrix.generator }}"
+        --build-and-test . build
+        --build-options -DDISABLE_REDIS_TESTS=1
+        -DCMAKE_INSTALL_PREFIX:PATH=$env:CONDA_PREFIX
+        --test-command ctest -V --build-config "${{ matrix.build_type }}"

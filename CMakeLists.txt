@@ -22,8 +22,9 @@ option(BUILD_SHARED_LIBS "build shared libraries" ON)
 option(BUILD_STATIC_LIBS "Build static libraries" OFF)
 
 option(BUILD_TESTING "build and run tests" ON)
+option(DISABLE_REDIS_TESTS "disable tests requiring redis socket" OFF)
 
-#set(INSTALL_PKGCONFIG_DIR "${CMAKE_INSTALL_PREFIX}/share/pkgconfig" CACHE PATH "Install directory for pkgconfig (.pc) files")
+set(INSTALL_PKGCONFIG_DIR "${CMAKE_INSTALL_PREFIX}/share/pkgconfig" CACHE PATH "Install directory for pkgconfig (.pc) files")
 set(EXTRA_TARGET_LINK_LIBRARIES)
 
 find_package(PkgConfig)
@@ -94,22 +95,23 @@ set_target_properties(redis_ipc PROPERTIES VERSION ${LIBRARY_VERSION})
 set_target_properties(redis_ipc PROPERTIES SOVERSION ${LIBRARY_SOVERSION})
 
 if(BUILD_TESTING)
-  set(TEST_TARGETS
-      command_result_test
-      pub_sub_test
-      settings_status_test
-      multithread_test
-      )
+  if (NOT DISABLE_REDIS_TESTS)
+    set(TEST_TARGETS
+        command_result_test
+        pub_sub_test
+        settings_status_test
+        multithread_test
+        )
 
+    foreach(target ${TEST_TARGETS})
+      add_executable(${target} test/${target}.c)
+      target_link_libraries(${target} redis_ipc ${EXTRA_TARGET_LINK_LIBRARIES})
+      add_test(NAME ${target} COMMAND ${target})
+    endforeach(target)
+  endif()
   add_executable(json_test test/json_test.cpp)
   target_link_libraries(json_test redis_ipc ${EXTRA_TARGET_LINK_LIBRARIES})
   add_test(NAME json_test COMMAND json_test)
-
-  foreach(target ${TEST_TARGETS})
-    add_executable(${target} test/${target}.c)
-    target_link_libraries(${target} redis_ipc ${EXTRA_TARGET_LINK_LIBRARIES})
-    add_test(NAME ${target} COMMAND ${target})
-  endforeach(target)
 endif()
 
 set(RIPC_HEADERS
@@ -140,4 +142,4 @@ install(EXPORT redis_ipcConfig
 
 set(RIPC_PC ${CMAKE_CURRENT_BINARY_DIR}/redis-ipc.pc)
 configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/redis-ipc.pc.in ${RIPC_PC} @ONLY)
-install(FILES ${RIPC_PC} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+install(FILES ${RIPC_PC} DESTINATION ${INSTALL_PKGCONFIG_DIR})
