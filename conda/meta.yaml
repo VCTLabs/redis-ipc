@@ -1,0 +1,38 @@
+{% set name = "redis-ipc" %}
+{% set version = "0.0.3" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  path: ..
+
+build:
+  number: 0
+
+requirements:
+  build:
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+    - cmake
+    - make  # [unix]
+
+  host:
+    - libhiredis
+    - json-c
+    - redis-py
+
+  run:
+    - redis
+
+about:
+  home: https://github.com/VCTLabs/redis-ipc
+  license: GPL-2.0-only
+  license_family: GPL
+  license_file: LICENSE
+  summary: advanced IPC mechanism using redis
+
+extra:
+  recipe-maintainers:
+    - sarnold
