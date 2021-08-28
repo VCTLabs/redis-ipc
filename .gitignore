@@ -19,6 +19,8 @@ __pycache__/*
 # Visual Studio
 Debug/*
 Release/*
+# cmake
+build/
 
 # compilation files
 *.lo
