@@ -14,7 +14,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-latest', 'macos-latest', 'windows-2016', 'windows-2019']
+        os: ['ubuntu-latest', 'macos-latest']
+        # add these later, 'windows-2016', 'windows-2019'
         python-version: ['3.7']
         include:
           - os: 'ubuntu-latest'
@@ -23,12 +24,12 @@ jobs:
           - os: 'macos-latest'
             generator: 'Ninja'
             build_type: 'RelWithDebInfo'
-          - os: 'windows-2016'
-            generator: 'Visual Studio 15 2017 Win64'
-            build_type: 'Release'
-          - os: 'windows-2019'
-            generator: 'Visual Studio 16 2019'
-            build_type: 'Release'
+          #- os: 'windows-2016'
+            #generator: 'Visual Studio 15 2017 Win64'
+            #build_type: 'Release'
+          #- os: 'windows-2019'
+            #generator: 'Visual Studio 16 2019'
+            #build_type: 'Release'
 
     steps:
     - uses: actions/checkout@v2
@@ -57,6 +58,6 @@ jobs:
         --build-config "${{ matrix.build_type }}"
         --build-generator "${{ matrix.generator }}"
         --build-and-test . build
-        --build-options -DDISABLE_REDIS_TESTS=1
+        --build-options -DRIPC_DISABLE_SOCK_TESTS=1
         -DCMAKE_INSTALL_PREFIX:PATH=$env:CONDA_PREFIX
         --test-command ctest -V --build-config "${{ matrix.build_type }}"

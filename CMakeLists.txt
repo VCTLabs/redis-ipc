@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
+# Add cmake modules of this project to the module path
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
 # used for both library and pkgconfig file
 set(LIBRARY_VERSION 0.0.3)
 set(LIBRARY_SOVERSION 0)
@@ -18,11 +21,18 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_EXTENSIONS OFF)
 endif()
 
+SET(CMAKE_C_STANDARD 99)
+SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
+SET(CMAKE_DEBUG_POSTFIX d)
+
+# Ensure proper configuration if in a conda environment
+include(CondaAware)
+
 option(BUILD_SHARED_LIBS "build shared libraries" ON)
 option(BUILD_STATIC_LIBS "Build static libraries" OFF)
 
-option(BUILD_TESTING "build and run tests" ON)
-option(DISABLE_REDIS_TESTS "disable tests requiring redis socket" OFF)
+option(RIPC_BUILD_TESTING "build and run tests" ON)
+option(RIPC_DISABLE_SOCK_TESTS "disable tests requiring redis socket" OFF)
 
 set(INSTALL_PKGCONFIG_DIR "${CMAKE_INSTALL_PREFIX}/share/pkgconfig" CACHE PATH "Install directory for pkgconfig (.pc) files")
 set(EXTRA_TARGET_LINK_LIBRARIES)
@@ -90,12 +100,8 @@ target_link_libraries(redis_ipc ${EXTRA_TARGET_LINK_LIBRARIES})
 # define (VERSION_INFO) here.
 target_compile_definitions(redis_ipc PRIVATE VERSION_INFO=${SCM_VERSION_INFO})
 
-# this looks weird, but needed for correct SOVERSION links
-set_target_properties(redis_ipc PROPERTIES VERSION ${LIBRARY_VERSION})
-set_target_properties(redis_ipc PROPERTIES SOVERSION ${LIBRARY_SOVERSION})
-
-if(BUILD_TESTING)
-  if (NOT DISABLE_REDIS_TESTS)
+if(RIPC_BUILD_TESTING)
+  if (NOT RIPC_DISABLE_SOCK_TESTS)
     set(TEST_TARGETS
         command_result_test
         pub_sub_test
@@ -109,6 +115,7 @@ if(BUILD_TESTING)
       add_test(NAME ${target} COMMAND ${target})
     endforeach(target)
   endif()
+
   add_executable(json_test test/json_test.cpp)
   target_link_libraries(json_test redis_ipc ${EXTRA_TARGET_LINK_LIBRARIES})
   add_test(NAME json_test COMMAND json_test)
