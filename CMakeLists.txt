@@ -26,7 +26,6 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 SET(CMAKE_C_STANDARD 99)
-SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
 SET(CMAKE_DEBUG_POSTFIX d)
 
 # Ensure proper configuration if in a conda environment
@@ -39,6 +38,8 @@ option(BUILD_STATIC_LIBS "Build static libraries" OFF)
 
 option(RIPC_BUILD_TESTING "build and run tests" ON)
 option(RIPC_DISABLE_SOCK_TESTS "disable tests requiring redis socket" OFF)
+
+set(WITH_COVERAGE "" CACHE PATH "build with test coverage enabled")
 
 set(INSTALL_PKGCONFIG_DIR "${CMAKE_INSTALL_PREFIX}/share/pkgconfig" CACHE PATH "Install directory for pkgconfig (.pc) files")
 set(EXTRA_TARGET_LINK_LIBRARIES)
@@ -62,6 +63,11 @@ else()
 endif()
 
 list(APPEND EXTRA_TARGET_LINK_LIBRARIES ${THIRD_PARTY_LIBS})
+
+if (WITH_COVERAGE)
+    add_compile_options("--coverage")
+    add_link_options("--coverage")
+endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   if(MSVC_VERSION LESS 1900)
