@@ -6,7 +6,7 @@ mkdir build
 cd build
 
 cmake \
-    -DBUILD_TESTING=OFF \
+    -DRIPC_BUILD_TESTING=OFF \
     -DCMAKE_INSTALL_PREFIX=$PREFIX \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     ..
