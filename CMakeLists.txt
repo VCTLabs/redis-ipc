@@ -11,7 +11,11 @@ if(POLICY CMP0048)
   cmake_policy(SET CMP0048 NEW)
 endif()
 
-project(redis_ipc C CXX)
+project(redis_ipc VERSION ${LIBRARY_VERSION} LANGUAGES C CXX)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
 include(CTest)
 include(GNUInstallDirs)
 
@@ -113,13 +117,21 @@ if(RIPC_BUILD_TESTING)
 
     foreach(target ${TEST_TARGETS})
       add_executable(${target} test/${target}.c)
-      target_link_libraries(${target} redis_ipc ${EXTRA_TARGET_LINK_LIBRARIES})
+      target_link_libraries(${target}
+        redis_ipc
+        ${EXTRA_TARGET_LINK_LIBRARIES}
+        ${CMAKE_THREAD_LIBS_INIT}
+        )
       add_test(NAME ${target} COMMAND ${target})
     endforeach(target)
   endif()
 
   add_executable(json_test test/json_test.cpp)
-  target_link_libraries(json_test redis_ipc ${EXTRA_TARGET_LINK_LIBRARIES})
+  target_link_libraries(json_test
+    redis_ipc
+    ${EXTRA_TARGET_LINK_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+    )
   add_test(NAME json_test COMMAND json_test)
 endif()
 

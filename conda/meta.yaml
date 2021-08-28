@@ -10,6 +10,9 @@ source:
 
 build:
   number: 0
+  skip: true           # [win and float(vc) < 14]
+  run_exports:
+    - {{ pin_subpackage('redis_ipc', max_pin='x.x') }}
 
 requirements:
   build:
@@ -20,12 +23,15 @@ requirements:
     - make  # [unix]
 
   host:
-    - libhiredis
-    - json-c
-    - redis-py
+    - msinttypes  # [win and float(vc) < 14]
 
-  run:
-    - redis
+test:
+  commands:
+    - ldd ${PREFIX}/lib/libredis_ipc.so  # [linux]
+    - test -f ${PREFIX}/include/redis_ipc.h  # [unix]
+    - test -f ${PREFIX}/lib/libredis_ipc.{{ soversion }}${SHLIB_EXT}  # [osx]
+    - if not exist %PREFIX%\\Library\\include\\redis_ipc.h exit 1  # [win]
+    - echo "TODO - Pkg tests require redis server."
 
 about:
   home: https://github.com/VCTLabs/redis-ipc
