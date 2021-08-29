@@ -1,22 +1,25 @@
+:: MSVC is preferred.
 ECHO "redis-ipc library"
 
-mkdir _build
-cd _build
-env
+set CC=cl.exe
+set CXX=cl.exe
 
-REM add future installation path to pkgconfig
-set PKG_CONFIG_PATH=%LIBRARY_PREFIX%\lib\pkgconfig;
-
-cmake -G"NMake Makefiles" ^
-      -DCMAKE_BUILD_TYPE=Release ^
-      -DRIPC_BUILD_TESTING:BOOL=OFF ^
-      -DCMAKE_INSTALL_PREFIX:PATH=%LIBRARY_PREFIX% ^
-      -DCMAKE_PREFIX_PATH:PATH=%LIBRARY_PREFIX% ^
-      ..
+mkdir build
+cd build
+cmake ^
+    -G "Ninja" ^
+    -DRIPC_BUILD_TESTING=0 ^
+    -DCMAKE_INSTALL_PREFIX=%LIBRARY_PREFIX% ^
+    -DCMAKE_BUILD_TYPE=Release ^
+    -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=True ^
+    -DBUILD_SHARED_LIBS=ON ^
+    %SRC_DIR%
 if errorlevel 1 exit 1
 
-nmake VERBOSE=1
+:: Build.
+cmake --build . --config Release
 if errorlevel 1 exit 1
 
-nmake install VERBOSE=1
+:: Install.
+cmake --build . --config Release --target install
 if errorlevel 1 exit 1

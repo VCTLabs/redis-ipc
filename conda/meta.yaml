@@ -28,6 +28,9 @@ requirements:
   host:
     - msinttypes  # [win and float(vc) < 14]
     - redis-py
+    - json-c
+    - libhiredis
+    - pthread-stubs  # [not win]
 
 test:
   commands:
