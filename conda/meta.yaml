@@ -26,6 +26,7 @@ requirements:
 
   host:
     - msinttypes  # [win and float(vc) < 14]
+    - redis-py
 
 test:
   commands:
