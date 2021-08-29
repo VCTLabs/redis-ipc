@@ -3,7 +3,9 @@
 // SPDX-License-Identifier: GPL-2.0-only
 
 #define _GNU_SOURCE  // for gettid()
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
