@@ -36,6 +36,8 @@ test:
     - ldd ${PREFIX}/lib/libredis_ipc${SHLIB_EXT}  # [linux]
     - test -f ${PREFIX}/include/redis_ipc.h  # [unix]
     - test -f ${PREFIX}/lib/libredis_ipc${SHLIB_EXT}  # [osx]
+    - conda inspect linkages -p $PREFIX $PKG_NAME  # [unix]
+    - conda inspect objects -p $PREFIX $PKG_NAME  # [osx]
     - echo "TODO - Pkg tests require redis server."
 
 about:
