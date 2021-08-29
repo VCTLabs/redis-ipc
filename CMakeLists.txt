@@ -110,6 +110,10 @@ if (NOT SCM_VERSION_INFO)
 endif()
 target_compile_definitions(redis_ipc PRIVATE VERSION_INFO=${SCM_VERSION_INFO})
 
+# this looks weird, but needed for correct SOVERSION links
+set_target_properties(redis_ipc PROPERTIES VERSION ${LIBRARY_VERSION})
+set_target_properties(redis_ipc PROPERTIES SOVERSION ${LIBRARY_SOVERSION})
+
 if(RIPC_BUILD_TESTING)
   if (NOT RIPC_DISABLE_SOCK_TESTS)
     set(TEST_TARGETS
