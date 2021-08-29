@@ -3,15 +3,15 @@
 // SPDX-License-Identifier: GPL-2.0-only
 
 #define _GNU_SOURCE  // for gettid()
-#ifndef _MSC_VER
-#include <unistd.h>
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 #include <sys/types.h>
+#ifndef _MSC_VER
+#include <unistd.h>
 #include <sys/syscall.h>
+#endif  // _MSC_VER
 #include <sys/time.h>
 #include <json-c/json.h>
 #include <hiredis/hiredis.h>
