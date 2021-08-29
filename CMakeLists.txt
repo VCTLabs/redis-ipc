@@ -95,8 +95,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc
 set(RIPC_SOURCES src/redis_ipc.c)
 
 if(BUILD_STATIC_LIBS)
-    add_library(ripcstatic STATIC ${RIPC_SOURCES})
-    set_target_properties(ripcstatic PROPERTIES OUTPUT_NAME redis_ipc)
+  add_library(ripcstatic STATIC ${RIPC_SOURCES})
+  set_target_properties(ripcstatic PROPERTIES OUTPUT_NAME redis_ipc)
 endif()
 
 add_library(redis_ipc ${RIPC_SOURCES})
@@ -105,6 +105,9 @@ target_link_libraries(redis_ipc ${EXTRA_TARGET_LINK_LIBRARIES})
 
 # SCM_VERSION_INFO is defined by cmake args and passed into the code as a
 # define (VERSION_INFO) here.
+if (NOT SCM_VERSION_INFO)
+  set(SCM_VERSION_INFO ${LIBRARY_VERSION})
+endif()
 target_compile_definitions(redis_ipc PRIVATE VERSION_INFO=${SCM_VERSION_INFO})
 
 if(RIPC_BUILD_TESTING)
