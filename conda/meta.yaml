@@ -11,16 +11,14 @@ source:
 
 build:
   number: 0
-  skip: true           # [win and float(vc) < 14]
+  skip: true  # [win]
   run_exports:
     - {{ pin_subpackage(name, max_pin='x.x') }}
 
 requirements:
   build:
-    - {{ compiler('c') }}  # [not win]
-    - {{ compiler('cxx') }}  # [not win]
-    - vs2017_win-64  # [win64]
-    - vs2017_win-32  # [win32]
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
     - cmake
     - pkg-config
     - make  # [unix]
@@ -28,20 +26,16 @@ requirements:
     - libhiredis
 
   host:
-    - msinttypes  # [win and float(vc) < 14]
     - redis-py
     - json-c
     - libhiredis
-    - pthread-stubs  # [not win]
-    - pthreads-win32  # [win]
+    - pthread-stubs
 
 test:
   commands:
     - ldd ${PREFIX}/lib/libredis_ipc${SHLIB_EXT}  # [linux]
     - test -f ${PREFIX}/include/redis_ipc.h  # [unix]
     - test -f ${PREFIX}/lib/libredis_ipc${SHLIB_EXT}  # [osx]
-    - if not exist %LIBRARY_LIB%\redis_ipc.lib exit 1   # [win]
-    - if not exist %PREFIX%\\Library\\include\\redis_ipc.h exit 1  # [win]
     - echo "TODO - Pkg tests require redis server."
 
 about:
