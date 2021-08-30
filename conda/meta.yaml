@@ -1,6 +1,5 @@
 {% set name = "redis-ipc" %}
 {% set version = "0.0.3" %}
-{% set soversion = "0" %}
 
 package:
   name: {{ name|lower }}
@@ -12,15 +11,15 @@ source:
 build:
   number: 0
   skip: true  # [win]
-  run_exports:
-    - {{ pin_subpackage(name, max_pin='x.x') }}
+  run_exports:  # [not win]
+    - {{ pin_subpackage('redis-ipc', max_pin='x.x') }}
 
 requirements:
   build:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - cmake
-    - pkg-config
+    - pkg-config  # [unix]
     - make  # [unix]
     - json-c
     - libhiredis
@@ -32,12 +31,17 @@ requirements:
     - pthread-stubs
 
 test:
+  requires:
+    - pkg-config
+    #- conda-build
   commands:
-    - ldd ${PREFIX}/lib/libredis_ipc${SHLIB_EXT}  # [linux]
+    {% set libname = "libredis_ipc" %}
+    - ldd ${PREFIX}/lib/{{ libname }}${SHLIB_EXT}  # [linux]
     - test -f ${PREFIX}/include/redis_ipc.h  # [unix]
-    - test -f ${PREFIX}/lib/libredis_ipc${SHLIB_EXT}  # [osx]
-    - conda inspect linkages -p $PREFIX $PKG_NAME  # [unix]
-    - conda inspect objects -p $PREFIX $PKG_NAME  # [osx]
+    - test -f ${PREFIX}/lib/{{ libname }}${SHLIB_EXT}  # [osx]
+    - test -f ${PREFIX}`pkg-config --variable=libdir --dont-define-prefix {{ name }}`/{{ libname }}$SHLIB_EXT  # [unix]
+    #- conda inspect linkages -p $PREFIX $PKG_NAME  # [unix]
+    #- conda inspect objects -p $PREFIX $PKG_NAME  # [osx]
     - echo "TODO - Pkg tests require redis server."
 
 about:
