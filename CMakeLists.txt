@@ -11,6 +11,12 @@ if(POLICY CMP0048)
   cmake_policy(SET CMP0048 NEW)
 endif()
 
+if (SCM_VERSION_INFO)
+  set(LIBRARY_VERSION ${SCM_VERSION_INFO})
+endif()
+
+set(RIPC_SONAME ${LIBRARY_VERSION})
+
 project(redis_ipc VERSION ${LIBRARY_VERSION} LANGUAGES C CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -103,16 +109,16 @@ add_library(redis_ipc ${RIPC_SOURCES})
 add_library(redis_ipc::redis_ipc ALIAS redis_ipc)
 target_link_libraries(redis_ipc ${EXTRA_TARGET_LINK_LIBRARIES})
 
-# SCM_VERSION_INFO is defined by cmake args and passed into the code as a
-# define (VERSION_INFO) here.
-if (NOT SCM_VERSION_INFO)
-  set(SCM_VERSION_INFO ${LIBRARY_VERSION})
-endif()
-target_compile_definitions(redis_ipc PRIVATE VERSION_INFO=${SCM_VERSION_INFO})
+# SCM_VERSION_INFO can be defined by cmake args and passed into the code as a
+# define here (see LIBRARY_VERSION near the top of this file)
+target_compile_definitions(redis_ipc PRIVATE VERSION_INFO=${LIBRARY_VERSION})
 
 # this looks weird, but needed for correct SOVERSION links
-set_target_properties(redis_ipc PROPERTIES VERSION ${LIBRARY_VERSION})
-set_target_properties(redis_ipc PROPERTIES SOVERSION ${LIBRARY_SOVERSION})
+set_target_properties(redis_ipc
+    PROPERTIES
+    VERSION ${RIPC_SONAME}
+    SOVERSION ${LIBRARY_SOVERSION}
+    )
 
 if(RIPC_BUILD_TESTING)
   if (NOT RIPC_DISABLE_SOCK_TESTS)
