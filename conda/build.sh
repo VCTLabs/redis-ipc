@@ -3,7 +3,7 @@
 set -ex
 
 if [[ "$target_platform" == "osx-64" ]]; then
-    MACOS_ARGS="-DCMAKE_MACOSX_RPATH=ON"
+    MACOS_ARGS="-DCMAKE_MACOSX_RPATH=ON -DCCACHE_IGNORE=ON"
 fi
 
 mkdir build

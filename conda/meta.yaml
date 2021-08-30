@@ -16,6 +16,7 @@ build:
     - {{ pin_subpackage('redis-ipc', max_pin='x.x') }}
   ignore_run_exports:  # [not win]
     - libstdcxx-ng
+    - libcxx
 
 requirements:
   build:
