@@ -11,7 +11,7 @@ if(POLICY CMP0048)
   cmake_policy(SET CMP0048 NEW)
 endif()
 
-if (SCM_VERSION_INFO)
+if(SCM_VERSION_INFO)
   set(LIBRARY_VERSION ${SCM_VERSION_INFO})
 endif()
 
@@ -35,7 +35,7 @@ SET(CMAKE_C_STANDARD 99)
 SET(CMAKE_DEBUG_POSTFIX d)
 
 # Ensure proper configuration if in a conda environment
-include(CondaAware)
+#include(CondaAware)
 # find the active python site-packages path
 include(FindPython)
 
@@ -50,22 +50,30 @@ set(WITH_COVERAGE "" CACHE PATH "build with test coverage enabled")
 set(INSTALL_PKGCONFIG_DIR "${CMAKE_INSTALL_PREFIX}/share/pkgconfig" CACHE PATH "Install directory for pkgconfig (.pc) files")
 set(EXTRA_TARGET_LINK_LIBRARIES)
 
-include(FindJSONC)
-include_directories(${JSONC_INCLUDE_DIRS})
-list(APPEND THIRD_PARTY_LIBS ${JSONC_LIBRARIES})
+#include(FindJSONC)
+#include_directories(${JSONC_INCLUDE_DIRS})
+#list(APPEND THIRD_PARTY_LIBS ${JSONC_LIBRARIES})
 
 find_package(PkgConfig)
-pkg_check_modules(HIREDIS IMPORTED_TARGET hiredis)
-if (HIREDIS_FOUND)
-  list(APPEND THIRD_PARTY_LIBS PkgConfig::HIREDIS)
-else()
+
+if(NOT PkgConfig_FOUND)
+  find_package(json-c)
   find_package(hiredis)
-  list(APPEND THIRD_PARTY_LIBS hiredis)
+  list(APPEND THIRD_PARTY_LIBS json-c hiredis)
+else()
+  pkg_check_modules(HIREDIS IMPORTED_TARGET hiredis)
+  if (HIREDIS_FOUND)
+    list(APPEND THIRD_PARTY_LIBS PkgConfig::HIREDIS)
+  endif()
+  pkg_check_modules(JSONC IMPORTED_TARGET json-c)
+  if (JSONC_FOUND)
+    list(APPEND THIRD_PARTY_LIBS PkgConfig::JSONC)
+  endif()
 endif()
 
 list(APPEND EXTRA_TARGET_LINK_LIBRARIES ${THIRD_PARTY_LIBS})
 
-if (WITH_COVERAGE)
+if(WITH_COVERAGE)
     add_compile_options("--coverage")
     add_link_options("--coverage")
 endif()

@@ -11,8 +11,11 @@ source:
 build:
   number: 0
   skip: true  # [win]
+  error_overdepending: true
   run_exports:  # [not win]
     - {{ pin_subpackage('redis-ipc', max_pin='x.x') }}
+  ignore_run_exports:  # [not win]
+    - libstdcxx-ng
 
 requirements:
   build:
@@ -26,20 +29,19 @@ requirements:
 
   host:
     - redis-py
+    # this is needed outside conda smithy env
     - json-c
     - libhiredis
-    - pthread-stubs
 
 test:
   requires:
     - pkg-config
     #- conda-build
   commands:
-    {% set libname = "libredis_ipc" %}
-    - ldd ${PREFIX}/lib/{{ libname }}${SHLIB_EXT}  # [linux]
+    - ldd ${PREFIX}/lib/libredis_ipc${SHLIB_EXT}  # [linux]
     - test -f ${PREFIX}/include/redis_ipc.h  # [unix]
-    - test -f ${PREFIX}/lib/{{ libname }}${SHLIB_EXT}  # [osx]
-    - test -f ${PREFIX}`pkg-config --variable=libdir --dont-define-prefix {{ name }}`/{{ libname }}$SHLIB_EXT  # [unix]
+    - test -f ${PREFIX}/lib/libredis_ipc${SHLIB_EXT}  # [osx]
+    - test -f ${PREFIX}`pkg-config --variable=libdir --dont-define-prefix redis-ipc`/libredis_ipc${SHLIB_EXT}  # [unix]
     #- conda inspect linkages -p $PREFIX $PKG_NAME  # [unix]
     #- conda inspect objects -p $PREFIX $PKG_NAME  # [osx]
     - echo "TODO - Pkg tests require redis server."
