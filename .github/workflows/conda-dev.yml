@@ -67,12 +67,11 @@ jobs:
       shell: bash -l {0}
       env:
         PY_VER: ${{ matrix.python-version }}
-      run: >
-        source activate redis-ipc &&
-        ctest
-        --build-config "${{ matrix.build_type }}"
-        --build-generator "${{ matrix.generator }}"
-        --build-and-test . build
-        --build-options -DRIPC_DISABLE_SOCK_TESTS=1 -DCCACHE_IGNORE=ON
-        --test-command ctest -V --build-config "${{ matrix.build_type }}"
-        && gcovr -e test/ -e src/
+      run: |
+        source activate redis-ipc
+        ctest --build-config "${{ matrix.build_type }}" \
+          --build-generator "${{ matrix.generator }}" \
+          --build-and-test . build \
+          --build-options -DRIPC_DISABLE_SOCK_TESTS=1 -DCCACHE_IGNORE=ON \
+          --test-command ctest -V --build-config "${{ matrix.build_type }}"
+        gcovr -e test/ -e src/
