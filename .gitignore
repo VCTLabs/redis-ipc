@@ -21,6 +21,8 @@ Debug/*
 Release/*
 # cmake
 build/
+# Conda
+environment.yml
 
 # compilation files
 *.lo

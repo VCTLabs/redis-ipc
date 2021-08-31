@@ -1,6 +1,11 @@
 ===========
  redis-ipc
 ===========
+
+redis-ipc is an example of how redis_ can be used as an advanced IPC 
+mechanism on an embedded Linux system, for instance as a substitute for
+the more common choice of dbus. 
+
 |ci| |codeql| |cpplint| |pylint|
 
 |bandit| |cov|
@@ -8,10 +13,6 @@
 |std| |python| |style|
 
 |tag| |license|
-
-redis-ipc is an example of how redis_ can be used as an advanced IPC 
-mechanism on an embedded Linux system, for instance as a substitute for the
-more common choice of dbus. 
 
 redis-ipc is intended to make communication among different logical components
 of a system convenient. It is not intended to replace shared memory for high 
@@ -25,6 +26,7 @@ IPC mechanisms:
 * event channels
 
 "But, but... redis for *embedded* applications??"
+
 
 Quick Start Package Install
 ===========================
@@ -73,6 +75,74 @@ this PPA to your system", eg, ``41113ed57774ed19`` for `Embedded device ppa`_.
 .. _Embedded device ppa: https://launchpad.net/~nerdboy/+archive/ubuntu/embedded
 
 
+Quick Start Dev Environment
+===========================
+
+Packages should eventually be available in `Conda Forge`_ but you can always
+use Conda's `devenv` support to build/install locally inside a Conda environment.
+This is the recommended method if you can't use the PPA or Gentoo overlay. Set
+your default shell to `bash` if not already set.
+
+Prerequisites
+-------------
+
+Install either Anaconda_ or Miniconda_ (we recommend miniconda) and add
+the `conda-forge` channel, then install the `conda-devenv` package.
+
+* Download the miniconda linux-64 installer and run it
+* Let the installer add the conda init bits to your `.bashrc`
+* Source your shell environment: `source ~/.bashrc`
+* Install`conda-devenv`::
+
+    conda config --append channels conda-forge
+    conda install -n base conda-devenv
+
+* Clone this repository::
+
+    git clone https://github.com/VCTLabs/redis-ipc.git
+
+* Create a new conda devenv environment::
+
+    cd redis-ipc/
+    conda devenv
+
+This command will create the conda environment called `redis-ipc`, which
+can take a few minutes to complete the first time. This will install
+the conda toolchain and all required dependencies to build from source
+(see the contents of the `environment.devenv.yml` file for details).
+
+* Activate the environment::
+
+    conda activate redis-ipc
+
+Now you can use the usual `cmake` configure and build steps (see the
+`Cmake build`_ section below) or you can run the following one-liner
+for a quick build-and-test::
+
+  ctest --build-config RelWithDebInfo --build-generator "Unix Makefiles" \
+    --build-and-test . build --build-options -DRIPC_DISABLE_SOCK_TESTS=1 \
+    -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DCMAKE_INSTALL_LIBDIR=lib \
+    -DWITH_COVERAGE=1 --test-command ctest -V --build-config RelWithDebInfo
+
+.. note:: The above command will omit running the socket tests, but if
+    already have a running `redis` server available, you can set the
+    `RIPC_DISABLE_SOCK_TESTS` argument to `0` instead.
+
+Whenever the above dependencies change or you alter your local conda
+environment, rebuild your `devenv`::
+
+    conda devenv
+
+When finished, deactivate the environment::
+
+    conda deactivate
+
+
+.. _Conda Forge: https://anaconda.org/conda-forge/repo
+.. _Ananconda: https://www.anaconda.com/download
+.. _Minicoda: https://conda.io/miniconda.html
+
+
 Digression into the wonders of redis
 ====================================
 
@@ -105,6 +175,7 @@ and finally one more which is specifically relevant for embedded software:
 
 * portable -- cross-compiles nicely, available as `openembedded recipe`_
 
+
 Important caveat regarding redis security
 =========================================
 
@@ -136,15 +207,21 @@ Example of sensible scenarios for redis deployment:
   are again limited to localhost, and in normal operations (i.e. not development mode) 
   there are NO network logins enabled to the device.
 
-Building redis-ipc 
+
+Building redis-ipc
 ==================
 
 Now back to the star of this show, namely redis-ipc, starting with how to 
-build and install it on your Linux development box.
+build and install it on your Linux development box (redis-ipc now supports
+both autotools and CMake build systems, so in the following steps choose
+one or the other).
 
 * Install build dependencies
 
   * C/C++ toolchain
+  * pkg-config
+  * make
+  * cmake --or-- automake/autoconf/libtool
   * hiredis_
   * json-c_
 
@@ -163,6 +240,37 @@ build and install it on your Linux development box.
 * Check out redis-ipc source code (no tarball releases yet)::
 
     git clone https://github.com/VCTLabs/redis-ipc.git
+    cd redis-ipc/
+
+
+CMake build
+-----------
+
+The cmake tools can be run in several ways, and follow the standard set
+of (cmake) out-of-tree build steps.
+
+* Create the build directory::
+
+    mkdir build && cd build/
+
+* Configure the build::
+
+    cmake -DCMAKE_BUILD_TYPE=Debug ..
+
+* Build it::
+
+    make
+
+* Run the tests::
+
+    make check
+
+
+Autotools build
+---------------
+
+The autotools build will create the standard set of Makefiles and the
+`configure` script.
 
 * Generate and run configure::
 
@@ -173,12 +281,12 @@ build and install it on your Linux development box.
   * native build::
 
       # also builds the library, in addition to some simple example apps
-      make testprogs 
+      make
 
   * cross-compile build::
 
       # also builds the library, in addition to some simple example apps
-      make testprogs CROSS_COMPILE=<toolchain prefix> SYSROOT=<cross-compile staging area>
+      make CROSS_COMPILE=<toolchain prefix> SYSROOT=<cross-compile staging area>
 
     * **CROSS_COMPILE** is everything up to (and including) the last '-' in the tool names,
       e.g. if the C compiler is arm-none-linux-gnueabi-gcc then
