@@ -15,15 +15,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-latest', 'macos-latest']
+        os: ['ubuntu-18.04', 'ubuntu-20.04']
         python-version: ['3.7', '3.9']
         include:
           - os: 'ubuntu-latest'
             generator: 'Unix Makefiles'
             build_type: 'RelWithDebInfo'
-          - os: 'macos-latest'
-            generator: 'Unix Makefiles'
-            build_type: 'RelWithDebInfo'
+          #- os: 'macos-latest'
+            #generator: 'Unix Makefiles'
+            #build_type: 'RelWithDebInfo'
 
     steps:
     - uses: actions/checkout@v2
@@ -64,13 +64,14 @@ jobs:
       shell: bash -l {0}
       env:
         PY_VER: ${{ matrix.python-version }}
-        #CC: ccache
-        #CXX: ccache
+        CC: ccache
+        CXX: ccache
       run: >
-        source activate redis-ipc &&
+        source activate redis-ipc && ccache -s && ccache -z &&
         ctest
         --build-config "${{ matrix.build_type }}"
         --build-generator "${{ matrix.generator }}"
         --build-and-test . build
         --build-options -DRIPC_DISABLE_SOCK_TESTS=1 -DCCACHE_IGNORE=1
         --test-command ctest -V --build-config "${{ matrix.build_type }}"
+        && ccache -s

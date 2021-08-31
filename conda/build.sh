@@ -3,7 +3,7 @@
 set -ex
 
 if [[ "$target_platform" == "osx-64" ]]; then
-    MACOS_ARGS="-DCMAKE_MACOSX_RPATH=ON -DCCACHE_IGNORE=ON"
+    MACOS_ARGS="-DCMAKE_MACOSX_RPATH=ON"
 fi
 
 mkdir build
@@ -14,6 +14,7 @@ cmake \
     -DCMAKE_INSTALL_PREFIX=$PREFIX \
     -DCMAKE_INSTALL_LIBDIR=lib \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    -DCCACHE_IGNORE=ON \
     ${MACOS_ARGS} \
     ..
 
