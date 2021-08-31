@@ -18,7 +18,10 @@ jobs:
         os: ['ubuntu-18.04', 'ubuntu-20.04']
         python-version: ['3.7', '3.9']
         include:
-          - os: 'ubuntu-latest'
+          - os: 'ubuntu-18.04'
+            generator: 'Unix Makefiles'
+            build_type: 'RelWithDebInfo'
+          - os: 'ubuntu-20.04'
             generator: 'Unix Makefiles'
             build_type: 'RelWithDebInfo'
           #- os: 'macos-latest'
@@ -72,6 +75,7 @@ jobs:
         --build-config "${{ matrix.build_type }}"
         --build-generator "${{ matrix.generator }}"
         --build-and-test . build
-        --build-options -DRIPC_DISABLE_SOCK_TESTS=1 -DCCACHE_IGNORE=1
+        --build-options -DRIPC_DISABLE_SOCK_TESTS=1
         --test-command ctest -V --build-config "${{ matrix.build_type }}"
         && ccache -s
+        && gcovr -e test/ -e src/
