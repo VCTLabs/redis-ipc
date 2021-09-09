@@ -414,8 +414,8 @@ Example::
   // monitor process (or thread) of printer software component
   redis_ipc_init("printer", "monitor");
 
-When redis-ipc is no longer neaded, there is a corresponding function to free 
-resources ::
+When redis-ipc is no longer needed, there is a corresponding function to
+free resources ::
 
   int redis_ipc_cleanup(pid_t tid);
 
@@ -470,7 +470,7 @@ Example::
 
   // printer component has 2 queues, "print" and "cancel"
   // because cancel commands need a separate queue that is checked even 
-  // while printing or else an in-progress job can't be cancelled
+  // while printing or else an in-progress job can't be canceled
 
   // non-printer component requests printing of file
   json_object *command = json_object_new_object();
