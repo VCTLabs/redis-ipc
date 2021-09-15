@@ -118,6 +118,9 @@ static int ipc_path(char *buf, size_t buf_len, enum redis_ipc_type type,
                                 component, extra_path_separator,
                                 extra_path);
             break;
+        default:
+            // anything else is unsupported, leave as failure
+            break;
     }
 
     // path_len == buf_len indicates truncation
@@ -151,7 +154,7 @@ int redis_ipc_init(const char *this_component, const char *this_thread)
     new_info = calloc(1, sizeof(struct redis_ipc_per_thread));
 
     if (new_info == NULL)
-        goto redis_ipc_init_failed;
+        return RIPC_FAIL;  // nothing to clean up before returning
 
     // component is name for all threads/processes in same subsystem,
     // thread is uniquely (non-random) assigned name for this thread,
@@ -232,6 +235,7 @@ redisReply * validate_redis_reply(redisReply *reply)
         // must reconnect to redis server after an error
         if (stderr_debug_is_enabled())
         {
+            // coverity[CWE-476] NOT null if redis_ipc_init() ran in this thread
             fprintf(stderr, "[ERROR] '%s', need to reconnect\n",
                     thread_info->redis_state->errstr);
         }
@@ -271,6 +275,7 @@ redisReply * redis_command(const char *format, ...)
     }
 
     va_start(argp, format);
+    // coverity[CWE-476] NOT null if redis_ipc_init() ran in this thread
     reply = redisvCommand(thread_info->redis_state, format, argp);
     va_end(argp);
 
@@ -289,7 +294,6 @@ redisReply * redis_command_from_list(int argc, const char **argv)
 {
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     redisReply *reply = NULL;
-    va_list argp;
     int i = 0;
 
     if (stderr_debug_is_enabled())
@@ -301,6 +305,7 @@ redisReply * redis_command_from_list(int argc, const char **argv)
         fprintf(stderr, "\n");
     }
 
+    // coverity[CWE-476] NOT null if redis_ipc_init() ran in this thread
     reply = redisCommandArgv(thread_info->redis_state, argc, argv, NULL);
 
     // check for redis errors and avoid returning an error string
@@ -328,6 +333,7 @@ void json_add_common_fields(json_object *obj)
 
     json_object_object_add(obj, "timestamp",
                            json_object_new_string(timestamp_buffer));
+    // coverity[CWE-476] NOT null if redis_ipc_init() ran in this thread
     json_object_object_add(obj, "component",
                            json_object_new_string(thread_info->component));
     json_object_object_add(obj, "thread",
@@ -364,7 +370,6 @@ static json_object * redis_pop(const char *queue_path, unsigned int timeout)
     const char *json_text = NULL;
     json_object *entry = NULL;
     redisReply *reply = NULL;
-    int ret = RIPC_FAIL;
 
     // don't forget to free reply later
     reply = redis_command("BLPOP %s %d", queue_path, timeout);
@@ -594,8 +599,10 @@ int redis_write_hash(const char *hash_path, json_object *obj)
     argc++;
     json_object_object_foreach(obj, key, val)
     {
+        // coverity[CWE-119] argv was sized by counting actual number of fields
         argv[argc] = key;
         argc++;
+        // coverity[CWE-119] argv was sized by counting actual number of fields
         argv[argc] = json_object_get_string(val);
         argc++;
     }
@@ -608,6 +615,7 @@ int redis_write_hash(const char *hash_path, json_object *obj)
         ret = RIPC_OK;
         freeReplyObject(reply);
     }
+    safe_free(argv);
 
     return ret;
 }
@@ -837,7 +845,6 @@ char * redis_read_hash_field(const char *hash_path, const char *field_name)
 {
     redisReply *reply = NULL;
     char *field_value = NULL;
-    int ret = RIPC_FAIL;
 
     // don't forget to free reply later
     reply = redis_command("HGET %s %s", hash_path, field_name);
@@ -984,10 +991,10 @@ int format_debug_msg(char *msg, size_t max_msg_len,
     msg_len = vsnprintf(msg, max_msg_len, format, argp);
 
     // flag truncation of message
-    if (msg_len == max_msg_len)
+    if (msg_len >= max_msg_len)
     {
         // write warning over end of message
-        strncpy(&msg[warning_offset], trunc_warning, warning_len);
+        strncpy(&msg[warning_offset], trunc_warning, warning_len+1);
     }
 
     if (msg_len > 0)
@@ -1121,7 +1128,6 @@ int redis_ipc_subscribe_debug(const char *component)
 {
     char debug_channel_path[RIPC_MAX_IPC_PATH_LEN];
     const char *component_pattern = NULL;
-    size_t pattern_len = 0;
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     int ret = RIPC_FAIL;
 
