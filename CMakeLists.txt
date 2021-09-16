@@ -34,6 +34,11 @@ endif()
 SET(CMAKE_C_STANDARD 99)
 SET(CMAKE_DEBUG_POSTFIX d)
 
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
+            "Default build type: RelWithDebInfo" FORCE)
+endif()
+
 # Ensure proper configuration if in a conda environment
 #include(CondaAware)
 # find the active python site-packages path
