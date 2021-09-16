@@ -1,6 +1,9 @@
 // Copyright (c) 2011-2021 Vanguard Computer Technology Labs <answers@vctlabs.com>
 //
 // SPDX-License-Identifier: GPL-2.0-only
+//
+// use the following to suppress false positives
+// coverity[EVENT_TAG_NAME]
 
 #define _GNU_SOURCE  // for gettid()
 #include <unistd.h>

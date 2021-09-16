@@ -1,10 +1,11 @@
 name: "Coverity"
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [ master, develop ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, develop ]
 #  schedule:
 #    - cron: '21 20 * * 5'
 

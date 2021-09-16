@@ -47,6 +47,11 @@ AC_TYPE_UINT32_T
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset strdup])
 
+AC_CHECK_LIB(pthread, pthread_create, [LIBS="-lpthread ${LIBS}"], [
+  echo "pthreads required, failing"
+  exit -1
+])
+
 # Check for hiredis and json-c
 JSON_C_MIN_VERSION="0.9"
 

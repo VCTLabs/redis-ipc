@@ -19,6 +19,10 @@ __pycache__/*
 # Visual Studio
 Debug/*
 Release/*
+# cmake
+build/
+# Conda
+environment.yml
 
 # compilation files
 *.lo

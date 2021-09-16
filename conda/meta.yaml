@@ -1,0 +1,59 @@
+{% set name = "redis-ipc" %}
+{% set version = "0.0.3" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  path: ..
+
+build:
+  number: 0
+  skip: true  # [win]
+  error_overdepending: true
+  run_exports:  # [not win]
+    - {{ pin_subpackage('redis-ipc', max_pin='x.x') }}
+  ignore_run_exports:  # [not win]
+    - libstdcxx-ng
+    - libcxx
+
+requirements:
+  build:
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+    - cmake
+    - pkg-config  # [unix]
+    - make  # [unix]
+    - json-c
+    - libhiredis
+
+  host:
+    - redis-py
+    # this is needed outside conda smithy env
+    - json-c
+    - libhiredis
+
+test:
+  requires:
+    - pkg-config
+    #- conda-build
+  commands:
+    - ldd ${PREFIX}/lib/libredis_ipc${SHLIB_EXT}  # [linux]
+    - test -f ${PREFIX}/include/redis_ipc.h  # [unix]
+    - test -f ${PREFIX}/lib/libredis_ipc${SHLIB_EXT}  # [osx]
+    - test -f ${PREFIX}`pkg-config --variable=libdir --dont-define-prefix redis-ipc`/libredis_ipc${SHLIB_EXT}  # [unix]
+    #- conda inspect linkages -p $PREFIX $PKG_NAME  # [unix]
+    #- conda inspect objects -p $PREFIX $PKG_NAME  # [osx]
+    - echo "TODO - Pkg tests require redis server."
+
+about:
+  home: https://github.com/VCTLabs/redis-ipc
+  license: GPL-2.0-only
+  license_family: GPL
+  license_file: LICENSE
+  summary: advanced IPC mechanism using redis
+
+extra:
+  recipe-maintainers:
+    - sarnold

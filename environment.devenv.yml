@@ -1,0 +1,12 @@
+name: redis-ipc
+
+dependencies:
+  - cmake>=3.18
+  - ninja
+  - c-compiler
+  - cxx-compiler
+  - make  # [linux]
+  - json-c=0.15
+  - libhiredis=1.0.0
+  - lcov
+  - gcovr
