@@ -6,13 +6,11 @@ redis-ipc is an example of how redis_ can be used as an advanced IPC
 mechanism on an embedded Linux system, for instance as a substitute for
 the more common choice of dbus. 
 
-|ci| |codeql| |cpplint| |pylint|
+|ci| |codeql| |cpplint|
 
-|bandit| |cov|
+|cov|
 
-|std| |python| |style|
-
-|tag| |license|
+|tag| |license| |std|
 
 redis-ipc is intended to make communication among different logical components
 of a system convenient. It is not intended to replace shared memory for high 
