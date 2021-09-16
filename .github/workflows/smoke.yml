@@ -99,7 +99,7 @@ jobs:
       with:
         fetch-depth: 0
 
-    - uses: sarnold/cccc-action@updates
+    - uses: sarnold/cccc-action@main
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         target_branch: gh-pages
@@ -110,6 +110,10 @@ jobs:
           .hh
           .h
           .c
+
+    - name: Display
+      run: |
+        ls -lR
 
     - uses: actions/upload-artifact@v2
       with:
