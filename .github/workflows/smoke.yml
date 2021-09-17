@@ -99,7 +99,7 @@ jobs:
       with:
         fetch-depth: 0
 
-    - uses: sarnold/cccc-action@main
+    - uses: sarnold/cccc-action@non-personal
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         source_dirs: |
