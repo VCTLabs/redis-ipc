@@ -29,6 +29,11 @@ IPC mechanisms:
 Quick Start Package Install
 ===========================
 
+redis-ipc comes in 2 flavors, a python class module and a lightweight C library
+implementation (this repo). The python module has moved to a `new home`_.
+
+.. _new home: https://github.com/VCTLabs/redis-ipc-py
+
 Packages are available for Ubuntu_, and the latest can be installed on Gentoo
 using the ebuilds in `this portage overlay`_. To build from source, see
 `Building redis-ipc`_ below.

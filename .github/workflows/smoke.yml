@@ -102,18 +102,9 @@ jobs:
     - uses: sarnold/cccc-action@main
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        target_branch: gh-pages
         source_dirs: |
           src
           inc
-        file_extensions: |
-          .hh
-          .h
-          .c
-
-    - name: Display
-      run: |
-        ls -lR
 
     - uses: actions/upload-artifact@v2
       with:
