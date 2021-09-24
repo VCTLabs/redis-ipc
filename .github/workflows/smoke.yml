@@ -75,12 +75,12 @@ jobs:
     - name: Display coverage bionic
       if: matrix.os == 'ubuntu-18.04'
       run: |
-        gcovr -s -b --filter src/
+        gcovr -s -b -r src/
 
     - name: Display coverage
       if: matrix.os == 'ubuntu-20.04'
       run: |
-        gcovr -s -b --filter src/.libs/
+        gcovr -s -b -r src/
 
     - name: Cleanup
       run: |
