@@ -75,20 +75,16 @@ jobs:
     - name: Display coverage bionic
       if: matrix.os == 'ubuntu-18.04'
       run: |
-        gcovr --filter src/
+        gcovr -s -b --filter src/
 
     - name: Display coverage
       if: matrix.os == 'ubuntu-20.04'
       run: |
-        gcovr --filter src/.libs/
+        gcovr -s -b --filter src/.libs/
 
     - name: Cleanup
       run: |
         cat /tmp/redis.pid | xargs kill
-
-    - uses: codecov/codecov-action@v2
-      with:
-        verbose: true
 
   check:
     name: Collect metrics

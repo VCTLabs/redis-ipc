@@ -724,9 +724,9 @@ When finished with the above, don't forget to kill the redis server::
     :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/cpplint.yml
     :alt: GitHub CI Cpplint Status
 
-.. |cov| image:: https://img.shields.io/codecov/c/github/VCTLabs/redis-ipc
-    :target: https://codecov.io/gh/VCTLabs/redis-ipc
-    :alt: Codecov test coverage
+.. |cov| image:: https://raw.githubusercontent.com/VCTLabs/redis-ipc/badges/develop/test-coverage.svg
+    :target: https://github.com/VCTLabs/redis-ipc/
+    :alt: Test coverage
 
 .. |bandit| image:: https://github.com/VCTLabs/redis-ipc/actions/workflows/bandit.yml/badge.svg
     :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/bandit.yml
