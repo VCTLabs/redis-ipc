@@ -125,7 +125,7 @@ for a quick build-and-test::
   ctest --build-config RelWithDebInfo --build-generator "Unix Makefiles" \
     --build-and-test . build --build-options -DRIPC_DISABLE_SOCK_TESTS=1 \
     -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DCMAKE_INSTALL_LIBDIR=lib \
-    -DWITH_COVERAGE=1 --test-command ctest -V --build-config RelWithDebInfo
+    --test-command ctest -V --build-config RelWithDebInfo
 
 .. note:: The above command will omit running the socket tests, but if
     already have a running `redis` server available, you can set the

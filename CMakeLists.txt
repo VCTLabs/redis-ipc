@@ -55,6 +55,11 @@ set(WITH_COVERAGE "" CACHE PATH "build with test coverage enabled")
 set(INSTALL_PKGCONFIG_DIR "${CMAKE_INSTALL_PREFIX}/share/pkgconfig" CACHE PATH "Install directory for pkgconfig (.pc) files")
 set(EXTRA_TARGET_LINK_LIBRARIES)
 
+if(WITH_COVERAGE)
+    add_compile_options(--coverage)
+    add_link_options(--coverage -lgcov)
+endif()
+
 #include(FindJSONC)
 #include_directories(${JSONC_INCLUDE_DIRS})
 #list(APPEND THIRD_PARTY_LIBS ${JSONC_LIBRARIES})
@@ -77,11 +82,6 @@ else()
 endif()
 
 list(APPEND EXTRA_TARGET_LINK_LIBRARIES ${THIRD_PARTY_LIBS})
-
-if(WITH_COVERAGE)
-    add_compile_options("--coverage")
-    add_link_options("--coverage")
-endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   if(MSVC_VERSION LESS 1900)
