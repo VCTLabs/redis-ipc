@@ -155,7 +155,12 @@ jobs:
         REAL_NAME: redis_ipc
       run: |
         tox -e auto,cover
-        ./scripts/fix_cov_file.sh
+        #./scripts/fix_cov_file.sh
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: coverage_data
+        path: coverage.xml
 
     - name: Code Coverage Summary Report (data)
       uses: irongut/CodeCoverageSummary@v1.0.3
