@@ -155,10 +155,10 @@ jobs:
         REAL_NAME: redis_ipc
       run: |
         tox -e auto,cover
-        ./scripts/fix_pkg_name.sh
+        ./scripts/fix_cov_file.sh
 
     - name: Code Coverage Summary Report (data)
-      uses: irongut/CodeCoverageSummary@v1.0.2
+      uses: irongut/CodeCoverageSummary@v1.0.3
       with:
         filename: coverage.xml
         output: 'both'
@@ -173,7 +173,7 @@ jobs:
         echo "##[set-output name=coverage-rounded-display;]${COVERAGE}%"
 
     - name: Code Coverage Summary Report
-      uses: irongut/CodeCoverageSummary@v1.0.2
+      uses: irongut/CodeCoverageSummary@v1.0.3
       if: ${{ github.event_name == 'pull_request' }}
       with:
         filename: coverage.xml
