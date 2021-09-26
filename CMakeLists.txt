@@ -57,7 +57,7 @@ set(EXTRA_TARGET_LINK_LIBRARIES)
 
 if(WITH_COVERAGE)
     add_compile_options(--coverage)
-    add_link_options(--coverage -lgcov)
+    add_link_options(--coverage)
 endif()
 
 #include(FindJSONC)

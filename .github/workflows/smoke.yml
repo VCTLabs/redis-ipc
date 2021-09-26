@@ -98,9 +98,7 @@ jobs:
     - uses: sarnold/cccc-action@0.3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        source_dirs: |
-          src
-          inc
+        source_dirs: src
 
     - uses: actions/upload-artifact@v2
       with:

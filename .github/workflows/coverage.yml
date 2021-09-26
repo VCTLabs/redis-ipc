@@ -150,12 +150,14 @@ jobs:
         python -m pip install --upgrade pip
         pip install tox
 
+    # add temporary sed knife fix for coveragae data
     - name: Generate coverage and fix pkg name
       env:
         REAL_NAME: redis_ipc
       run: |
         tox -e auto
         ./scripts/fix_pkg_name.sh
+        sed -i -e 's|complexity="0.0"|complexity="0"|g' coverage.xml
 
     - uses: actions/upload-artifact@v2
       with:
