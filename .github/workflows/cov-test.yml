@@ -18,13 +18,29 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    - name: Check for new scan data
+      env:
+        FILE: 'coverity-results.json'
+      shell: bash
+      run: |
+        if [ -f "${FILE}" ]
+        then
+            echo "HAVE_SCAN_DATA=true" >> $GITHUB_ENV
+            echo "Found data file: ${FILE}"
+        else
+            echo "HAVE_SCAN_DATA=false" >> $GITHUB_ENV
+            echo "Data file NOT found!!"
+        fi
+
     - name: Convert Coverity Results to SARIF
+      if: env.HAVE_SCAN_DATA == 'true'
       uses: gautambaghel/coverity-scan-results-to-sarif@1.0.0
       with:
         pipeline-results-json: coverity-results.json
         output-results-sarif: coverity-results.sarif
         
     - name: Upload SARIF file to GitHub UI
+      if: env.HAVE_SCAN_DATA == 'true'
       uses: github/codeql-action/upload-sarif@v1
       with:
         sarif_file: coverity-results.sarif
