@@ -2,16 +2,19 @@ name: CondaDev
 
 on:
   workflow_dispatch:
-  #push:
-    #branches:
-      #- master
-      #- develop
+  push:
+    branches:
+      - master
+      - develop
   pull_request:
 
 jobs:
   build:
     name: redis-ipc ${{ matrix.python-version }} ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -l {0}
     strategy:
       fail-fast: false
       matrix:
@@ -31,19 +34,15 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Configure Cache
-      id: cache
-      uses: actions/cache@v2
-      env:
-        # Increase this value to reset cache and rebuild the env during the PR
-        CACHE_NUMBER: 1
-      with:
-        path: |
-          **/build
-          **/ccache
-          ~/conda_pkgs_dir
-        key:
-          ${{ runner.os }}-${{ matrix.python-version }}-${{ github.ref }}-${{ env.CACHE_NUMBER }}
+      - name: Cache conda
+        uses: actions/cache@v2
+        env:
+          # Increase this value to reset cache if environment.devenv.yml has not changed
+          CACHE_NUMBER: 2
+        with:
+          path: ~/conda_pkgs_dir
+          key:
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment.devenv.yml') }}
 
     - uses: conda-incubator/setup-miniconda@v2
       with:
@@ -67,11 +66,12 @@ jobs:
       shell: bash -l {0}
       env:
         PY_VER: ${{ matrix.python-version }}
-      run: |
+      run: >-
         source activate redis-ipc
-        ctest --build-config "${{ matrix.build_type }}" \
-          --build-generator "${{ matrix.generator }}" \
-          --build-and-test . build \
-          --build-options -DRIPC_DISABLE_SOCK_TESTS=1 -DCCACHE_IGNORE=ON \
-          --test-command ctest -V --build-config "${{ matrix.build_type }}"
-        gcovr -e test/ -e src/
+        && ctest --build-config "${{ matrix.build_type }}"
+          --build-generator "${{ matrix.generator }}"
+          --build-and-test . build
+          --build-options -DRIPC_DISABLE_SOCK_TESTS=1
+          --test-command ctest -V
+          --build-config "${{ matrix.build_type }}"
+        && gcovr -s -b build/

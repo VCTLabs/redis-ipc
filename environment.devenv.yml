@@ -1,6 +1,7 @@
 name: redis-ipc
 
 dependencies:
+  - python ={{ get_env("PY_VER", default="3.9") }}
   - cmake>=3.18
   - ninja
   - c-compiler

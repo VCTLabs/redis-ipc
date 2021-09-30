@@ -29,7 +29,6 @@ requirements:
     - libhiredis
 
   host:
-    - redis-py
     # this is needed outside conda smithy env
     - json-c
     - libhiredis

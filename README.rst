@@ -6,7 +6,7 @@ redis-ipc is an example of how redis_ can be used as an advanced IPC
 mechanism on an embedded Linux system, for instance as a substitute for
 the more common choice of dbus. 
 
-|ci| |codeql| |cpplint|
+|ci| |conda-dev| |codeql| |cpplint| |coverage|
 
 |cov|
 
@@ -716,21 +716,21 @@ When finished with the above, don't forget to kill the redis server::
     :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/codeql.yml
     :alt: GitHub CI CodeQL Status
 
-.. |pylint| image:: https://github.com/VCTLabs/redis-ipc/actions/workflows/pylint.yml/badge.svg
-    :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/pylint.yml
-    :alt: GitHub CI Pylint Status
+.. |conda-dev| image:: https://github.com/VCTLabs/redis-ipc/actions/workflows/conda-dev.yml/badge.svg
+    :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/conda-dev.yml
+    :alt: GitHub CI Conda-dev Status
 
 .. |cpplint| image:: https://github.com/VCTLabs/redis-ipc/actions/workflows/cpplint.yml/badge.svg
     :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/cpplint.yml
     :alt: GitHub CI Cpplint Status
 
+.. |coverage| image:: https://github.com/VCTLabs/redis-ipc/actions/workflows/coverage.yml/badge.svg
+    :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/coverage.yml
+    :alt: Coverage workflow
+
 .. |cov| image:: https://raw.githubusercontent.com/VCTLabs/redis-ipc/badges/develop/test-coverage.svg
     :target: https://github.com/VCTLabs/redis-ipc/
     :alt: Test coverage
-
-.. |bandit| image:: https://github.com/VCTLabs/redis-ipc/actions/workflows/bandit.yml/badge.svg
-    :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/bandit.yml
-    :alt: Security check - Bandit
 
 .. |license| image:: https://badges.frapsoft.com/os/gpl/gpl.png?v=103
     :target: https://opensource.org/licenses/GPL-2.0/
