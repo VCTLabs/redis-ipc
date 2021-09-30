@@ -42,7 +42,7 @@ endif()
 # Ensure proper configuration if in a conda environment
 #include(CondaAware)
 # find the active python site-packages path
-include(FindPython)
+#include(FindPython)
 
 option(BUILD_SHARED_LIBS "build shared libraries" ON)
 option(BUILD_STATIC_LIBS "Build static libraries" OFF)

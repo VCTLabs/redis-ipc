@@ -86,6 +86,11 @@ jobs:
       run: |
         cat /tmp/redis.pid | xargs kill
 
+    - uses: actions/upload-artifact@v2
+      with:
+        name: coverage
+        path: ./coverage
+
   check:
     name: Collect metrics
     runs-on: ubuntu-20.04

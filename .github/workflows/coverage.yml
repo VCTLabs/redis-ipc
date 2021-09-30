@@ -154,7 +154,7 @@ jobs:
       env:
         REAL_NAME: redis_ipc
       run: |
-        tox -e auto
+        tox -e ctest
         ./scripts/fix_pkg_name.sh
 
     - uses: actions/upload-artifact@v2

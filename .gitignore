@@ -23,7 +23,8 @@ Release/*
 build/
 # Conda
 environment.yml
-
+# coverage files
+test/*.out
 # compilation files
 *.lo
 *.od

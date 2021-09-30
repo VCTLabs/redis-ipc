@@ -5,16 +5,16 @@
 genhtml_branch_coverage = 1
 genhtml_function_coverage = 1
 genhtml_charset=UTF-8
-#genhtml_demangle_cpp=1
+genhtml_demangle_cpp=1
 
 geninfo_checksum = 0
 geninfo_compat_libtool = 1
-geninfo_external = 0
-geninfo_gcov_all_blocks = 0
+#geninfo_external = 0
+#geninfo_gcov_all_blocks = 0
 #geninfo_adjust_src_path = /tmp/build => /usr/src
 geninfo_adjust_src_path = /.libs
 genhtml_precision = 4
-geninfo_auto_base = 0
+#geninfo_auto_base = 1
 
 lcov_function_coverage = 1
 lcov_branch_coverage = 1

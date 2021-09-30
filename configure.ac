@@ -87,11 +87,13 @@ AC_ARG_WITH([coverage],
             )
 AM_CONDITIONAL([WITH_COVERAGE], [test x$with_cov = xtrue])
 if test x$with_cov = xtrue; then
+  AC_PATH_PROG(PWD, pwd)
   AC_PATH_PROG(LCOV, lcov)
   AC_PATH_PROG(GCOV, gcov)
   AC_PATH_PROG(GENHTML, genhtml)
   COVERAGE_CFLAGS="--coverage"
-  COVERAGE_OPTFLAGS="-O0"
+  COVERAGE_OPTFLAGS="-pg -g -O0"
+  AC_SUBST([PWD])
   AC_SUBST([GCOV])
   AC_SUBST([LCOV])
   AC_SUBST([GENHTML])
