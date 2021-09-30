@@ -1,0 +1,53 @@
+# To install the git pre-commit hook run:
+#   pre-commit install
+# To update the pre-commit hooks run:
+#   pre-commit install-hooks
+repos:
+  - repo: meta
+    hooks:
+      - id: check-useless-excludes
+      - id: check-hooks-apply
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: trailing-whitespace
+        # exclude: '\.patch$'
+      - id: end-of-file-fixer
+        # exclude: '\.patch$'
+      - id: mixed-line-ending
+        # exclude: '\.patch$'
+        args: [--fix=lf]
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: check-merge-conflict
+      # - id: check-symlinks
+      - id: detect-private-key
+      # - id: check-xml
+      - id: check-yaml
+  - repo: https://github.com/iconmaster5326/cmake-format-pre-commit-hook
+    rev: v0.6.9
+    hooks:
+      - id: cmake-format
+#  - repo: https://github.com/pocc/pre-commit-hooks
+#    rev: v1.1.1
+#    hooks:
+#      - id: clang-format
+#        args: [-i]
+# current cpplint hook ignores top-level CPPLINT.cfg
+  - repo: https://github.com/cpplint/cpplint
+    rev: 1.5.5
+    hooks:
+      - id: cpplint
+        args:
+          - '--output=gsed'
+          - '--linelength=120'
+          - '--filter=-build/include_subdir,-build/header_guard,-whitespace/braces,-whitespace/newline'
+          - '--exclude=test/*.c'
+          - '--exclude=test/*.cpp'
+        files: \.(h|hh|hpp|hxx|h|c|cc|cpp|cxx|c)$
+  - repo: https://github.com/jorisroovers/gitlint
+    rev: v0.15.1
+    hooks:
+      - id: gitlint
