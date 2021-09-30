@@ -47,7 +47,7 @@ jobs:
     - name: Common dependencies
       run: |
         sudo apt-get install -y libhiredis-dev autoconf automake
-        sudo apt-get install -y redis-tools redis-server gcovr lcov
+        sudo apt-get install -y redis-server gcovr lcov
 
     - name: Configure
       run: |
@@ -75,20 +75,16 @@ jobs:
     - name: Display coverage bionic
       if: matrix.os == 'ubuntu-18.04'
       run: |
-        gcovr --filter src/
+        gcovr -s -b -r src/
 
     - name: Display coverage
       if: matrix.os == 'ubuntu-20.04'
       run: |
-        gcovr --filter src/.libs/
+        gcovr -s -b -r src/
 
     - name: Cleanup
       run: |
         cat /tmp/redis.pid | xargs kill
-
-    - uses: codecov/codecov-action@v2
-      with:
-        verbose: true
 
   check:
     name: Collect metrics
@@ -99,21 +95,10 @@ jobs:
       with:
         fetch-depth: 0
 
-    - uses: sarnold/cccc-action@main
+    - uses: sarnold/cccc-action@0.3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        target_branch: gh-pages
-        source_dirs: |
-          src
-          inc
-        file_extensions: |
-          .hh
-          .h
-          .c
-
-    - name: Display
-      run: |
-        ls -lR
+        source_dirs: src
 
     - uses: actions/upload-artifact@v2
       with:

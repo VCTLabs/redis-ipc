@@ -26,7 +26,7 @@ cov:
 	$(MAKE) $(AM_MAKEFLAGS) check \
 		CFLAGS="$(CFLAGS) $(COVERAGE_CFLAGS) $(COVERAGE_OPTFLAGS)"
 	@echo "Generating coverage report..."
-	$(LCOV) --capture \
+	$(LCOV) --config-file $(top_srcdir)/.lcovrc --capture \
 		--directory "$(top_builddir)/src" \
 		--output-file $(COV_INFO_FILE) \
 		--gcov-tool $(GCOV)

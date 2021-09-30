@@ -38,6 +38,7 @@ environment.yml
 
 *.pyc
 
-# auto generated documentation (docs should go on gh-pages branch)
+# auto generated data (docs should go on gh-pages branch)
+coverage.xml
 doc/html/
 doc/metrics/

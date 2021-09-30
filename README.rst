@@ -29,6 +29,11 @@ IPC mechanisms:
 Quick Start Package Install
 ===========================
 
+redis-ipc comes in 2 flavors, a python class module and a lightweight C library
+implementation (this repo). The python module has moved to a `new home`_.
+
+.. _new home: https://github.com/VCTLabs/redis-ipc-py
+
 Packages are available for Ubuntu_, and the latest can be installed on Gentoo
 using the ebuilds in `this portage overlay`_. To build from source, see
 `Building redis-ipc`_ below.
@@ -120,7 +125,7 @@ for a quick build-and-test::
   ctest --build-config RelWithDebInfo --build-generator "Unix Makefiles" \
     --build-and-test . build --build-options -DRIPC_DISABLE_SOCK_TESTS=1 \
     -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DCMAKE_INSTALL_LIBDIR=lib \
-    -DWITH_COVERAGE=1 --test-command ctest -V --build-config RelWithDebInfo
+    --test-command ctest -V --build-config RelWithDebInfo
 
 .. note:: The above command will omit running the socket tests, but if
     already have a running `redis` server available, you can set the
@@ -719,9 +724,9 @@ When finished with the above, don't forget to kill the redis server::
     :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/cpplint.yml
     :alt: GitHub CI Cpplint Status
 
-.. |cov| image:: https://img.shields.io/codecov/c/github/VCTLabs/redis-ipc
-    :target: https://codecov.io/gh/VCTLabs/redis-ipc
-    :alt: Codecov test coverage
+.. |cov| image:: https://raw.githubusercontent.com/VCTLabs/redis-ipc/badges/develop/test-coverage.svg
+    :target: https://github.com/VCTLabs/redis-ipc/
+    :alt: Test coverage
 
 .. |bandit| image:: https://github.com/VCTLabs/redis-ipc/actions/workflows/bandit.yml/badge.svg
     :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/bandit.yml
