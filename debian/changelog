@@ -1,3 +1,33 @@
+redis-ipc (0.0.2-1ubuntu5) bionic; urgency=medium
+
+  * add yet-another-missing-build-dep
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Sun, 08 Aug 2021 16:17:41 -0700
+
+redis-ipc (0.0.2-1ubuntu4) bionic; urgency=medium
+
+  * disable maint flags (configure bombs in launchpad)
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Sun, 25 Jul 2021 23:50:42 -0700
+
+redis-ipc (0.0.2-1ubuntu3) bionic; urgency=medium
+
+  * remove extra configure args, relax cflags
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Sun, 25 Jul 2021 23:18:23 -0700
+
+redis-ipc (0.0.2-1ubuntu2) bionic; urgency=medium
+
+  * add missing libltdl-dev (build dep)
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Sun, 25 Jul 2021 22:40:31 -0700
+
+redis-ipc (0.0.2-1ubuntu1) bionic; urgency=medium
+
+  * new upstream release (plus packaging/QA updates)
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Sun, 25 Jul 2021 16:36:21 -0700
+
 redis-ipc (0.0.1-1) trusty; urgency=medium
 
   * Initial release.

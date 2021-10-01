@@ -1,6 +1,23 @@
 #!/usr/bin/make -f
+export DH_VERBOSE = 1
+#export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+#export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+
 %:
-	dh $@
+	dh $@ --with autoreconf
 
 override_dh_auto_configure:
-	./autogen.sh --prefix=/usr
+	dh_auto_configure -- --with-pic \
+		LIB_INSTALL_DIR=/usr/lib/$(DEB_HOST_MULTIARCH)
+
+override_dh_auto_install:
+	dh_auto_install
+	install -m 644 redis_ipc.py -D --target-directory \
+		$(CURDIR)/debian/tmp/usr/lib/python3/dist-packages/
+
+override_dh_auto_clean:
+	dh_auto_clean
+	-rm -rf libltdl/ config.log
+
+# tests need a running redis server with appropriate socket
+override_dh_auto_test:

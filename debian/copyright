@@ -1,7 +1,13 @@
-This package was debianized by Stephen Arnold nerdboy@gentoo.org on
+This package was debianized by Stephen Arnold <nerdboy@gentoo.org> on
 Fri, 10 Mar 2017 23:03:44 -0800
 
-Copyright (c) 2017 VCTLabs
-
 This software is released under the GPL version 2 or later (see the file
-COPYING for details).
+LICENSE for details).
+
+Files: *
+Copyright: 2011-2021 Vanguard Computer Technology Labs <answers@vctlabs.com>
+License: GPL-2
+
+On Debian systems, the complete text of the GNU General
+Public License can be found in `/usr/share/common-licenses/GPL-2'
+
