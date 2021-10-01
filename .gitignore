@@ -23,7 +23,8 @@ Release/*
 build/
 # Conda
 environment.yml
-
+# coverage files
+test/*.out
 # compilation files
 *.lo
 *.od
@@ -39,6 +40,7 @@ environment.yml
 *.pyc
 
 # auto generated data (docs should go on gh-pages branch)
+coverage/
 coverage.xml
 doc/html/
 doc/metrics/

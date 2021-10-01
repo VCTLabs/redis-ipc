@@ -2,10 +2,10 @@ name: CondaDev
 
 on:
   workflow_dispatch:
-  #push:
-    #branches:
-      #- master
-      #- develop
+  push:
+    branches:
+      - master
+      - develop
   pull_request:
 
 jobs:
@@ -19,31 +19,36 @@ jobs:
         python-version: ['3.7', '3.9']
         include:
           - os: 'ubuntu-18.04'
-            generator: 'Unix Makefiles'
-            build_type: 'RelWithDebInfo'
+            generator: 'Ninja'
+            build_type: 'Debug'
           - os: 'ubuntu-20.04'
-            generator: 'Unix Makefiles'
+            generator: 'Ninja'
             build_type: 'RelWithDebInfo'
-          #- os: 'macos-latest'
-            #generator: 'Unix Makefiles'
-            #build_type: 'RelWithDebInfo'
+          #- os: 'macOS-11'
+            #generator: 'Ninja'
+            #build_type: 'Debug'
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python-version }}
+      PYTHONIOENCODING: utf-8
 
     steps:
     - uses: actions/checkout@v2
 
-    - name: Configure Cache
+    - name: Setup base python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Cache conda
       id: cache
       uses: actions/cache@v2
       env:
-        # Increase this value to reset cache and rebuild the env during the PR
+        # Increase this value to reset cache if environment.devenv.yml has not changed
         CACHE_NUMBER: 1
       with:
-        path: |
-          **/build
-          **/ccache
-          ~/conda_pkgs_dir
-        key:
-          ${{ runner.os }}-${{ matrix.python-version }}-${{ github.ref }}-${{ env.CACHE_NUMBER }}
+        path: ~/conda_pkgs_dir
+        key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment.devenv.yml') }}
 
     - uses: conda-incubator/setup-miniconda@v2
       with:
@@ -53,14 +58,14 @@ jobs:
         channel-priority: strict
         use-only-tar-bz2: true
 
-    - name: Configure Conda Environment
+    - name: Configure condadev environment
       shell: bash -l {0}
       env:
         PY_VER: ${{ matrix.python-version }}
       run: |
         conda config --set always_yes yes --set changeps1 no
         conda config --add channels conda-forge
-        conda install conda-devenv
+        conda install conda-devenv=2.1.1
         conda devenv
 
     - name: Build and test
@@ -68,10 +73,10 @@ jobs:
       env:
         PY_VER: ${{ matrix.python-version }}
       run: |
-        source activate redis-ipc
+        source activate redis-ipc-test
         ctest --build-config "${{ matrix.build_type }}" \
           --build-generator "${{ matrix.generator }}" \
           --build-and-test . build \
-          --build-options -DRIPC_DISABLE_SOCK_TESTS=1 -DCCACHE_IGNORE=ON \
-          --test-command ctest -V --build-config "${{ matrix.build_type }}"
-        gcovr -e test/ -e src/
+          --build-options -DRIPC_DISABLE_SOCK_TESTS=1 \
+          --test-command ctest -V \
+          --build-config "${{ matrix.build_type }}"

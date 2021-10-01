@@ -19,9 +19,18 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-18.04, ubuntu-20.04]
+        include:
+          - os: 'ubuntu-20.04'
+            test_cmd: 'auto'
+          - os: 'ubuntu-18.04'
+            test_cmd: 'bionic'
 
     steps:
     - uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
 
     - name: Environment
       run: |
@@ -36,7 +45,7 @@ jobs:
         sudo apt-get -qq update
         sudo apt-get install -y software-properties-common
         sudo add-apt-repository -y -s ppa:nerdboy/embedded
-        sudo apt-get install -y libjson-c-dev
+        sudo apt-get install -y libjson-c-dev lcov autoconf automake
 
     - name: Upstream
       if: matrix.os == 'ubuntu-18.04'
@@ -46,45 +55,22 @@ jobs:
 
     - name: Common dependencies
       run: |
-        sudo apt-get install -y libhiredis-dev autoconf automake
-        sudo apt-get install -y redis-server gcovr lcov
+        sudo apt-get install -y libhiredis-dev
+        sudo apt-get install -y redis-server gcovr
 
-    - name: Configure
+    - name: Add python requirements
       run: |
-        ./autogen.sh
-        ./configure
-
-    - name: Build
-      run: make
-
-    - name: Message bus
-      run: |
-        mkdir -p /tmp/redis-ipc
-        redis-server --port 0 --pidfile /tmp/redis.pid --unixsocket /tmp/redis-ipc/socket --unixsocketperm 600 &
+        python -m pip install --upgrade pip
+        pip install tox
 
     - name: Test
       run: |
-        make check
+        tox -e "${{ matrix.test_cmd }}"
 
-    - name: Generate coverage
-      run: |
-        ./configure --with-coverage
-        make clean
-        make cov
-
-    - name: Display coverage bionic
-      if: matrix.os == 'ubuntu-18.04'
-      run: |
-        gcovr -s -b -r src/
-
-    - name: Display coverage
-      if: matrix.os == 'ubuntu-20.04'
-      run: |
-        gcovr -s -b -r src/
-
-    - name: Cleanup
-      run: |
-        cat /tmp/redis.pid | xargs kill
+    - uses: actions/upload-artifact@v2
+      with:
+        name: coverage
+        path: ./coverage
 
   check:
     name: Collect metrics
@@ -98,7 +84,9 @@ jobs:
     - uses: sarnold/cccc-action@0.3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        source_dirs: src
+        source_dirs: |
+          src
+          inc
 
     - uses: actions/upload-artifact@v2
       with:
