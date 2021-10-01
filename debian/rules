@@ -12,8 +12,6 @@ override_dh_auto_configure:
 
 override_dh_auto_install:
 	dh_auto_install
-	install -m 644 redis_ipc.py -D --target-directory \
-		$(CURDIR)/debian/tmp/usr/lib/python3/dist-packages/
 
 override_dh_auto_clean:
 	dh_auto_clean

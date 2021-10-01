@@ -5,9 +5,7 @@ Priority: optional
 Standards-Version: 3.9.8
 Build-Depends: debhelper (>= 9),
     dh-autoreconf,
-    dh-python,
     pkg-config,
-    python3-all,
     libltdl-dev,
     libhiredis-dev (>= 0.10),
     libjson-c-dev (>= 0.9)
@@ -27,15 +25,3 @@ Multi-Arch: same
 Depends: ${shlibs:Depends}, ${misc:Depends}, libhiredis-dev, libjson-c-dev
 Description: redis-ipc library development files
  Provides a high-performance substitute for the more common choice of dbus.
-
-Package: python3-redis-ipc
-Section: devel
-Architecture: all
-Depends:
-    python3,
-    python3-redis,
-    ${misc:Depends},
-    ${python3:Depends},
-Description: Python module implementing redis-ipc style client and server
- classes (where module name is redis_ipc). Depends only on python3-redis
- and a redis server (does not use/depend on libredis-ipc).

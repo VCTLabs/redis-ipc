@@ -1,3 +1,10 @@
+redis-ipc (0.0.4-1ubuntu1) bionic; urgency=medium
+
+  * include pkgconfig file in -dev
+  * python module has moved to separate repo
+
+ -- S. Lockwood-Childs <sjl@vctlabs.comm>  Thu, 30 Sep 2021 19:23:54 -0700
+
 redis-ipc (0.0.2-1ubuntu5) bionic; urgency=medium
 
   * add yet-another-missing-build-dep
