@@ -78,6 +78,60 @@ this PPA to your system", eg, ``41113ed57774ed19`` for `Embedded device ppa`_.
 .. _Embedded device ppa: https://launchpad.net/~nerdboy/+archive/ubuntu/embedded
 
 
+Build and test with Tox
+-----------------------
+
+As long as you have git and at least Python 3.6, then the "easy" dev
+install is to clone this repository and install `tox`_.
+
+After cloning the repository, you can run the current tests using either
+cmake or autotools with the ``tox`` command.  It will build a virtual
+python environment with most of the build dependencies (except the shared
+libraries above and the autotools bits) and then run the tests. For cmake
+plus test coverage, you would first install your toolchain, the required
+json-c and hiredis libraries, redis-server, and tox, then run the following
+commands:
+
+::
+
+  $ git clone https://github.com/VCTLabs/redis-ipc
+  $ cd redis-ipc
+  $ tox -e ctest
+
+The above will start the redis server, build and run the tests with coverage
+display, and stop the redis server. Alternatively, you can manipulate the
+server manually and use ``tox -e tests`` instead.  To run the autotools
+build, you may need most or all of the following packages installed; for
+example on Ubuntu you might need:
+
+* build-essential, make, libjson-c-dev, libhiredis-dev, redis-server (from above)
+* autoconf, autoconf-archive, automake, pkg-config, libtool
+
+.. note:: The default libjson-c version (0.13) on Ubuntu focal is broken,
+  so you should add the PPA and install the 0.15 package instead.
+
+There are several ``tox -e`` environment commands available:
+
+* ``ctest`` - build/run tests using ctest (**with** redis-server handling)
+* ``tests`` - build/run tests using cmake (**without** redis-server handling)
+* ``bionic`` - build/run tests using cmake (**with** redis-server handling)
+* ``clang`` - build/run tests using cmake with clang toolchain file (**with** redis-server handling)
+* ``grind`` - build/run using cmake and valgrind (**with** redis-server handling)
+* ``clean`` - clean the cmake build/ directory/files
+* ``auto`` - build/run tests using autotools (**with** redis-server handling)
+* ``autoclean`` - clean all the autotools cruft
+* ``lint`` - run the cpplint style checks
+
+.. note:: Bionic has an older GTest package and needs an extra cmake arg.
+
+See the `Github workflow files`_ for more details on the packages installed
+for each runner OS environment.
+
+
+.. _tox: https://github.com/tox-dev/tox
+.. _Github workflow files: https://github.com/VCTLabs/redis-ipc/tree/develop/.github/workflows
+
+
 Quick Start Dev Environment
 ===========================
 
@@ -122,7 +176,7 @@ Now you can use the usual `cmake` configure and build steps (see the
 `Cmake build`_ section below) or you can run the following one-liner
 for a quick build-and-test::
 
-  ctest --build-config RelWithDebInfo --build-generator "Unix Makefiles" \
+  ctest --build-config RelWithDebInfo --build-generator "Ninja" \
     --build-and-test . build --build-options -DRIPC_DISABLE_SOCK_TESTS=1 \
     -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DCMAKE_INSTALL_LIBDIR=lib \
     --test-command ctest -V --build-config RelWithDebInfo
@@ -640,62 +694,6 @@ Since redis-ipc requires the redis server to use a unix socket rather than tcp,
 remember to specify the socket path when running redis-cli ::
 
   redis-cli -s /tmp/redis-ipc/socket
-
-
-redis_ipc.py
-============
-
-A python module with redis-ipc client/server classes.  Requires `redis-py`
-and a running `redis` server.  From the repository directory, you should
-either add "." to your PYTHON_PATH or copy the python module to `site-packages`.
-
-To start a local redis server first, run the following *before* you start
-the python interpreter::
-
-    $ redis-server --port 0 --pidfile /tmp/redis.pid --unixsocket /tmp/redis-ipc/socket --unixsocketperm 600 &
-
-The above will background the redis server, but you may need to hit
-<Enter> once to get the prompt back. Then type `python` in the source
-directory in *2 separate terminal windows* and continue below.
-
-For example, to run from the source directory, start a server from the
-first terminal::
-
-    >>> import sys
-    >>> sys.path.append('.')
-    >>> from redis_ipc import RedisServer as rs
-    >>> myServer = rs("my_component")
-    >>> result = myServer.redis_ipc_receive_command()  # doctest: +SKIP
-    >>> myServer.redis_ipc_send_reply(result, result)  # doctest: +SKIP
-
-Then from a second terminal, start a client::
-
-    >>> import sys
-    >>> sys.path.append('.')
-    >>> from redis_ipc import RedisClient as rc
-    >>> myClient = rc("my_component")
-    >>> myClient.redis_ipc_send_and_receive("my_component", {}, 30)  # doctest: +SKIP
-    {'timestamp': '1627166512.0108066', 'component': 'my_component', 'thread': 'main', 'tid': 24544, 'results_queue': 'queues.results.my_component.main', 'command_id': 'my_component:24544:1627166512.0108066'}
-
-
-Note that both of the above will block for the timeout period (30 sec in
-this example) if they're waiting for the other side to send/reply.
-
-If there is no running redis server, then you will get the following::
-
-    >>> import sys
-    >>> sys.path.append('.')
-    >>> from redis_ipc import RedisServer as rs
-    >>> myServer = rs("my_component")
-    >>> result = myServer.redis_ipc_receive_command()  # doctest: +ELLIPSIS
-    Traceback (most recent call last):
-    ...
-    redis.exceptions.ConnectionError: Error 2 connecting to unix socket: /tmp/redis-ipc/socket. No such file or directory.
-
-When finished with the above, don't forget to kill the redis server::
-
-    $ cat /tmp/redis.pid | xargs kill
-
 
 .. _redis: http://redis.io/
 .. _low overhead: http://www.bango29.com/squeezing-cubieboard-for-performance/
