@@ -68,7 +68,6 @@ jobs:
         tox -e "${{ matrix.test_cmd }}"
 
     - uses: actions/upload-artifact@v2
-      if: matrix.os == 'ubuntu-20.04'
       with:
         name: coverage
         path: ./coverage
@@ -85,7 +84,9 @@ jobs:
     - uses: sarnold/cccc-action@0.3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        source_dirs: src
+        source_dirs: |
+          src
+          inc
 
     - uses: actions/upload-artifact@v2
       with:
