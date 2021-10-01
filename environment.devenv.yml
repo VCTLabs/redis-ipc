@@ -7,7 +7,8 @@ dependencies:
   - c-compiler
   - cxx-compiler
   - pip
-  - make  # [linux]
+  - make  # [unix]
+  - pkg-config  # [unix]
   - json-c=0.15
   - libhiredis=1.0.0
   - lcov
