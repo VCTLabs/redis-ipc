@@ -2,11 +2,26 @@ Source: redis-ipc
 Maintainer: Steve Arnold <nerdboy@gentoo.org>
 Section: utils
 Priority: optional
-Standards-Version: 3.9.6
-Build-Depends: debhelper (>= 9), libhiredis-dev (>= 0.10), libjson-c-dev (>= 0.9)
+Standards-Version: 3.9.8
+Build-Depends: debhelper (>= 9),
+    dh-autoreconf,
+    pkg-config,
+    libltdl-dev,
+    libhiredis-dev (>= 0.10),
+    libjson-c-dev (>= 0.9)
 
-Package: redis-ipc
+Package: libredis-ipc0
+Section: libs
 Architecture: any
+Multi-Arch: same
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: small library for using redis server and JSON as IPC mechanism
- Provides a substitute for the more common choice of dbus.
+ Provides a high-performance substitute for the more common choice of dbus.
+
+Package: libredis-ipc-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Depends: ${shlibs:Depends}, ${misc:Depends}, libhiredis-dev, libjson-c-dev
+Description: redis-ipc library development files
+ Provides a high-performance substitute for the more common choice of dbus.
