@@ -43,6 +43,42 @@ using the ebuilds in `this portage overlay`_. To build from source, see
 .. _this portage overlay: https://github.com/VCTLabs/python-overlay/
 
 
+Making Changes & Contributing
+=============================
+
+This repo is now pre-commit_ enabled for various linting and format checks.  The
+checks run automatically on commit and will fail the commit (if not clean) and
+perform simple file corrections.  If cpplint_ fails on commit, the failure display
+should explain the error types and line numbers. Note you must fix any fatal errors
+for the commit to succeed; any other errors should be fixed automatically (use
+``git status`` and `` git diff`` to review any changes).  To review any ``cpplint``
+warnings manually, either run the ``tox -e lint`` command shown below, or install
+cpplint_ (using system packages or pip) locally and run it from the top-level repo
+directory::
+
+  $ cpplint src/* inc/*
+
+You will need to install pre-commit before contributing any changes; installing
+it using your system's package manager is recommended, otherwise install with pip
+into your usual virtual environment using something like::
+
+  $ sudo emerge pre-commit  --or--
+  $ pip install pre-commit
+
+then install it into the repo you just cloned::
+
+  $ git clone https://github.com/VCTLabs/redis-ipc
+  $ cd redis-ipc/
+  $ pre-commit install
+
+It's usually a good idea to update the hooks to the latest version::
+
+    pre-commit autoupdate
+
+.. _pre-commit: http://pre-commit.com/
+.. _cpplint: https://github.com/cpplint/cpplint
+
+
 Prerequisites
 -------------
 
@@ -115,7 +151,6 @@ There are several ``tox -e`` environment commands available:
 * ``ctest`` - build/run tests using ctest (**with** redis-server handling)
 * ``tests`` - build/run tests using cmake (**without** redis-server handling)
 * ``bionic`` - build/run tests using cmake (**with** redis-server handling)
-* ``clang`` - build/run tests using cmake with clang toolchain file (**with** redis-server handling)
 * ``grind`` - build/run using cmake and valgrind (**with** redis-server handling)
 * ``clean`` - clean the cmake build/ directory/files
 * ``auto`` - build/run tests using autotools (**with** redis-server handling)
@@ -170,7 +205,7 @@ the conda toolchain and all required dependencies to build from source
 
 * Activate the environment::
 
-    conda activate redis-ipc
+    conda activate redis-ipc-test
 
 Now you can use the usual `cmake` configure and build steps (see the
 `Cmake build`_ section below) or you can run the following one-liner
