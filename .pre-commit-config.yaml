@@ -2,6 +2,7 @@
 #   pre-commit install
 # To update the pre-commit hooks run:
 #   pre-commit install-hooks
+exclude: '^(debian/.*|.tox/)$'
 repos:
   - repo: meta
     hooks:
@@ -11,9 +12,7 @@ repos:
     rev: v4.0.1
     hooks:
       - id: trailing-whitespace
-        # exclude: '\.patch$'
       - id: end-of-file-fixer
-        # exclude: '\.patch$'
       - id: mixed-line-ending
         # exclude: '\.patch$'
         args: [--fix=lf]
@@ -25,7 +24,13 @@ repos:
       # - id: check-symlinks
       - id: detect-private-key
       # - id: check-xml
+      # - id: check-json
       - id: check-yaml
+        exclude: 'conda/meta.yaml'
+#  - repo: https://github.com/adrienverge/yamllint
+#    rev: v1.26.3
+#    hooks:
+#      - id: yamllint
   - repo: https://github.com/iconmaster5326/cmake-format-pre-commit-hook
     rev: v0.6.9
     hooks:
