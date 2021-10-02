@@ -35,6 +35,10 @@ repos:
     rev: v0.6.9
     hooks:
       - id: cmake-format
+  - repo: https://github.com/lovesegfault/beautysh
+    rev: v6.1.0
+    hooks:
+      - id: beautysh
 #  - repo: https://github.com/pocc/pre-commit-hooks
 #    rev: v1.1.1
 #    hooks:
