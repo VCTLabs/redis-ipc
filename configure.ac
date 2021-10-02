@@ -135,4 +135,3 @@ AC_CONFIG_FILES([Makefile \
                  redis-ipc.pc])
 
 AC_OUTPUT
-

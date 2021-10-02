@@ -2,7 +2,7 @@
 
 	* Initial implementation, static makefile for native/cross
 
-2017-05-10 
+2017-05-10
 
         * Initial autotools version.
         * AUTHORS: Initial version
@@ -14,4 +14,3 @@
         * Makefile.am: Initial version.
         * NEWS: Initial version.
         * README: Initial version.
-

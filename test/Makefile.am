@@ -36,4 +36,3 @@ pub_sub_test_LDFLAGS = -Wl,--hash-style=gnu -no-install
 settings_status_test_SOURCES = settings_status_test.c
 settings_status_test_LDADD = -lhiredis -ljson-c $(LIBREDISIPC) -lpthread
 settings_status_test_LDFLAGS = -Wl,--hash-style=gnu -no-install
-
