@@ -1,4 +1,8 @@
-AM_CPPFLAGS    = -I$(top_srcdir)/inc -I$(top_srcdir)/src -I$(includedir)
+if RIPC_RUNTIME_DIR
+PATH_FLAG = -DRIPC_RUNTIME_DIR=\"$(RIPC_RUNTIME_DIR)\"
+endif
+
+AM_CPPFLAGS    = -I$(top_srcdir)/inc -I$(top_srcdir)/src -I$(includedir) $(PATH_FLAG)
 
 LIBREDISIPC = $(top_srcdir)/src/.libs/libredis_ipc.la
 

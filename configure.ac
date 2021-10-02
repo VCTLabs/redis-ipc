@@ -124,6 +124,9 @@ fi
 AC_DEFINE_UNQUOTED(ENABLE_DEBUG, `enable_value $enable_debug`, [Enable debugging])
 AC_DEFINE_UNQUOTED(ENABLE_GPROF, `enable_value $enable_gprof`, [Enable gcc profiling])
 
+AC_ARG_VAR(RIPC_RUNTIME_DIR, [Supply default path to directory containing redis server socket])
+AM_CONDITIONAL([RIPC_RUNTIME_DIR], [test x$RIPC_RUNTIME_DIR != x])
+
 PKG_INSTALLDIR
 
 AC_CONFIG_FILES([Makefile \

@@ -27,6 +27,7 @@ struct redis_ipc_per_thread
     char *thread;             // thread name used in redis
     char *result_queue_path;  // based on component and thread
     redisContext *redis_state;  // state for connection to redis server
+    const char *redis_socket_path;  // path for connection to redis server
     unsigned int command_ctr;   // counter for number of commands sent by thread
 };
 
@@ -166,8 +167,13 @@ int redis_ipc_init(const char *this_component, const char *this_thread)
     // tid is OS thread ID number
     new_info->tid = gettid();
 
+    // path to redis server socket can be overridden from environment
+    new_info->redis_socket_path = getenv("RIPC_SERVER_PATH");
+    if (new_info->redis_socket_path == NULL)
+        new_info->redis_socket_path = RIPC_SERVER_PATH;
+
     // each thread gets its own redis connection
-    new_info->redis_state = redisConnectUnix(RIPC_SERVER_PATH);
+    new_info->redis_state = redisConnectUnix(new_info->redis_socket_path);
     if (new_info->redis_state == NULL || new_info->redis_state->err)
         goto redis_ipc_init_failed;
 

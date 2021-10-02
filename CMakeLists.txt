@@ -50,10 +50,16 @@ option(BUILD_STATIC_LIBS "Build static libraries" OFF)
 option(RIPC_BUILD_TESTING "build and run tests" ON)
 option(RIPC_DISABLE_SOCK_TESTS "disable tests requiring redis socket" OFF)
 
+option(RIPC_RUNTIME_DIR "Default path to directory containing redis server socket")
+
 set(WITH_COVERAGE "" CACHE PATH "build with test coverage enabled")
 
 set(INSTALL_PKGCONFIG_DIR "${CMAKE_INSTALL_PREFIX}/share/pkgconfig" CACHE PATH "Install directory for pkgconfig (.pc) files")
 set(EXTRA_TARGET_LINK_LIBRARIES)
+
+if(DEFINED RIPC_RUNTIME_DIR)
+    add_compile_options(-DRIPC_RUNTIME_DIR=\"${RIPC_RUNTIME_DIR}\")
+endif()
 
 if(WITH_COVERAGE)
     add_compile_options(--coverage)
