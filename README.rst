@@ -8,7 +8,7 @@ the more common choice of dbus.
 
 |ci| |conda-dev| |codeql| |cpplint| |coverage|
 
-|cov|
+|pre| |cov|
 
 |tag| |license| |std|
 
@@ -728,6 +728,10 @@ remember to specify the socket path when running redis-cli ::
     :target: https://github.com/VCTLabs/redis-ipc/actions/workflows/coverage.yml
     :alt: Coverage workflow
 
+.. |pre| image:: https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white
+   :target: https://github.com/pre-commit/pre-commit
+   :alt: pre-commit
+
 .. |cov| image:: https://raw.githubusercontent.com/VCTLabs/redis-ipc/badges/develop/test-coverage.svg
     :target: https://github.com/VCTLabs/redis-ipc/
     :alt: Test coverage
@@ -739,14 +743,6 @@ remember to specify the socket path when running redis-cli ::
 .. |tag| image:: https://img.shields.io/github/v/tag/VCTLabs/redis-ipc?color=green&include_prereleases&label=latest%20release
     :target: https://github.com/VCTLabs/redis-ipc/releases
     :alt: GitHub tag (latest SemVer, including pre-release)
-
-.. |python| image:: https://img.shields.io/badge/python-3.6+-blue.svg
-    :target: https://www.python.org/downloads/
-    :alt: Python
-
-.. |style| image:: https://img.shields.io/badge/Py%20code%20style-pylint-00000.svg
-    :target: https://github.com/pycqa/pylint/
-    :alt: Python Style
 
 .. |std| image:: https://img.shields.io/badge/Standards-C++11%20%20C99-00000.svg
     :target: https://isocpp.org/wiki/faq/cpp11
