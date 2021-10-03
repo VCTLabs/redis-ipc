@@ -208,8 +208,8 @@ the ``conda-forge`` channel, then install the ``conda-devenv`` package.
     cd redis-ipc/
     conda devenv
 
-This command will create the conda environment called ``redis-ipc``, which
-can take a few minutes to complete the first time. This will install
+This command will create the conda environment called ``redis-ipc-test``,
+which can take a few minutes to complete the first time. This will install
 the conda toolchain and all required dependencies to build from source
 (see the contents of the ``environment.devenv.yml`` file for details).
 
