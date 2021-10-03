@@ -12,11 +12,11 @@ the more common choice of dbus.
 
 |tag| |license| |std|
 
-redis-ipc is intended to make communication among different logical components
-of a system convenient. It is not intended to replace shared memory for high
-data-rate transfers between processes, where lowest possible overhead is key,
-but to provide a convenient and reliable way to implement the following
-IPC mechanisms:
+redis-ipc is intended to make communication among different logical
+components of a system convenient. It is not intended to replace shared
+memory for high data-rate transfers between processes, where lowest
+possible overhead is key, but to provide a convenient and reliable way
+to implement the following IPC mechanisms:
 
 * command queues
 * settings
@@ -29,14 +29,15 @@ IPC mechanisms:
 Quick Start Package Install
 ===========================
 
-redis-ipc comes in 2 flavors, a python class module and a lightweight C library
-implementation (this repo). The python module has moved to a `new home`_.
+redis-ipc comes in 2 flavors, a python class module and a lightweight C
+library implementation (this repo). The python module has moved to a
+`new home`_.
 
 .. _new home: https://github.com/VCTLabs/redis-ipc-py
 
-Packages are available for Ubuntu_, and the latest can be installed on Gentoo
-using the ebuilds in `this portage overlay`_. To build from source, see
-`Building redis-ipc`_ below.
+Packages are available for Ubuntu_, and the latest can be installed on
+Gentoo using the ebuilds in `this portage overlay`_. To build from
+source, see `Building redis-ipc`_ below.
 
 
 .. _Ubuntu: https://launchpad.net/~nerdboy/+archive/ubuntu/embedded
@@ -46,21 +47,24 @@ using the ebuilds in `this portage overlay`_. To build from source, see
 Making Changes & Contributing
 =============================
 
-This repo is now pre-commit_ enabled for various linting and format checks.  The
-checks run automatically on commit and will fail the commit (if not clean) and
-perform simple file corrections.  If cpplint_ fails on commit, the failure display
-should explain the error types and line numbers. Note you must fix any fatal errors
-for the commit to succeed; any other errors should be fixed automatically (use
-``git status`` and `` git diff`` to review any changes).  To review any ``cpplint``
-warnings manually, either run the ``tox -e lint`` command shown below, or install
-cpplint_ (using system packages or pip) locally and run it from the top-level repo
-directory::
+This repo is now pre-commit_ enabled for various linting and format
+checks.  The checks run automatically on commit and will fail the
+commit (if not clean) with some checks performing simple file corrections.
 
-  $ cpplint src/* inc/*
+If other checks fail on commit, the failure display should explain the error
+types and line numbers. Note you must fix any fatal errors for the
+commit to succeed; some errors should be fixed automatically (use
+``git status`` and `` git diff`` to review any changes).
 
-You will need to install pre-commit before contributing any changes; installing
-it using your system's package manager is recommended, otherwise install with pip
-into your usual virtual environment using something like::
+See the pre-commit docs under ``docs/dev/`` for more information:
+
+* pre-commit-config_
+* pre-commit-usage_
+
+You will need to install pre-commit before contributing any changes;
+installing it using your system's package manager is recommended,
+otherwise install with pip into your usual virtual environment using
+something like::
 
   $ sudo emerge pre-commit  --or--
   $ pip install pre-commit
@@ -75,19 +79,23 @@ It's usually a good idea to update the hooks to the latest version::
 
     pre-commit autoupdate
 
+
 .. _pre-commit: http://pre-commit.com/
 .. _cpplint: https://github.com/cpplint/cpplint
+.. _pre-commit-config: docs/dev/pre-commit-config.rst
+.. _pre-commit-usage: docs/dev/pre-commit-usage.rst
 
 
 Prerequisites
 -------------
 
-A supported linux distribution, mainly something that uses either `.ebuilds`
-(eg, Gentoo or funtoo) or `.deb` packages, starting with at least Ubuntu
-bionic or Debian stretch (see the above PPA package repo on Launchpad).
+A supported linux distribution, mainly something that uses either
+``.ebuilds`` (eg, Gentoo or funtoo) or ``.deb`` packages, starting with at
+least Ubuntu bionic or Debian stretch (see the above PPA package repo
+on Launchpad).
 
-Make sure you have the ``add-apt-repository`` command installed and then add
-the PPA:
+Make sure you have the ``add-apt-repository`` command installed and
+then add the PPA:
 
 ::
 
@@ -140,7 +148,8 @@ server manually and use ``tox -e tests`` instead.  To run the autotools
 build, you may need most or all of the following packages installed; for
 example on Ubuntu you might need:
 
-* build-essential, make, libjson-c-dev, libhiredis-dev, redis-server (from above)
+* build-essential, make, libjson-c-dev, libhiredis-dev, redis-server
+  (from above)
 * autoconf, autoconf-archive, automake, pkg-config, libtool
 
 .. note:: The default libjson-c version (0.13) on Ubuntu focal is broken,
@@ -170,21 +179,22 @@ for each runner OS environment.
 Quick Start Dev Environment
 ===========================
 
-Packages should eventually be available in `Conda Forge`_ but you can always
-use Conda's `devenv` support to build/install locally inside a Conda environment.
-This is the recommended method if you can't use the PPA or Gentoo overlay. Set
-your default shell to `bash` if not already set.
+Packages should eventually be available in `Conda Forge`_ but you can
+always use Conda's ``devenv`` support to build/install locally inside a
+Conda environment. This is the recommended method if you can't use the
+PPA or Gentoo overlay. Set your default shell to ``bash`` if not already
+set.
 
 Prerequisites
 -------------
 
 Install either Anaconda_ or Miniconda_ (we recommend miniconda) and add
-the `conda-forge` channel, then install the `conda-devenv` package.
+the ``conda-forge`` channel, then install the ``conda-devenv`` package.
 
 * Download the miniconda linux-64 installer and run it
-* Let the installer add the conda init bits to your `.bashrc`
-* Source your shell environment: `source ~/.bashrc`
-* Install`conda-devenv`::
+* Let the installer add the conda init bits to your ``.bashrc``
+* Source your shell environment: ``source ~/.bashrc``
+* Install ``conda-devenv``::
 
     conda config --append channels conda-forge
     conda install -n base conda-devenv
@@ -198,16 +208,16 @@ the `conda-forge` channel, then install the `conda-devenv` package.
     cd redis-ipc/
     conda devenv
 
-This command will create the conda environment called `redis-ipc`, which
+This command will create the conda environment called ``redis-ipc``, which
 can take a few minutes to complete the first time. This will install
 the conda toolchain and all required dependencies to build from source
-(see the contents of the `environment.devenv.yml` file for details).
+(see the contents of the ``environment.devenv.yml`` file for details).
 
 * Activate the environment::
 
     conda activate redis-ipc-test
 
-Now you can use the usual `cmake` configure and build steps (see the
+Now you can use the usual ``cmake`` configure and build steps (see the
 `Cmake build`_ section below) or you can run the following one-liner
 for a quick build-and-test::
 
@@ -217,11 +227,11 @@ for a quick build-and-test::
     --test-command ctest -V --build-config RelWithDebInfo
 
 .. note:: The above command will omit running the socket tests, but if
-    already have a running `redis` server available, you can set the
-    `RIPC_DISABLE_SOCK_TESTS` argument to `0` instead.
+    already have a running ``redis`` server available, you can set the
+    ``RIPC_DISABLE_SOCK_TESTS`` argument to ``0`` instead.
 
 Whenever the above dependencies change or you alter your local conda
-environment, rebuild your `devenv`::
+environment, rebuild your ``devenv``::
 
     conda devenv
 
@@ -231,8 +241,8 @@ When finished, deactivate the environment::
 
 
 .. _Conda Forge: https://anaconda.org/conda-forge/repo
-.. _Ananconda: https://www.anaconda.com/download
-.. _Minicoda: https://conda.io/miniconda.html
+.. _Anaconda: https://www.anaconda.com/download
+.. _Miniconda: https://conda.io/miniconda.html
 
 
 Digression into the wonders of redis
@@ -271,22 +281,26 @@ and finally one more which is specifically relevant for embedded software:
 Important caveat regarding redis security
 =========================================
 
-After covering the many attractions of redis_, it is only fair to point out an
-important limitation: the `lack of security features`_ (toy authentication and no ability to restrict
-capabilities of connected clients) makes it highly unsuitable for access by
-untrusted users. Security-wise (and performance-wise, for that matter) it is better
-to use unix sockets than a locally-bound tcp socket, so that filesystem permissions can be
-used to restrict socket access to a certain user or group. However always keep in mind that
-a rogue process running as that authorized user or group gains full admin powers over the server,
-including snooping of all redis_ activity and making runtime changes to the config.
+After covering the many attractions of redis_, it is only fair to point
+out an important limitation: the `lack of security features`_ (toy
+authentication and no ability to restrict capabilities of connected
+clients) makes it highly unsuitable for access by untrusted users.
 
-For that reason, **never** use redis_ in security-sensitive environments unless
-there are solid external mechanisms for restricting access (sandboxing,
-custom SELinux policy limiting redis connections to specific
-trusted applications), and for security-critical tasks the principle of
-layered defense calls for a more secure store as an additional line of defense
--- credit card info cached in an unencrypted redis store would be
-such a juicy target for any attackers who made it onto the server!
+Security-wise (and performance-wise, for that matter) it is better to
+use unix sockets than a locally-bound tcp socket, so that filesystem
+permissions can be used to restrict socket access to a certain user or
+group. However always keep in mind that a rogue process running as that
+authorized user or group gains full admin powers over the server,
+including snooping of all redis_ activity and making runtime changes to
+the config.
+
+For that reason, **never** use redis_ in security-sensitive environments
+unless there are solid external mechanisms for restricting  access (sandboxing,
+custom SELinux policy limiting redis connections to specific trusted
+applications), and for security-critical tasks the  principle of layered
+defense calls for a more secure store as an additional line of defense,
+eg, credit card info cached in an unencrypted redis store would be such
+a juicy target for any attackers who made it onto the server!
 
 Example of sensible scenarios for redis deployment:
 
@@ -362,7 +376,7 @@ Autotools build
 ---------------
 
 The autotools build will create the standard set of Makefiles and the
-`configure` script.
+``configure`` script.
 
 * Generate and run configure::
 
@@ -380,14 +394,17 @@ The autotools build will create the standard set of Makefiles and the
       # also builds the library, in addition to some simple example apps
       make CROSS_COMPILE=<toolchain prefix> SYSROOT=<cross-compile staging area>
 
-    * **CROSS_COMPILE** is everything up to (and including) the last '-' in the tool names,
-      e.g. if the C compiler is arm-none-linux-gnueabi-gcc then
+    * **CROSS_COMPILE** is everything up to (and including) the last '-' in the
+      tool names, e.g. if the C compiler is arm-none-linux-gnueabi-gcc then
 
         **CROSS_COMPILE=arm-none-linux-gnueabi-**
 
-    * **SYSROOT** is the base path of your staging area that has cross-compiled versions of the
-      dependency libraries, e.g. if the cross-compiled hiredis library is under
-      /home/sjl/yocto/build/tmp/sysroots/armv5te-poky-linux-gnueabi/usr/lib
+    * **SYSROOT** is the base path of your staging area that has cross-compiled
+      versions of the dependency libraries, e.g. if the cross-compiled hiredis
+      library is under
+
+        /home/sjl/yocto/build/tmp/sysroots/armv5te-poky-linux-gnueabi/usr/lib
+
       then
 
         **SYSROOT=/home/sjl/yocto/build/tmp/sysroots/armv5te-poky-linux-gnueabi/**
