@@ -361,8 +361,10 @@ Running redis-ipc
 =================
 
 After building redis-ipc for the desired platform, try running it against a redis server.
-The redis server needs to be configured to use a unix socket, the path of which is
-currently hard-coded to /tmp/redis-ipc/socket in this library
+The redis server needs to be configured to use a unix socket, the path of which
+defaults to $RPC_RUNTIME_DIR/socket, where RPC_RUNTIME_DIR defaults to /tmp/redis-ipc
+but may be overridden at compile time. The socket path may also be overridden at
+runtime with the environment variable `RIPC_SERVER_PATH`.
 
 redis.conf excerpt::
 

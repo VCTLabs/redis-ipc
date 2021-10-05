@@ -42,7 +42,13 @@ enum { RIPC_DBG_ERROR,
 #define RIPC_MAX_IPC_PATH_LEN 128
 
 // redis server address
-#define RIPC_SERVER_PATH "/tmp/redis-ipc/socket"
+#ifdef RIPC_RUNTIME_DIR
+#pragma message "RIPC_RUNTIME_DIR was set"
+#else
+#pragma message "RIPC_RUNTIME_DIR was *not* set"
+#define RIPC_RUNTIME_DIR "/tmp/redis-ipc"
+#endif
+#define RIPC_SERVER_PATH RIPC_RUNTIME_DIR "/socket"
 
 //*************
 // functions

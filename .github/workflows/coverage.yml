@@ -135,6 +135,22 @@ jobs:
       with:
         python-version: '3.9'
 
+    - name: Set platform server (socket) dir
+      id: set_temp_dirs
+      run: |
+        MKTEMP=$(mktemp -d)
+        echo "Platform temp dir is: ${MKTEMP}"
+        echo "GH CI temp dir is: ${RUNNER_TEMP}"
+        if [ "${ImageOS}" != "ubuntu18" ]
+        then
+            TEMP_DIR="${MKTEMP}"
+        else
+            TEMP_DIR="${RUNNER_TEMP}"
+        fi
+        echo "Setting runtime dir: ${TEMP_DIR}"
+        echo "TEMP_DIR=${TEMP_DIR}" >> $GITHUB_ENV
+        bash -c set
+
     - name: Install deps plus redis
       run: |
         sudo apt-get -qq update
@@ -148,14 +164,34 @@ jobs:
     - name: Add python requirements
       run: |
         python -m pip install --upgrade pip
-        pip install tox
+        pip install gcovr
 
-    - name: Generate coverage and fix pkg name
-      env:
-        REAL_NAME: redis_ipc
+    - name: Configure and build (autotools)
       run: |
-        tox -e ctest,cover
+        autoreconf -fiv
+        ./configure --with-coverage
+        make cov || true
+
+    - name: Message bus
+      env:
+        RIPC_RUNTIME_DIR: "${{ env.TEMP_DIR }}"
+      run: |
+        ./scripts/run_redis.sh start
+
+    - name: Test (autotools)
+      env:
+        RIPC_SERVER_PATH: "${{ env.TEMP_DIR }}/socket"
+      run: |
+        make cov
+        gcovr -s -b src/.libs/ test/
+        gcovr --xml-pretty -o coverage.xml src/.libs/ test/
         ./scripts/fix_pkg_name.sh
+
+    - name: Cleanup
+      env:
+        RIPC_RUNTIME_DIR: "${{ env.TEMP_DIR }}"
+      run: |
+        ./scripts/run_redis.sh stop
 
     - uses: actions/upload-artifact@v2
       with:

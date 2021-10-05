@@ -13,21 +13,21 @@ trap 'failures=$((failures+1))' ERR
 CMD_ARG=${1:-status}
 PORT=${PORT:-0}
 VERBOSE="false"  # set to "true" for extra output
-export RIPC_RUNTIME_DIR=${RIPC_RUNTIME_DIR:-/tmp}
+export RIPC_RUNTIME_DIR=${RIPC_RUNTIME_DIR:-/tmp/redis-ipc}
 
 echo "Using socket runtime dir: ${RIPC_RUNTIME_DIR}"
 
 if [[ "${CMD_ARG}" = "status" ]]; then
     [[ "${VERBOSE}" = "true" ]]  && echo "pinging redis-server on local socket..."
-    redis-cli -s ${RIPC_RUNTIME_DIR}/redis-ipc/socket ping
+    redis-cli -s ${RIPC_RUNTIME_DIR}/socket ping
 fi
 
 if [[ "${CMD_ARG}" = "start" ]]; then
     [[ "${VERBOSE}" = "true" ]]  && echo "starting redis-server on local socket..."
-    mkdir -p ${RIPC_RUNTIME_DIR}/redis-ipc/
-    redis-server --port ${PORT} --pidfile ${RIPC_RUNTIME_DIR}/redis.pid --unixsocket ${RIPC_RUNTIME_DIR}/redis-ipc/socket --unixsocketperm 600 &
+    mkdir -p ${RIPC_RUNTIME_DIR}
+    redis-server --port ${PORT} --pidfile ${RIPC_RUNTIME_DIR}/redis.pid --unixsocket ${RIPC_RUNTIME_DIR}/socket --unixsocketperm 600 &
     sleep 1
-    redis-cli -s ${RIPC_RUNTIME_DIR}/redis-ipc/socket config set save ""
+    redis-cli -s ${RIPC_RUNTIME_DIR}/socket config set save ""
 fi
 
 if [[ "${CMD_ARG}" = "stop" ]]; then
