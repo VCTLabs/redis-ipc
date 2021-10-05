@@ -20,7 +20,10 @@ VERBOSE="false"  # set to "true" for extra output
 
 NAME_CHECK=$(grep -o 'name=""' "${COV_FILE}" || true)
 
-[[ -z "$NAME_CHECK" ]] && echo "Nothing to fix ..." && exit 0
+# extra fix for autotools ??
+sed -i -e "s|src..libs|src|" $COV_FILE
+
+[[ -z "$NAME_CHECK" ]] && echo "No name to fix ..." && exit 0
 [[ -n $REAL_NAME ]] || REAL_NAME=$(grep ^name setup.cfg | cut -d" " -f3)
 [[ -n $REAL_NAME ]] && sed -i -e "s|name=\"\"|name=\"${REAL_NAME}\"|" $COV_FILE
 [[ -n $REAL_NAME ]] && echo "Replaced \"\" with ${REAL_NAME} in ${COV_FILE} ..."
