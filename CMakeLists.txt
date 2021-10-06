@@ -17,7 +17,10 @@ endif()
 
 set(RIPC_SONAME ${LIBRARY_VERSION})
 
-project(redis-ipc VERSION ${LIBRARY_VERSION} LANGUAGES C CXX)
+project(
+  redis-ipc
+  VERSION ${LIBRARY_VERSION}
+  LANGUAGES C CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -46,9 +49,13 @@ option(BUILD_STATIC_LIBS "Build static libraries" OFF)
 option(RIPC_BUILD_TESTING "build and run tests" OFF)
 option(RIPC_DISABLE_SOCK_TESTS "disable tests requiring redis socket" OFF)
 
-set(RIPC_RUNTIME_DIR "" CACHE PATH "path to directory containing redis server socket")
+set(RIPC_RUNTIME_DIR
+    ""
+    CACHE PATH "path to directory containing redis server socket")
 
-set(WITH_COVERAGE "" CACHE PATH "build with test coverage enabled")
+set(WITH_COVERAGE
+    ""
+    CACHE PATH "build with test coverage enabled")
 
 set(INSTALL_PKGCONFIG_DIR
     "${CMAKE_INSTALL_PREFIX}/share/pkgconfig"
@@ -66,9 +73,13 @@ elseif(RIPC_RUNTIME_DIR)
   add_compile_definitions(RIPC_RUNTIME_DIR="${RUNTIME_DIR}")
 endif()
 
-# Adds custom target for lcov report generation (does not build, only runs test cmd).
-# Note: "make cov" target must be run both with/without RIPC_RUNTIME_DIR override
-# in order to generate full coverage data.
+# ~~~
+# Adds custom target for lcov report generation (does not build, only
+# runs test cmd). Uses the same .lcovrc and command args as autotools.
+# Note: "make cov" target must be run both with/without RIPC_RUNTIME_DIR
+#        override in order to generate full coverage data.
+# ~~~
+
 if(WITH_COVERAGE)
   set(RIPC_BUILD_TESTING ON)
   include(TestCoverage)
@@ -141,13 +152,9 @@ set_target_properties(redis_ipc PROPERTIES VERSION ${RIPC_SONAME}
 
 if(RIPC_BUILD_TESTING)
   enable_testing()
-  if (NOT RIPC_DISABLE_SOCK_TESTS)
-    set(TEST_TARGETS
-        command_result_test
-        pub_sub_test
-        settings_status_test
-        multithread_test
-        )
+  if(NOT RIPC_DISABLE_SOCK_TESTS)
+    set(TEST_TARGETS command_result_test pub_sub_test settings_status_test
+                     multithread_test)
 
     foreach(target ${TEST_TARGETS})
       add_executable(${target} test/${target}.c)
