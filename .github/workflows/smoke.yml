@@ -69,6 +69,7 @@ jobs:
         tox -e "${{ matrix.test_cmd }}"
 
     - uses: actions/upload-artifact@v2
+      if: matrix.os == 'ubuntu-18.04'
       with:
         name: coverage
         path: ./coverage
