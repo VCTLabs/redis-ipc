@@ -206,5 +206,6 @@ install(EXPORT redis_ipcConfig
 
 
 set(RIPC_PC ${CMAKE_CURRENT_BINARY_DIR}/redis-ipc.pc)
+set(prefix ${CMAKE_INSTALL_PREFIX})
 configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/redis-ipc.pc.in ${RIPC_PC} @ONLY)
 install(FILES ${RIPC_PC} DESTINATION ${INSTALL_PKGCONFIG_DIR})
