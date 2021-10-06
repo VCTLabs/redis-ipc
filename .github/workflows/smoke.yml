@@ -39,21 +39,23 @@ jobs:
     # we split the deps for ubunti json-c versions:
     #   bionic has json-c = 0.12 but focal
     #   has a broken 0.13 so we use 0.15 instead
-    - name: Upstream
-      if: matrix.os == 'ubuntu-18.04'
-      run: |
-        sudo apt-get -qq update
-        sudo apt-get install -y libjson-c-dev
-
+    #   otoh, bionic has old lcov without --include support
     - name: Common dependencies
       run: |
         sudo apt-get -qq update
         sudo apt-get install -y libhiredis-dev redis-server
 
-    - name: Backports
+    - name: Backports (bionic)
+      if: matrix.os == 'ubuntu-18.04'
+      run: |
+        sudo apt-get install -y software-properties-common libjson-c-dev
+        sudo add-apt-repository -y -s ppa:nerdboy/embedded
+        sudo apt-get install -y lcov
+
+    - name: Backports (focal)
       if: matrix.os == 'ubuntu-20.04'
       run: |
-        sudo apt-get install -y software-properties-common lcov autoconf automake
+        sudo apt-get install -y software-properties-common autoconf automake lcov
         sudo add-apt-repository -y -s ppa:nerdboy/embedded
         sudo apt-get install -y libjson-c-dev
 
