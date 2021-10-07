@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.15...3.18)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # used for both library and pkgconfig file
-set(LIBRARY_VERSION 0.0.3)
+set(PACKAGE_VERSION 0.0.3)
 set(LIBRARY_SOVERSION 0)
 
 if(POLICY CMP0048)
@@ -12,14 +12,14 @@ if(POLICY CMP0048)
 endif()
 
 if(SCM_VERSION_INFO)
-  set(LIBRARY_VERSION ${SCM_VERSION_INFO})
+  set(PACKAGE_VERSION ${SCM_VERSION_INFO})
 endif()
 
-set(RIPC_SONAME ${LIBRARY_VERSION})
+set(RIPC_SONAME ${PACKAGE_VERSION})
 
 project(
   redis-ipc
-  VERSION ${LIBRARY_VERSION}
+  VERSION ${PACKAGE_VERSION}
   LANGUAGES C CXX
 )
 
@@ -148,8 +148,8 @@ add_library(redis_ipc::redis_ipc ALIAS redis_ipc)
 target_link_libraries(redis_ipc ${EXTRA_TARGET_LINK_LIBRARIES})
 
 # SCM_VERSION_INFO can be defined by cmake args and passed into the code as a
-# define here (see LIBRARY_VERSION near the top of this file)
-target_compile_definitions(redis_ipc PRIVATE VERSION_INFO=${LIBRARY_VERSION})
+# define here (see PACKAGE_VERSION near the top of this file)
+target_compile_definitions(redis_ipc PRIVATE VERSION_INFO=${PACKAGE_VERSION})
 
 # this looks weird, but needed for correct SOVERSION links
 set_target_properties(
