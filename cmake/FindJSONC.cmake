@@ -12,7 +12,8 @@ find_path(
   HINTS ENV VCPKG_ROOT ENV CONDA_PREFIX
   PATH_SUFFIXES include include/json-c
   PATHS ~/Library/Frameworks /Library/Frameworks /opt/local /opt /usr
-        /usr/local/)
+        /usr/local/
+)
 
 find_library(
   JSONC_LIBRARY
@@ -20,13 +21,15 @@ find_library(
   HINTS ENV VCPKG_ROOT ENV CONDA_PREFIX
   PATH_SUFFIXES lib lib64 lib32
   PATHS ~/Library/Frameworks /Library/Frameworks /opt/local /opt /usr
-        /usr/local/)
+        /usr/local/
+)
 
 mark_as_advanced(JSONC_INCLUDE_DIR JSONC_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(JSONC REQUIRED_VARS JSONC_LIBRARY
-                                  JSONC_INCLUDE_DIR)
+find_package_handle_standard_args(
+  JSONC REQUIRED_VARS JSONC_LIBRARY JSONC_INCLUDE_DIR
+)
 
 if(JSONC_FOUND)
   # need if _FOUND guard to allow project to autobuild; can't overwrite imported
@@ -39,6 +42,7 @@ if(JSONC_FOUND)
     set_target_properties(
       json-c::json-c
       PROPERTIES INTERFACE_LINK_LIBRARIES "${JSONC_LIBRARIES}"
-                 INTERFACE_INCLUDE_DIRECTORIES "${JSONC_INCLUDE_DIR}")
+                 INTERFACE_INCLUDE_DIRECTORIES "${JSONC_INCLUDE_DIR}"
+    )
   endif()
 endif(JSONC_FOUND)

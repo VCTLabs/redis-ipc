@@ -20,7 +20,8 @@ set(RIPC_SONAME ${LIBRARY_VERSION})
 project(
   redis-ipc
   VERSION ${LIBRARY_VERSION}
-  LANGUAGES C CXX)
+  LANGUAGES C CXX
+)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -40,7 +41,8 @@ set(CMAKE_DEBUG_POSTFIX d)
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE
       "RelWithDebInfo"
-      CACHE STRING "Default build type: RelWithDebInfo" FORCE)
+      CACHE STRING "Default build type: RelWithDebInfo" FORCE
+  )
 endif()
 
 option(BUILD_SHARED_LIBS "build shared libraries" ON)
@@ -51,15 +53,18 @@ option(RIPC_DISABLE_SOCK_TESTS "disable tests requiring redis socket" OFF)
 
 set(RIPC_RUNTIME_DIR
     ""
-    CACHE PATH "path to directory containing redis server socket")
+    CACHE PATH "path to directory containing redis server socket"
+)
 
 set(WITH_COVERAGE
     ""
-    CACHE PATH "build with test coverage enabled")
+    CACHE PATH "build with test coverage enabled"
+)
 
 set(INSTALL_PKGCONFIG_DIR
     "${CMAKE_INSTALL_PREFIX}/share/pkgconfig"
-    CACHE PATH "Install directory for pkgconfig (.pc) files")
+    CACHE PATH "Install directory for pkgconfig (.pc) files"
+)
 set(EXTRA_TARGET_LINK_LIBRARIES)
 
 # accept cmake option -or- environment variable
@@ -76,10 +81,9 @@ endif()
 # ~~~
 # Adds custom target for lcov report generation (does not build, only
 # runs test cmd). Uses the same .lcovrc and command args as autotools.
-# Note: "make cov" target must be run both with/without RIPC_RUNTIME_DIR
+# Note: "make cov" target must be run both with/without RIPC_SERVER_PATH
 #        override in order to generate full coverage data.
 # ~~~
-
 if(WITH_COVERAGE)
   set(RIPC_BUILD_TESTING ON)
   include(TestCoverage)
@@ -128,8 +132,9 @@ elseif(UNIX)
   list(APPEND EXTRA_TARGET_LINK_LIBRARIES -pthread)
 endif()
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc
-                    ${CMAKE_CURRENT_SOURCE_DIR}/src)
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
 
 set(RIPC_SOURCES src/redis_ipc.c)
 
@@ -147,26 +152,32 @@ target_link_libraries(redis_ipc ${EXTRA_TARGET_LINK_LIBRARIES})
 target_compile_definitions(redis_ipc PRIVATE VERSION_INFO=${LIBRARY_VERSION})
 
 # this looks weird, but needed for correct SOVERSION links
-set_target_properties(redis_ipc PROPERTIES VERSION ${RIPC_SONAME}
-                                           SOVERSION ${LIBRARY_SOVERSION})
+set_target_properties(
+  redis_ipc PROPERTIES VERSION ${RIPC_SONAME} SOVERSION ${LIBRARY_SOVERSION}
+)
 
 if(RIPC_BUILD_TESTING)
   enable_testing()
   if(NOT RIPC_DISABLE_SOCK_TESTS)
     set(TEST_TARGETS command_result_test pub_sub_test settings_status_test
-                     multithread_test)
+                     multithread_test
+    )
 
     foreach(target ${TEST_TARGETS})
       add_executable(${target} test/${target}.c)
-      target_link_libraries(${target} redis_ipc ${EXTRA_TARGET_LINK_LIBRARIES}
-                            ${CMAKE_THREAD_LIBS_INIT})
+      target_link_libraries(
+        ${target} redis_ipc ${EXTRA_TARGET_LINK_LIBRARIES}
+        ${CMAKE_THREAD_LIBS_INIT}
+      )
       add_test(NAME ${target} COMMAND ${target})
     endforeach(target)
   endif()
 
   add_executable(json_test test/json_test.cpp)
-  target_link_libraries(json_test redis_ipc ${EXTRA_TARGET_LINK_LIBRARIES}
-                        ${CMAKE_THREAD_LIBS_INIT})
+  target_link_libraries(
+    json_test redis_ipc ${EXTRA_TARGET_LINK_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+  )
   add_test(NAME json_test COMMAND json_test)
 endif()
 
@@ -189,12 +200,14 @@ install(
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   INCLUDES
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
 
 install(
   EXPORT redis_ipcConfig
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/redis_ipc
-  NAMESPACE redis_ipc::)
+  NAMESPACE redis_ipc::
+)
 
 set(RIPC_PC ${CMAKE_CURRENT_BINARY_DIR}/redis-ipc.pc)
 set(prefix ${CMAKE_INSTALL_PREFIX})
