@@ -1,0 +1,87 @@
+# To install the git pre-commit hook run:
+#   pre-commit install
+# To update the pre-commit hooks run:
+#   pre-commit install-hooks
+
+exclude: '^(debian/.*|.tox/)$'
+repos:
+  - repo: meta
+    hooks:
+      - id: check-useless-excludes
+      - id: check-hooks-apply
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        # exclude: '\.patch$'
+        args: [--fix=lf]
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: check-merge-conflict
+      # - id: check-symlinks
+      - id: detect-private-key
+      # - id: check-xml
+      # - id: check-json
+      - id: check-yaml
+        exclude: 'conda/meta.yaml'
+
+  - repo: https://github.com/PyCQA/doc8
+    rev: 0.9.1
+    hooks:
+      - id: doc8
+        args:
+          - '--max-line-length=90'
+          - '--ignore=D001'
+        exclude: ChangeLog\.rst$
+
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.9.0
+    hooks:
+      - id: rst-backticks
+        exclude: ChangeLog\.rst$
+      - id: rst-directive-colons
+      - id: rst-inline-touching-normal
+
+#  - repo: https://github.com/adrienverge/yamllint
+#    rev: v1.26.3
+#    hooks:
+#      - id: yamllint
+#        exclude: 'conda/meta.yaml'
+
+  - repo: https://github.com/iconmaster5326/cmake-format-pre-commit-hook
+    rev: v0.6.9
+    hooks:
+      - id: cmake-format
+
+  - repo: https://github.com/lovesegfault/beautysh
+    rev: v6.1.0
+    hooks:
+      - id: beautysh
+
+#  - repo: https://github.com/pocc/pre-commit-hooks
+#    rev: v1.1.1
+#    hooks:
+#      - id: clang-format
+#        args: [-i]
+
+# current cpplint hook ignores top-level CPPLINT.cfg
+  - repo: https://github.com/cpplint/cpplint
+    rev: 1.5.5
+    hooks:
+      - id: cpplint
+        args:
+          - '--output=gsed'
+          - '--linelength=120'
+          - '--filter=-build/include_subdir,-build/header_guard,-whitespace/braces,-whitespace/newline'
+          - '--exclude=test/*.c'
+          - '--exclude=test/*.cpp'
+        files: \.(h|hh|hpp|hxx|h|c|cc|cpp|cxx|c)$
+
+  - repo: https://github.com/jorisroovers/gitlint
+    rev: v0.15.1
+    hooks:
+      - id: gitlint

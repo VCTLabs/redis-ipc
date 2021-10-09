@@ -22,8 +22,8 @@ automake --gnu --add-missing --copy || abort "automake"
 autoconf || abort "autoconf"
 
 if test -z "$*"; then
-        echo "You still need to run ./configure - if you wish to pass any arguments"
-        echo "to it, please specify them on the configure command line."
+    echo "You still need to run ./configure - if you wish to pass any arguments"
+    echo "to it, please specify them on the configure command line."
 fi
 
 #set +x
@@ -34,4 +34,3 @@ echo "make"
 echo "make install"
 echo
 echo "have fun."
-

@@ -9,7 +9,7 @@ void spawn_listener_process(void)
   pid_t pid = fork();
 
   // parent waits for child to start listening, then returns
-  if (pid > 0) 
+  if (pid > 0)
   {
     sleep(1);
     return;
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
   int child_status = -1;
 
   spawn_listener_process();
-  
+
   redis_ipc_init("printer", "monitor");
   redis_ipc_send_debug(1, "printer starting to smoke");
   redis_ipc_send_debug(0, "printer on fire!!");

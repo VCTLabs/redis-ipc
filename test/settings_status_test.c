@@ -5,7 +5,7 @@ int main(int argc, char **argv)
 {
   json_object *setting = NULL;
   json_object *status = NULL;
-  
+
   redis_ipc_init("session", "main");
 
   status = json_object_new_object();
@@ -20,9 +20,9 @@ int main(int argc, char **argv)
                          json_object_new_string("no way"));
   // this should fail, component is not authorized to write settings
   // (not even its own)
-  redis_ipc_write_setting("session", setting); 
+  redis_ipc_write_setting("session", setting);
   json_object_put(setting);
-  redis_ipc_write_setting_field("session", "location", "right here"); 
+  redis_ipc_write_setting_field("session", "location", "right here");
 
   // should come back empty since above write failed
   setting = redis_ipc_read_setting("session");
@@ -44,10 +44,10 @@ int main(int argc, char **argv)
   redis_ipc_write_setting("printer", setting);
   json_object_put(setting);
 
-  redis_ipc_write_setting_field("printer", "contrast", "none"); 
+  redis_ipc_write_setting_field("printer", "contrast", "none");
 
   setting = redis_ipc_read_setting("printer");
-  redis_ipc_read_setting_field("printer", "paper_type"); 
+  redis_ipc_read_setting_field("printer", "paper_type");
   json_object_put(setting);
 
   redis_ipc_cleanup(getpid());

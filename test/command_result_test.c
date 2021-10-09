@@ -10,7 +10,7 @@ void spawn_command_handler_process(void)
   pid_t pid = fork();
 
   // parent waits for child to start listening, then returns
-  if (pid > 0) 
+  if (pid > 0)
   {
     sleep(1);
     return;
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
   int child_status = -1;
 
   spawn_command_handler_process();
-  
+
   redis_ipc_init("web", "requestor");
 
   command = json_object_new_object();
