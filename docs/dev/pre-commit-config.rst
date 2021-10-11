@@ -53,7 +53,7 @@ If a commit fails due to this hook, just commit again.
 ``check-yaml``
 --------------
 
-This will NOT modifiy files. It will examine YAML files and report any
+This will NOT modify files. It will examine YAML files and report any
 issues. The rules for its configuration are defined in
 ``.pre-commit-config.yaml`` in the ``exclude`` section.
 
@@ -73,7 +73,7 @@ console, and check the files using ``git diff <file1> <file2> ...``
 ``cpplint``
 -----------
 
-This will NOT modifiy files. It will examine source files and report any
+This will NOT modify files. It will examine source files and report any
 issues. The rules for its configuration are defined in
 ``.pre-commit-config.yaml`` in the ``args`` section.
 
@@ -103,5 +103,5 @@ Doc formatting (.rst files)
 These checks will NOT modifiy files. They will examine all RST files
 (except ChangeLog.rst) and report any issues.
 
-If a commit fails due to any of these hook, all reported issues must be
+If a commit fails due to any of these hooks, all reported issues must be
 manually fixed before committing again.
