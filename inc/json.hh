@@ -25,7 +25,11 @@ class json {
         else
             obj = json_object_new_object();
     }
-    explicit json(json_object *c_obj) : obj(c_obj) {}
+    explicit json(json_object *c_obj) : obj(c_obj) {
+        if (obj) json_object_get(obj);
+        else
+            obj = json_object_new_object();
+    }
     // release reference on underlying json_object*,
     // if this was last reference it will get freed
     ~json() { json_object_put(obj); }
