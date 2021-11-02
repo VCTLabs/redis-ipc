@@ -9,6 +9,12 @@
 #include <string>
 #include <stdexcept>
 
+class json_missing_field : public std::runtime_error
+{
+public:
+    json_missing_field(const std::string &field_name) : std::runtime_error(field_name + " field is missing") {}
+};
+
 class json {
  public:
     // normally want to take reference on underlying json_object*,
@@ -63,7 +69,7 @@ class json {
         if (!json_object_is_type(obj, json_type_object))
             throw std::runtime_error("Not a hash-type object!");
         json_object *field_obj = json_object_object_get(obj, field_name);
-        if (field_obj == NULL) throw std::runtime_error("No such field!");
+        if (field_obj == NULL) throw json_missing_field(field_name);
         json_object_get(field_obj);
         return json(field_obj);
     }
@@ -72,7 +78,7 @@ class json {
         if (!json_object_is_type(obj, json_type_object))
             throw std::runtime_error("Not a hash-type object!");
         json_object *field_obj = json_object_object_get(obj, field_name);
-        if (field_obj == NULL) throw std::runtime_error("No such field!");
+        if (field_obj == NULL) throw json_missing_field(field_name);
         json_object_get(field_obj);
         return json(field_obj);
     }
