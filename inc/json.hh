@@ -11,8 +11,8 @@
 
 class json_missing_field : public std::runtime_error
 {
-public:
-    json_missing_field(const std::string &field_name) : std::runtime_error(field_name + " field is missing") {}
+ public:
+    explicit json_missing_field(const std::string &field_name) : std::runtime_error(field_name + " field is missing") {}
 };
 
 class json {
