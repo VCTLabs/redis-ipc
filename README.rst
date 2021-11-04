@@ -41,7 +41,7 @@ source, see `Building redis-ipc`_ below.
 
 
 .. _Ubuntu: https://launchpad.net/~nerdboy/+archive/ubuntu/embedded
-.. _this portage overlay: https://github.com/VCTLabs/python-overlay/
+.. _this portage overlay: https://github.com/VCTLabs/embedded-overlay/
 
 
 Making Changes & Contributing

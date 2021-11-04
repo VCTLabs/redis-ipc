@@ -58,7 +58,7 @@ repos:
       - id: cmake-format
 
   - repo: https://github.com/lovesegfault/beautysh
-    rev: v6.1.0
+    rev: v6.2.1
     hooks:
       - id: beautysh
 
@@ -82,6 +82,6 @@ repos:
         files: \.(h|hh|hpp|hxx|h|c|cc|cpp|cxx|c)$
 
   - repo: https://github.com/jorisroovers/gitlint
-    rev: v0.15.1
+    rev: v0.16.0
     hooks:
       - id: gitlint
