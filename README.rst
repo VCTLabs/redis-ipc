@@ -616,6 +616,7 @@ or a single setting can be updated by name, with both name and value supplied
 as strings ::
 
   int redis_ipc_write_setting_field(const char *owner_component, const char *field_name,
+                                    const char *field_value);
 
 Similarly, all settings belonging to a single component can be read as
 JSON object containing key/value pairs ::
