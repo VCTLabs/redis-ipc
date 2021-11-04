@@ -58,7 +58,7 @@ repos:
       - id: cmake-format
 
   - repo: https://github.com/lovesegfault/beautysh
-    rev: v6.1.0
+    rev: v6.2.1
     hooks:
       - id: beautysh
 
