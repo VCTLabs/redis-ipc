@@ -181,6 +181,13 @@ if(RIPC_BUILD_TESTING)
         ${CMAKE_THREAD_LIBS_INIT}
     )
     add_test(NAME json_test COMMAND json_test)
+
+    # Add source-based code coverage targets instead of using WITH_COVERAGE
+    # above. Note this requires recent clang/llvm tooling.
+    if(COVERAGE_BUILD AND NOT WITH_COVERAGE)
+        include(coverage)
+        add_coverage(redis_ipc)
+    endif()
 endif()
 
 set(RIPC_HEADERS inc/json.hh src/redis_ipc.h)
