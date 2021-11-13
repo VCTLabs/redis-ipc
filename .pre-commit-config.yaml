@@ -30,7 +30,7 @@ repos:
         exclude: 'conda/meta.yaml'
 
   - repo: https://github.com/PyCQA/doc8
-    rev: 0.9.1
+    rev: 0.10.1
     hooks:
       - id: doc8
         args:

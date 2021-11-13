@@ -1,6 +1,15 @@
 Changelog
 =========
 
+v0.0.5 (2021-11-12)
+-------------------
+
+New
+~~~
+- json.hh: provide has_field() alternative to throwing missing-field
+  exception. [S. Lockwood-Childs]
+
+
 v0.0.4 (2021-11-04)
 -------------------
 
