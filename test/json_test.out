@@ -1,4 +1,5 @@
-# sample output from json_test
 9999
 9999
 hungry
+OK this field exists
+OK this field does not exist
