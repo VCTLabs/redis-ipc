@@ -3,3 +3,7 @@
 hungry
 OK this field exists
 OK this field does not exist
+OK these objects match
+OK these objects match
+OK these objects don't match
+OK these objects don't match

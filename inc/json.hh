@@ -42,6 +42,16 @@ class json {
 
     json& operator=(const json &copy) { obj = copy.obj; json_object_get(obj); return *this; }
 
+    bool operator==(const json &other) {
+        bool is_same = json_object_equal(this->obj, other.obj);
+        return is_same;
+    }
+
+    bool operator!=(const json &other) {
+        bool is_same = json_object_equal(this->obj, other.obj);
+        return !is_same;
+    }
+
     std::string to_string() const {
         std::string value;
         if (obj) value = json_object_get_string(obj);
