@@ -18,4 +18,14 @@ int main(int argc, char **argv)
     }
     cout << snook.get_field("betook").get_field("baggins").to_string() << endl;
     cout << snook.get_field("betook").get_field("bilbo").to_string() << endl;
+
+    if (snook.has_field("betook"))
+        cout << "OK this field exists" << endl;
+    else
+        cout << "ERROR could not find field that should exist" << endl;
+
+    if (snook.has_field("NOT-HERE"))
+        cout << "ERROR found field that should NOT exist" << endl;
+    else
+        cout << "OK this field does not exist" << endl;
 }

@@ -65,6 +65,16 @@ class json {
     json_object * to_json_c_obj() { return obj; }
     const json_object * to_json_c_obj() const { return obj; }
 
+    bool has_field(const char *field_name) {
+        bool field_present = false;
+        if (json_object_is_type(obj, json_type_object) &&
+            json_object_object_get(obj, field_name))
+        {
+            field_present = true;
+        }
+        return field_present;
+    }
+
     json get_field(const char *field_name) {
         if (!json_object_is_type(obj, json_type_object))
             throw std::runtime_error("Not a hash-type object!");
