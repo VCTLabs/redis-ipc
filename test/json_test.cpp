@@ -28,4 +28,28 @@ int main(int argc, char **argv)
         cout << "ERROR found field that should NOT exist" << endl;
     else
         cout << "OK this field does not exist" << endl;
+
+    json took_twin;
+    took_twin.set_field("bilbo", "hungry");
+    took_twin.set_field("baggins", 9999);
+
+    if (took == took_twin)
+        cout << "OK these objects match" << endl;
+    else
+        cout << "ERROR these objects were supposed to match" << endl;
+
+    if (took != took_twin)
+        cout << "ERROR these objects were supposed to match" << endl;
+    else
+        cout << "OK these objects match" << endl;
+
+    if (took == snook)
+        cout << "ERROR these objects were not supposed to match" << endl;
+    else
+        cout << "OK these objects don't match" << endl;
+
+    if (took != snook)
+        cout << "OK these objects don't match" << endl;
+    else
+        cout << "ERROR these objects were not supposed to match" << endl;
 }
