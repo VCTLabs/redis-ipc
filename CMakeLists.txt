@@ -187,6 +187,7 @@ if(RIPC_BUILD_TESTING)
     if(COVERAGE_BUILD AND NOT WITH_COVERAGE)
         include(coverage)
         add_coverage(redis_ipc)
+        add_coverage(json_test)
     endif()
 endif()
 

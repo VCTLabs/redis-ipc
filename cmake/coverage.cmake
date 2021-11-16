@@ -1,9 +1,9 @@
 option(COVERAGE_BUILD "Enable code coverage" OFF)
 option(COVERAGE_TEXT "Show text summary of the coverage" ON)
-option(COVERAGE_LCOV "Export coverage data in lcov trace file" OFF)
-option(COVERAGE_HTML "Detailed html report of the coverage" ON)
+option(COVERAGE_LCOV "Export coverage data in lcov trace file" ON)
+option(COVERAGE_HTML "Detailed html report of the coverage" OFF)
 
-set(COVERAGE_EXCLUDE_REGEX "([^/]+\.pb\.(cc|h))")
+set(COVERAGE_EXCLUDE_REGEX "(test/|src/redis_ipc.h)")
 set(COVERAGE_PATH ${PROJECT_BINARY_DIR}/coverage)
 
 if(COVERAGE_BUILD)
