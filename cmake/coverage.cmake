@@ -13,18 +13,30 @@ if(COVERAGE_BUILD)
     )
 
     find_package(LLVM REQUIRED CONFIG)
-    include(AddLLVM)
+    get_filename_component(LLVM_PREFIX "${LLVM_DIR}" DIRECTORY)
+    message(STATUS "Found llvm directory: ${LLVM_PREFIX}")
 
     find_program(
         LLVM_COV_PATH
         NAMES llvm-cov
-        PATHS /usr/lib/llvm* REQUIRED
+        HINTS ${LLVM_PREFIX}
+        PATH_SUFFIXES bin
     )
     find_program(
         LLVM_PROFDATA_PATH
         NAMES llvm-profdata
-        PATHS /usr/lib/llvm* REQUIRED
+        HINTS ${LLVM_PREFIX}
+        PATH_SUFFIXES bin
     )
+
+    if(LLVM_COV_PATH AND LLVM_PROFDATA_PATH)
+        set(RIPC_HAVE_LLVM_COVERAGE_TOOLS TRUE)
+
+        message(STATUS "Found llvm-cov: ${LLVM_COV_PATH}")
+        message(STATUS "Found llvm-profdata: ${LLVM_PROFDATA_PATH}")
+    else()
+        message(FATAL_ERROR "llvm-cov stack required for coverage!")
+    endif()
 
     set(CMAKE_C_FLAGS
         "${CMAKE_C_FLAGS} -fprofile-instr-generate -fcoverage-mapping"
