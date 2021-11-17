@@ -142,7 +142,10 @@ jobs:
         sudo add-apt-repository -y -s ppa:nerdboy/embedded
         sudo apt-get install -y libjson-c-dev
         sudo apt-get install -y libhiredis-dev lcov
-        sudo apt-get install -yqq redis-server
+        sudo apt-get install -yqq redis-server clang-9 lld-9 llvm-9
+        echo "/usr/lib/llvm/9/bin" >> $GITHUB_PATH
+        echo "CC=clang-9" >> $GITHUB_ENV
+        echo "CXX=clang++-9" >> $GITHUB_ENV
         sudo systemctl stop redis
 
     - name: Add python requirements
@@ -151,6 +154,9 @@ jobs:
         pip install tox
 
     - name: Test (clang source coverage)
+      env:
+        CC: ${{ env.CC }}
+        CXX: ${{ env.CXX }}
       run: |
         tox -e clang,lcov
 
