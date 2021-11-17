@@ -12,8 +12,19 @@ if(COVERAGE_BUILD)
             "Source coverage is enabled. TEXT=${COVERAGE_TEXT}, LCOV=${COVERAGE_LCOV}, HTML=${COVERAGE_HTML}"
     )
 
-    find_program(LLVM_COV_PATH NAMES llvm-cov REQUIRED)
-    find_program(LLVM_PROFDATA_PATH NAMES llvm-profdata REQUIRED)
+    find_package(LLVM REQUIRED CONFIG)
+    include(AddLLVM)
+
+    find_program(
+        LLVM_COV_PATH
+        NAMES llvm-cov
+        PATHS /usr/lib/llvm* REQUIRED
+    )
+    find_program(
+        LLVM_PROFDATA_PATH
+        NAMES llvm-profdata
+        PATHS /usr/lib/llvm* REQUIRED
+    )
 
     set(CMAKE_C_FLAGS
         "${CMAKE_C_FLAGS} -fprofile-instr-generate -fcoverage-mapping"
