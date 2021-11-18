@@ -165,7 +165,7 @@ jobs:
         path: build/coverage
 
     - name: Code Coverage Summary Report (data)
-      uses: irongut/CodeCoverageSummary@v1.0.5
+      uses: irongut/CodeCoverageSummary@v1.1.0
       with:
         filename: coverage.xml
         output: 'both'
@@ -180,7 +180,7 @@ jobs:
         echo "##[set-output name=coverage-rounded-display;]${COVERAGE}%"
 
     - name: Code Coverage Summary Report
-      uses: irongut/CodeCoverageSummary@v1.0.5
+      uses: irongut/CodeCoverageSummary@v1.1.0
       if: ${{ github.event_name == 'pull_request' }}
       with:
         filename: coverage.xml
