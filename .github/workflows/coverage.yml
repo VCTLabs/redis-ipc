@@ -197,8 +197,7 @@ jobs:
       if: ${{ github.event_name == 'pull_request' }}
       with:
         header: coverage
-        hide_and_recreate: true
-        hide_classify: "OUTDATED"
+        recreate: true
         path: code-coverage-results.md
 
   test:
@@ -287,8 +286,7 @@ jobs:
       if: env.HAVE_BASE_COVERAGE == 'true'
       with:
         header: delta
-        hide_and_recreate: true
-        hide_classify: "OUTDATED"
+        recreate: true
         path: coverage-delta.md
 
   badge:
