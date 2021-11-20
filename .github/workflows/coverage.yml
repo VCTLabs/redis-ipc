@@ -1,4 +1,5 @@
-# internal coverage PR comment and badge v0.0.2
+# internal coverage with PR comment and badge v0.0.3
+# updated actions and coverage value regex, no fork isolation yet
 # badge and comment job logic should be tuned for personal vs org use
 # (see badge job comments below)
 name: Coverage
@@ -135,22 +136,6 @@ jobs:
       with:
         python-version: '3.9'
 
-    - name: Set platform server (socket) dir
-      id: set_temp_dirs
-      run: |
-        MKTEMP=$(mktemp -d)
-        echo "Platform temp dir is: ${MKTEMP}"
-        echo "GH CI temp dir is: ${RUNNER_TEMP}"
-        if [ "${ImageOS}" != "ubuntu18" ]
-        then
-            TEMP_DIR="${MKTEMP}"
-        else
-            TEMP_DIR="${RUNNER_TEMP}"
-        fi
-        echo "Setting runtime dir: ${TEMP_DIR}"
-        echo "TEMP_DIR=${TEMP_DIR}" >> $GITHUB_ENV
-        bash -c set
-
     - name: Install deps plus redis
       run: |
         sudo apt-get -qq update
@@ -158,63 +143,49 @@ jobs:
         sudo add-apt-repository -y -s ppa:nerdboy/embedded
         sudo apt-get install -y libjson-c-dev
         sudo apt-get install -y libhiredis-dev lcov
-        sudo apt-get install -yqq redis-server
+        sudo apt-get install -yqq redis-server clang-12 lld-12 llvm-12-tools
+        echo "CC=clang-12" >> $GITHUB_ENV
+        echo "CXX=clang++-12" >> $GITHUB_ENV
+        echo "ENV_LLVM_VER=12" >> $GITHUB_ENV
         sudo systemctl stop redis
 
     - name: Add python requirements
       run: |
         python -m pip install --upgrade pip
-        pip install gcovr
+        pip install tox
 
-    - name: Configure and build (autotools)
-      run: |
-        autoreconf -fiv
-        ./configure --with-coverage
-        make cov || true
-
-    - name: Message bus
+    - name: Test (clang source coverage)
       env:
-        RIPC_RUNTIME_DIR: "${{ env.TEMP_DIR }}"
+        CC: ${{ env.CC }}
+        CXX: ${{ env.CXX }}
+        ENV_LLVM_VER: ${{ env.ENV_LLVM_VER }}
       run: |
-        ./scripts/run_redis.sh start
-
-    - name: Test (autotools)
-      env:
-        RIPC_SERVER_PATH: "${{ env.TEMP_DIR }}/socket"
-      run: |
-        make cov
-        gcovr -s -b src/.libs/ test/
-        gcovr --xml-pretty -o coverage.xml src/.libs/ test/
-        ./scripts/fix_pkg_name.sh
-
-    - name: Cleanup
-      env:
-        RIPC_RUNTIME_DIR: "${{ env.TEMP_DIR }}"
-      run: |
-        ./scripts/run_redis.sh stop
-
-    - uses: actions/upload-artifact@v2
-      with:
-        name: coverage_data
-        path: coverage.xml
+        tox -e clang,lcov
 
     - name: Code Coverage Summary Report (data)
-      uses: irongut/CodeCoverageSummary@v1.0.5
+      uses: irongut/CodeCoverageSummary@v1.1.0
       with:
         filename: coverage.xml
         output: 'both'
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: src_coverage_rpts
+        path: |
+          coverage.xml
+          code-coverage-results.txt
 
     - name: Check code coverage
       id: coverage
       env:
         VALUE: "Branch Rate"
       run: |
-        COVERAGE="$( cat code-coverage-results.txt | egrep "^${VALUE}" | sed -e 's#^.* \([0-9]*\)%.*#\1#' )"
+        COVERAGE=$( cat code-coverage-results.txt | grep -e ^Summary | grep -o -E "${VALUE} = .{2}" | awk '{ print $4 }' )
         echo "##[set-output name=coverage;]${COVERAGE}"
         echo "##[set-output name=coverage-rounded-display;]${COVERAGE}%"
 
     - name: Code Coverage Summary Report
-      uses: irongut/CodeCoverageSummary@v1.0.5
+      uses: irongut/CodeCoverageSummary@v1.1.0
       if: ${{ github.event_name == 'pull_request' }}
       with:
         filename: coverage.xml
@@ -222,11 +193,11 @@ jobs:
         output: 'both'
 
     - name: Add Coverage PR Comment
-      uses: marocchino/sticky-pull-request-comment@v2.1.1
-      if: ${{ github.event_name == 'pull_request' }}
+      uses: marocchino/sticky-pull-request-comment@v2
       with:
         header: coverage
-        recreate: true
+        hide_and_recreate: true
+        hide_classify: "OUTDATED"
         path: code-coverage-results.md
 
   test:
@@ -311,11 +282,12 @@ jobs:
         fi
 
     - name: Comment PR with test coverage delta
-      uses: marocchino/sticky-pull-request-comment@v2.1.1
+      uses: marocchino/sticky-pull-request-comment@v2
       if: env.HAVE_BASE_COVERAGE == 'true'
       with:
         header: delta
-        recreate: true
+        hide_and_recreate: true
+        hide_classify: "OUTDATED"
         path: coverage-delta.md
 
   badge:
