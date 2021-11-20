@@ -13,7 +13,7 @@ Provide a short description of the bug with any error message.
 
 ### Log Messages
 ```
-Add​ the ​relevant part of any redis/client logs, if possible.
+Add​ the ​relevant part of any redis/client logs, if applicable.
 ```
 
 ### Expected Behavior

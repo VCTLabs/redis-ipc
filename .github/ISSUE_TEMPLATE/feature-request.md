@@ -11,7 +11,7 @@ assignees: SJLC
 
 Provide a short description of the problem you are trying to solve or feature you would like to see.
 
-### Expected Behaviour
+### Expected Behavior
 Provide a detailed description of how the feature should work.
 
 ### Additional Context
