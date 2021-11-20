@@ -12,7 +12,7 @@ if(COVERAGE_BUILD)
             "Source coverage is enabled. TEXT=${COVERAGE_TEXT}, LCOV=${COVERAGE_LCOV}, HTML=${COVERAGE_HTML}"
     )
 
-    find_package(LLVM REQUIRED CONFIG)
+    find_package(LLVM ${LLVM_VER} REQUIRED CONFIG)
     get_filename_component(LLVM_PREFIX "${LLVM_DIR}" DIRECTORY)
     message(STATUS "Found llvm directory: ${LLVM_PREFIX}")
 
