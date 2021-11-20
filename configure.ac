@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68])
-AC_INIT([redis-ipc], [0.0.5], [sjl@vctlabs.com])
+AC_INIT([redis-ipc], [0.0.6], [sjl@vctlabs.com])
 AC_CONFIG_SRCDIR([src/redis_ipc.c])
 AC_CONFIG_MACRO_DIR([m4])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
