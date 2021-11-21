@@ -1,21 +1,19 @@
 #!/usr/bin/make -f
 export DH_VERBOSE = 1
-#export DEB_BUILD_MAINT_OPTIONS = hardening=+all
-#export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+export V=1  # verbose mode for make
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+include /usr/share/dpkg/architecture.mk
+
+export DEB_HOST_MULTIARCH
+
+multiarch_path = $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 
 %:
-	dh $@ --with autoreconf
+	dh $@ --buildsystem=cmake --builddirectory=build
 
 override_dh_auto_configure:
-	dh_auto_configure -- --with-pic \
-		LIB_INSTALL_DIR=/usr/lib/$(DEB_HOST_MULTIARCH)
-
-override_dh_auto_install:
-	dh_auto_install
-
-override_dh_auto_clean:
-	dh_auto_clean
-	-rm -rf libltdl/ config.log
-
-# tests need a running redis server with appropriate socket
-override_dh_auto_test:
+	dh_auto_configure -- \
+		-DBUILD_STATIC_LIBS=ON \
+		-DRIPC_BUILD_TESTING=OFF

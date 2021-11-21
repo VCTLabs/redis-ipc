@@ -166,7 +166,17 @@ There are several ``tox -e`` environment commands available:
 * ``autoclean`` - clean all the autotools cruft
 * ``lint`` - run the cpplint style checks
 
-.. note:: Bionic has an older GTest package and needs an extra cmake arg.
+With the additional dependencies of LLVM/Clang >= 12 you can try the LLVM
+source-based coverage alternative to gcov/lcov-based coverage.  First install
+the above toolchain, then run the following::
+
+  $ CC=clang CXX=clang++ tox -e clang
+
+`If you installed a newer version than 12, eg, 13, then prepend the version
+using ``ENV_LLVM_VER=13`` to the above command.
+
+.. note:: Without the PPA, Bionic has an older GTest package and needs an
+          extra cmake arg.
 
 See the `Github workflow files`_ for more details on the packages installed
 for each runner OS environment.

@@ -4,9 +4,8 @@ Section: utils
 Priority: optional
 Standards-Version: 3.9.8
 Build-Depends: debhelper (>= 9),
-    dh-autoreconf,
+    cmake,
     pkg-config,
-    libltdl-dev,
     libhiredis-dev (>= 0.10),
     libjson-c-dev (>= 0.9)
 
@@ -14,6 +13,7 @@ Package: libredis-ipc0
 Section: libs
 Architecture: any
 Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: small library for using redis server and JSON as IPC mechanism
  Provides a high-performance substitute for the more common choice of dbus.
@@ -22,6 +22,9 @@ Package: libredis-ipc-dev
 Section: libdevel
 Architecture: any
 Multi-Arch: same
-Depends: ${shlibs:Depends}, ${misc:Depends}, libhiredis-dev, libjson-c-dev
+Depends: libredis-ipc0 (= ${binary:Version}),
+         ${misc:Depends},
+         libhiredis-dev,
+         libjson-c-dev,
 Description: redis-ipc library development files
  Provides a high-performance substitute for the more common choice of dbus.

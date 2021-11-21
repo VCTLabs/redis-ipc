@@ -1,3 +1,57 @@
+redis-ipc (0.0.5-2ubuntu4) focal; urgency=medium
+
+  * rebuild for focal (no src changes)
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Fri, 19 Nov 2021 12:42:17 -0800
+
+redis-ipc (0.0.5-2ubuntu3) bionic; urgency=medium
+
+  * install cmake packaging files along with .pc files
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Fri, 19 Nov 2021 12:36:56 -0800
+
+redis-ipc (0.0.5-2ubuntu2) focal; urgency=medium
+
+  * rebuild for focal (no src changes)
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Fri, 19 Nov 2021 12:01:15 -0800
+
+redis-ipc (0.0.5-2ubuntu1) bionic; urgency=medium
+
+  * bump revision for cmake-built pkgs, update build deps
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Fri, 19 Nov 2021 11:35:10 -0800
+
+redis-ipc (0.0.5-1ubuntu5) bionic; urgency=medium
+
+  * switch to cmake build system
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Fri, 19 Nov 2021 10:12:17 -0800
+
+redis-ipc (0.0.5-1ubuntu4) focal; urgency=medium
+
+  * rebuild for focal (no src changes)
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Thu, 18 Nov 2021 21:47:14 -0800
+
+redis-ipc (0.0.5-1ubuntu3) bionic; urgency=medium
+
+  * rebuild with missing dev package deps
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Thu, 18 Nov 2021 21:33:19 -0800
+
+redis-ipc (0.0.5-1ubuntu2) focal; urgency=medium
+
+  * rebuild for focal (no src changes)
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Fri, 12 Nov 2021 18:34:36 -0800
+
+redis-ipc (0.0.5-1ubuntu1) bionic; urgency=medium
+
+  * new upstream release
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Fri, 12 Nov 2021 18:14:37 -0800
+
 redis-ipc (0.0.4-1ubuntu1) bionic; urgency=medium
 
   * include pkgconfig file in -dev

@@ -1,6 +1,49 @@
 Changelog
 =========
 
+v0.0.6 (2021-11-20)
+-------------------
+
+New
+~~~
+- Json.hh: provide == and != operators. [S. Lockwood-Childs]
+- Switch to individual issue template files to drive project cards. [Stephen L Arnold]
+
+  * uses/used for non-beta (as of Nov2021) GH project automation
+
+- Add clang/llvm source coverage module, test with tox. [Stephen L Arnold]
+
+  * use cmake options to enable coverage and set reporting formats
+  * update pr comment action to use hide option
+
+Changes
+~~~~~~~
+- Relax cmake_minimum_required to 3.10. [Stephen L Arnold]
+
+  * use the default version available in bionic/PPA as minimum
+
+- Bump CodeCoverageSummary action to latest. [Stephen L Arnold]
+- Add extra clang deps, set and pass CC/CXX env vars. [Stephen L Arnold]
+
+  * update path for llvm bin directory so we can find llvm-cov
+
+- Update smoke/coverage deps, use new llvm source coverage in workflow. [Stephen L Arnold]
+
+Fixes
+~~~~~
+- Add missing skip-on-push to coverage comment step. [Stephen L Arnold]
+- Use legible/working sed regex for summary rate value. [Stephen L Arnold]
+
+  * update comment action version, update workflow comments/rev
+- Force clang/llvm-12 for coverage, set version for find_package. [Stephen L Arnold]
+
+  * explicitly set ENV_LLVM_VER, add tail to pick the summary value
+
+Other
+~~~~~
+- Bump version(s) for release 0.0.5 => 0.0.6. [Stephen L Arnold]
+
+
 v0.0.5 (2021-11-12)
 -------------------
 
