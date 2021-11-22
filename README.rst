@@ -172,7 +172,7 @@ the above toolchain, then run the following::
 
   $ CC=clang CXX=clang++ tox -e clang
 
-`If you installed a newer version than 12, eg, 13, then prepend the version
+If you installed a newer version than 12, eg, 13, then prepend the version
 using ``ENV_LLVM_VER=13`` to the above command.
 
 .. note:: Without the PPA, Bionic has an older GTest package and needs an
