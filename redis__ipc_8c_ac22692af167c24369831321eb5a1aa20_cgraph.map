@@ -1,10 +1,10 @@
 <map id="redis_ipc_subscribe_debug" name="redis_ipc_subscribe_debug">
-<area shape="rect" id="node1" title=" " alt="" coords="5,20,144,59"/>
-<area shape="rect" id="node2" href="$redis__ipc_8c.html#aa2a3ce97c0b6f3e83572446f3c92e541" title=" " alt="" coords="724,27,867,52"/>
-<area shape="rect" id="node4" href="$redis__ipc_8c.html#a67c9dd84d2426ab58a759dbdfd223267" title=" " alt="" coords="212,27,287,52"/>
-<area shape="rect" id="node5" href="$redis__ipc_8c.html#a420fcd64722043e4bc0bb7f61a29d588" title=" " alt="" coords="192,76,307,102"/>
-<area shape="rect" id="node3" href="$redis__ipc_8c.html#af0449193b7cded86e600f052d0aabd39" title=" " alt="" coords="929,27,988,52"/>
-<area shape="rect" id="node6" href="$redis__ipc_8c.html#aefb4508c1883e7d4345b206076b19e5d" title=" " alt="" coords="355,78,473,103"/>
-<area shape="rect" id="node7" href="$redis__ipc_8c.html#a5e81feac565f9476476c5f042b2a5c9d" title=" " alt="" coords="709,103,881,128"/>
-<area shape="rect" id="node8" href="$redis__ipc_8c.html#ae88037651d88f63c62d32afd7e0fccf2" title=" " alt="" coords="521,78,661,103"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,20,135,59"/>
+<area shape="rect" id="node2" href="$redis__ipc_8c.html#a7b930ec420c7b4bf2df1469aca77f93d" title=" " alt="" coords="686,27,813,52"/>
+<area shape="rect" id="node4" href="$redis__ipc_8c.html#a67c9dd84d2426ab58a759dbdfd223267" title=" " alt="" coords="202,27,270,52"/>
+<area shape="rect" id="node5" href="$redis__ipc_8c.html#a420fcd64722043e4bc0bb7f61a29d588" title=" " alt="" coords="183,76,289,101"/>
+<area shape="rect" id="node3" href="$redis__ipc_8c.html#af0449193b7cded86e600f052d0aabd39" title=" " alt="" coords="876,27,927,52"/>
+<area shape="rect" id="node6" href="$redis__ipc_8c.html#afab35d4c40b4b1866fc0239bb885a39b" title=" " alt="" coords="337,77,444,103"/>
+<area shape="rect" id="node7" href="$redis__ipc_8c.html#a5e81feac565f9476476c5f042b2a5c9d" title=" " alt="" coords="671,103,828,128"/>
+<area shape="rect" id="node8" href="$redis__ipc_8c.html#a80ea8825dd17a3cff2530680c97d184a" title=" " alt="" coords="492,77,623,103"/>
 </map>

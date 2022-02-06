@@ -11,7 +11,7 @@ var classjson =
     [ "get_field", "classjson.html#a7f8ce0dc555054bb2d94e39043e3fc3b", null ],
     [ "has_field", "classjson.html#aef6f4d1bcb9da34d4dd4942c0a998e14", null ],
     [ "operator!=", "classjson.html#aafbc468d248984838e59a73e70ffc3ec", null ],
-    [ "operator=", "classjson.html#a2bf764f05369fc29fcf205b621104533", null ],
+    [ "operator=", "classjson.html#ae3bd521b4b7b7c389182fd0790f2b886", null ],
     [ "operator==", "classjson.html#a4df3ffabd9b1e7315405a5dffd771697", null ],
     [ "set_element", "classjson.html#a7f2dc32f18e11272eb38f933503a4181", null ],
     [ "set_element", "classjson.html#a7edfd46af7f6f94068ed05a4ea2e1d7c", null ],
@@ -25,8 +25,8 @@ var classjson =
     [ "set_field", "classjson.html#a0dd200ca081996201173170a35202663", null ],
     [ "to_bool", "classjson.html#a8f3f102f401b50ca274711e969f4ad1f", null ],
     [ "to_int", "classjson.html#a1b71de5b932d9641e3534a9eb421a721", null ],
-    [ "to_json_c_obj", "classjson.html#aa14b7e856c92e05d3414a2ca44000bfd", null ],
-    [ "to_json_c_obj", "classjson.html#a112890d93d2d972e031b707ffe63c3b4", null ],
+    [ "to_json_c_obj", "classjson.html#a4de43486e567c3fc46c7a2a875f9ca7d", null ],
+    [ "to_json_c_obj", "classjson.html#a1caf77dfd3d2db6782cb474f8e977bbd", null ],
     [ "to_string", "classjson.html#a1fae1b786cbf9ce0cb23fc130dbd2063", null ],
     [ "obj", "classjson.html#a6dd975686336bd3bfc9e2b969f30280f", null ]
 ];
