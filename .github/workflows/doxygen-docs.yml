@@ -14,11 +14,18 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install doxygen
-      run: sudo apt install doxygen graphviz
+#    - name: Install doxygen
+#      run: sudo apt install doxygen graphviz
 
-    - name: Run doxygen
-      run: doxygen docs/Doxyfile.Overview
+#    - name: Run doxygen
+#      run: doxygen docs/Doxyfile.Overview
+
+    - name: Build docs
+      uses: mattnotmitt/doxygen-action@edge
+      with:
+        # not many fonts available on edge :(
+        #additional-packages: font-fira-code
+        doxyfile-path: 'docs/Doxyfile.Overview'
 
     - name: Deploy to gh-pages
       uses: peaceiris/actions-gh-pages@v3.8.0
