@@ -1,0 +1,33 @@
+name: Doxygen Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+
+jobs:
+  doxygen:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install doxygen
+      run: sudo apt install doxygen graphviz
+
+    - name: Run doxygen
+      run: doxygen docs/Doxyfile.Overview
+
+    - name: Deploy to gh-pages
+      uses: peaceiris/actions-gh-pages@v3.8.0
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: gh-pages
+        publish_dir: docs/doxygen/html
+
+#    - uses: actions/upload-artifact@v2
+#      with:
+#        name: api-docs
+#        path: ./docs/doxygen
