@@ -14,12 +14,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-#    - name: Install doxygen
-#      run: sudo apt install doxygen graphviz
-
-#    - name: Run doxygen
-#      run: doxygen docs/Doxyfile.Overview
-
     - name: Build docs
       uses: mattnotmitt/doxygen-action@edge
       with:
