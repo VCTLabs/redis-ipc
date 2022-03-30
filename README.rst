@@ -54,7 +54,7 @@ commit (if not clean) with some checks performing simple file corrections.
 If other checks fail on commit, the failure display should explain the error
 types and line numbers. Note you must fix any fatal errors for the
 commit to succeed; some errors should be fixed automatically (use
-``git status`` and `` git diff`` to review any changes).
+``git status`` and ``git diff`` to review any changes).
 
 See the pre-commit docs under ``docs/dev/`` for more information:
 
@@ -473,7 +473,7 @@ that are processed with different priorities.
 Settings are hashes representing the current configuration of each component.
 The settings for a single component can all be read atomically and written
 atomically, to avoid bugs where one component gets into an inconsistent state
-by reading settings when partially updates by another component. Note that
+by reading settings when partially updated by another component. Note that
 settings changes across multiple components are *not* atomic, so complicated
 designs where settings consistency depends on updating multiple components at
 the same time would need to implement that separately, e.g. with some form of
