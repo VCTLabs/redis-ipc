@@ -55,6 +55,21 @@ struct redis_ipc_per_thread * get_per_thread_info()
     return NULL;
 }
 
+static void stderr_debug(const char *format, ...)
+{
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    va_list argp;
+
+    if (stderr_debug_is_enabled())
+    {
+        fprintf(stderr, "(%s) ", thread_info->component);
+        va_start(argp, format);
+        vfprintf(stderr, format, argp);
+        va_end(argp);
+        fprintf(stderr, "\n");
+    }
+}
+
 // NOTE: keep the following type enum and names array in sync
 
 enum redis_ipc_type
@@ -299,22 +314,15 @@ redisReply * validate_redis_reply(redisReply *reply)
     if (reply == NULL)
     {
         // must reconnect to redis server after an error
-        if (stderr_debug_is_enabled())
-        {
-            // coverity[CWE-476] NOT null if redis_ipc_init() ran in this thread
-            fprintf(stderr, "[ERROR] '%s', need to reconnect\n",
-                    thread_info->redis_state->errstr);
-        }
+        // coverity[CWE-476] NOT null if redis_ipc_init() ran in this thread
+        stderr_debug("[ERROR] '%s', need to reconnect", thread_info->redis_state->errstr);
         redisFree(thread_info->redis_state);
         thread_info->redis_state = redisConnectUnix(RIPC_SERVER_PATH);
     }
     // error in command
     else if (reply->type == REDIS_REPLY_ERROR)
     {
-        if (stderr_debug_is_enabled())
-        {
-            fprintf(stderr, "[ERROR] command failed: %s\n", reply->str);
-        }
+        stderr_debug("[ERROR] command failed: %s", reply->str);
         freeReplyObject(validated_reply);
         validated_reply = NULL;
     }
@@ -335,6 +343,7 @@ redisReply * redis_command(const char *format, ...)
     if (stderr_debug_is_enabled())
     {
         va_start(argp, format);
+        fprintf(stderr, "(%s) ", thread_info->component);
         vfprintf(stderr, format, argp);
         fprintf(stderr, "\n");
         va_end(argp);
@@ -364,6 +373,7 @@ redisReply * redis_command_from_list(int argc, const char **argv)
 
     if (stderr_debug_is_enabled())
     {
+        fprintf(stderr, "(%s) ", thread_info->component);
         for (i = 0; i < argc; i++)
         {
             fprintf(stderr, "%s ", argv[i]);
@@ -454,10 +464,7 @@ static json_object * redis_pop(const char *queue_path, unsigned int timeout)
 
     json_text = reply->element[1]->str;
 
-    if (stderr_debug_is_enabled())
-    {
-        fprintf(stderr, "[ENTRY:%s] %s\n", queue_path, json_text);
-    }
+    stderr_debug("[ENTRY:%s] %s", queue_path, json_text);
 
     // parse popped entry back into json object
     entry = json_tokener_parse(json_text);
@@ -696,9 +703,9 @@ static int component_can_write_settings(const char *component)
     }
 
     authorized = (strcmp(component, lookup) == 0 || strcmp(lookup, RIPC_COMPONENT_ANY) == 0);
-    if (!authorized && stderr_debug_is_enabled())
+    if (!authorized)
     {
-        fprintf(stderr, "[ERROR] component %s is not authorized to write settings\n", component);
+        stderr_debug("[ERROR] component %s is not authorized to write settings", component);
     }
 
     return authorized;
@@ -829,6 +836,7 @@ redis_ipc_write_status_field_finish:
 
 json_object * redis_read_hash(const char *hash_path)
 {
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     redisReply *reply = NULL;
     json_object *fields = NULL;
     const char *key = NULL, *val = NULL;
@@ -851,7 +859,7 @@ json_object * redis_read_hash(const char *hash_path)
     if (reply->elements % 2)  // need to have name-value pairs
         goto redis_read_hash_finish;
 
-    if (stderr_debug_is_enabled()) fprintf(stderr, "[HASH]");
+    if (stderr_debug_is_enabled()) fprintf(stderr, "(%s) [HASH]", thread_info->component);
     while (i < reply->elements)
     {
         key = reply->element[i++]->str;
@@ -932,18 +940,16 @@ char * redis_read_hash_field(const char *hash_path, const char *field_name)
     // reply should be a string
     if (reply == NULL)
     {
-        if (stderr_debug_is_enabled()) fprintf(stderr, "[HASH_FIELD] <null result>\n");
+        stderr_debug("[HASH_FIELD] <null result>");
         goto redis_read_hash_field_finish;
     }
     if (reply->type != REDIS_REPLY_STRING)
     {
-        if (stderr_debug_is_enabled())
-            fprintf(stderr, "[HASH_FIELD] <non-string result type %d>\n", reply->type);
+        stderr_debug("[HASH_FIELD] <non-string result type %d>", reply->type);
         goto redis_read_hash_field_finish;
     }
     field_value = strdup(reply->str);
-    if (stderr_debug_is_enabled())
-        fprintf(stderr, "[HASH_FIELD] %s='%s'\n", field_name, field_value);
+    stderr_debug("[HASH_FIELD] %s='%s'", field_name, field_value);
 
 redis_read_hash_field_finish:
     if (reply != NULL)
@@ -1340,10 +1346,7 @@ json_object * redis_ipc_get_message_blocking(void)
 
     message_str = reply->element[3]->str;
 
-    if (stderr_debug_is_enabled())
-    {
-        fprintf(stderr, "[MESSAGE] %s\n", message_str);
-    }
+    stderr_debug("[MESSAGE] %s", message_str);
 
     // parse message back into json object
     message = json_tokener_parse(message_str);
