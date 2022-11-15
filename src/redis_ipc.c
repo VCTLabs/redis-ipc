@@ -29,6 +29,7 @@ struct redis_ipc_per_thread
     redisContext *redis_state;  // state for connection to redis server
     const char *redis_socket_path;  // path for connection to redis server
     unsigned int command_ctr;   // counter for number of commands sent by thread
+    int force_quiet;          // force stderr prints off
 };
 
 static __thread struct redis_ipc_per_thread *redis_ipc_info = NULL;
@@ -192,10 +193,7 @@ int redis_ipc_init(const char *this_component, const char *this_thread)
     return RIPC_OK;
 
 redis_ipc_init_failed:
-    if (stderr_debug_is_enabled())
-    {
-        fprintf(stderr, "[ERROR] redis_ipc_init failed for thread %s\n", this_thread);
-    }
+    fprintf(stderr, "[ERROR] redis_ipc_init failed for thread %s\n", this_thread);
     cleanup_per_thread_info(new_info);
     safe_free(new_info);
 
@@ -251,14 +249,18 @@ int redis_ipc_config_settings_writer(const char *writer_component)
     return set_config(SETTINGS_WRITER_FIELD, writer_component);
 }
 
-char * redis_read_hash_field(const char *hash_path, const char *field_name, int force_quiet);
+char * redis_read_hash_field(const char *hash_path, const char *field_name);
 static const char *get_config(const char *field_name)
 {
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     char setting_hash_path[RIPC_MAX_IPC_PATH_LEN];
     const char *lookup = NULL;
 
+    // set flag to disable stderr debugging when looking up internal config settings
+    thread_info->force_quiet = 1;
     ipc_path(setting_hash_path, sizeof(setting_hash_path), RPC_TYPE_SETTING, RIPC_COMPONENT, NULL);
-    lookup = redis_read_hash_field(setting_hash_path, field_name, 1);  // 1=no-stderr-debug
+    lookup = redis_read_hash_field(setting_hash_path, field_name);
+    thread_info->force_quiet = 0;
     return lookup;
 }
 
@@ -272,8 +274,16 @@ int get_debug_verbosity()
 
 int stderr_debug_is_enabled()
 {
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     int stderr_enabled = RIPC_DEFAULT_STDERR;
-    const char *lookup = get_config(STDERR_FIELD);
+    const char *lookup = NULL;
+
+    // prevent infinite recursion: always say "no" while looking up current config
+    if (thread_info->force_quiet == 1)
+        return 0;
+
+    lookup = get_config(STDERR_FIELD);
+
     if (lookup) stderr_enabled = atoi(lookup);
     return stderr_enabled;
 }
@@ -314,17 +324,15 @@ redisReply * validate_redis_reply(redisReply *reply)
 
 // run redis command and return reply object if command succeeds
 //
-// force_quiet=1 disables runtime check for stderr debug setting (prevent infinite recursion)
-//
 // if return value is non-null,
 // caller is responsible for calling freeReplyObject() when done with reply
-redisReply * redis_command(int force_quiet, const char *format, ...)
+redisReply * redis_command(const char *format, ...)
 {
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     redisReply *reply = NULL;
     va_list argp;
 
-    if (!force_quiet && stderr_debug_is_enabled())
+    if (stderr_debug_is_enabled())
     {
         va_start(argp, format);
         vfprintf(stderr, format, argp);
@@ -412,7 +420,7 @@ static int redis_push(const char *queue_path, json_object *obj)
     json_text = json_object_to_json_string(obj);
 
     // don't forget to free reply later
-    reply = redis_command(0, "RPUSH %s %s", queue_path, json_text);
+    reply = redis_command("RPUSH %s %s", queue_path, json_text);
 
     if (reply != NULL)
     {
@@ -430,7 +438,7 @@ static json_object * redis_pop(const char *queue_path, unsigned int timeout)
     redisReply *reply = NULL;
 
     // don't forget to free reply later
-    reply = redis_command(0, "BLPOP %s %d", queue_path, timeout);
+    reply = redis_command("BLPOP %s %d", queue_path, timeout);
     if (reply == NULL)
         goto redis_pop_finish;
 
@@ -755,7 +763,7 @@ int redis_write_hash_field(const char *hash_path, const char *field_name,
     int ret = RIPC_FAIL;
 
     // don't forget to free reply later
-    reply = redis_command(0, "HSET %s %s %s", hash_path, field_name, field_value);
+    reply = redis_command("HSET %s %s %s", hash_path, field_name, field_value);
 
     if (reply != NULL)
     {
@@ -827,7 +835,7 @@ json_object * redis_read_hash(const char *hash_path)
     int i = 0;
 
     // don't forget to free reply later
-    reply = redis_command(0, "HGETALL %s", hash_path);
+    reply = redis_command("HGETALL %s", hash_path);
 
     // extract fields from reply object
     //
@@ -911,31 +919,30 @@ redis_ipc_read_status_finish:
     return fields;
 }
 
-// force_quiet=1 disables runtime check for stderr debug setting (prevent infinite recursion)
-char * redis_read_hash_field(const char *hash_path, const char *field_name, int force_quiet)
+char * redis_read_hash_field(const char *hash_path, const char *field_name)
 {
     redisReply *reply = NULL;
     char *field_value = NULL;
 
     // don't forget to free reply later
-    reply = redis_command(force_quiet, "HGET %s %s", hash_path, field_name);
+    reply = redis_command("HGET %s %s", hash_path, field_name);
 
     // extract fields from reply object
     //
     // reply should be a string
     if (reply == NULL)
     {
-        if (!force_quiet && stderr_debug_is_enabled()) fprintf(stderr, "[HASH_FIELD] <null result>\n");
+        if (stderr_debug_is_enabled()) fprintf(stderr, "[HASH_FIELD] <null result>\n");
         goto redis_read_hash_field_finish;
     }
     if (reply->type != REDIS_REPLY_STRING)
     {
-        if (!force_quiet && stderr_debug_is_enabled())
+        if (stderr_debug_is_enabled())
             fprintf(stderr, "[HASH_FIELD] <non-string result type %d>\n", reply->type);
         goto redis_read_hash_field_finish;
     }
     field_value = strdup(reply->str);
-    if (!force_quiet && stderr_debug_is_enabled())
+    if (stderr_debug_is_enabled())
         fprintf(stderr, "[HASH_FIELD] %s='%s'\n", field_name, field_value);
 
 redis_read_hash_field_finish:
@@ -963,7 +970,7 @@ char * redis_ipc_read_setting_field(const char *owner_component, const char *fie
         goto redis_ipc_read_setting_field_finish;
 
     // get all fields of setting hash
-    field_value = redis_read_hash_field(setting_hash_path, field_name, 0);
+    field_value = redis_read_hash_field(setting_hash_path, field_name);
 
 redis_ipc_read_setting_field_finish:
 
@@ -988,7 +995,7 @@ char * redis_ipc_read_status_field(const char *owner_component, const char *fiel
         goto redis_ipc_read_status_field_finish;
 
     // get all fields of status hash
-    field_value = redis_read_hash_field(status_hash_path, field_name, 0);
+    field_value = redis_read_hash_field(status_hash_path, field_name);
 
 redis_ipc_read_status_field_finish:
 
@@ -1011,7 +1018,7 @@ static int redis_publish(const char *channel_path, json_object *obj)
     json_text = json_object_to_json_string(obj);
 
     // don't forget to free reply later
-    reply = redis_command(0, "PUBLISH %s %s", channel_path, json_text);
+    reply = redis_command("PUBLISH %s %s", channel_path, json_text);
 
     if (reply != NULL)
     {
@@ -1134,7 +1141,7 @@ static int redis_subscribe(const char *channel_path)
     int ret = RIPC_FAIL;
 
     // don't forget to free reply later
-    reply = redis_command(0, "PSUBSCRIBE %s", channel_path);
+    reply = redis_command("PSUBSCRIBE %s", channel_path);
 
     if (reply != NULL)
     {
@@ -1236,7 +1243,7 @@ static int redis_unsubscribe(char *channel_path)
     int ret = RIPC_FAIL;
 
     // don't forget to free reply later
-    reply = redis_command(0, "PUNSUBSCRIBE %s", channel_path);
+    reply = redis_command("PUNSUBSCRIBE %s", channel_path);
 
     if (reply != NULL)
     {

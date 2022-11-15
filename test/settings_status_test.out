@@ -1,27 +1,27 @@
-HMSET status.session open until closed procedure complicated 
-HSET settings.redis-ipc settings-writer db
+(session) HMSET status.session open until closed procedure complicated 
+(session) HSET settings.redis-ipc settings-writer db
 ** This attempt to write settings should fail...
-[ERROR] component session is not authorized to write settings
+(session) [ERROR] component session is not authorized to write settings
 ** This attempt to write single setting should fail...
-[ERROR] component session is not authorized to write settings
-HGETALL settings.session
-[HASH] location='still right here'
-HGET settings.session location
-[HASH_FIELD] location='still right here'
-HSET settings.redis-ipc settings-writer session
+(session) [ERROR] component session is not authorized to write settings
+(session) HGETALL settings.session
+(session) [HASH] location='still right here'
+(session) HGET settings.session location
+(session) [HASH_FIELD] location='still right here'
+(session) HSET settings.redis-ipc settings-writer session
 ** This attempt to write single setting should work...
-HSET settings.session location still right here
-HSET settings.redis-ipc settings-writer db
-HGETALL status.session
-[HASH] open='until closed' procedure='complicated'
+(session) HSET settings.session location still right here
+(session) HSET settings.redis-ipc settings-writer db
+(db) HGETALL status.session
+(db) [HASH] open='until closed' procedure='complicated'
 ** This attempt to write settings should work...
-HMSET settings.printer num_copies until ink runs out paper_type wrinkled 
+(db) HMSET settings.printer num_copies until ink runs out paper_type wrinkled 
 ** This attempt to write single setting should work...
-HSET settings.printer contrast none
-HGETALL settings.printer
-[HASH] num_copies='until ink runs out' paper_type='wrinkled' contrast='none'
-HSET settings.redis-ipc stderr 0
+(db) HSET settings.printer contrast none
+(db) HGETALL settings.printer
+(db) [HASH] num_copies='until ink runs out' paper_type='wrinkled' contrast='none'
+(db) HSET settings.redis-ipc stderr 0
 ** This attempt to read single setting should *not* print debug...
 ** This attempt to read single setting *should* print debug...
-HGET settings.printer paper_type
-[HASH_FIELD] paper_type='wrinkled'
+(db) HGET settings.printer paper_type
+(db) [HASH_FIELD] paper_type='wrinkled'
