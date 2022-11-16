@@ -20,6 +20,19 @@
 
 #define safe_free(ptr) { if (ptr) free(ptr); ptr = NULL; }
 
+#define RIPC_COMPONENT             "redis-ipc"
+
+#define DEBUG_VERBOSITY_FIELD      "debug_verbosity"
+#define STDERR_DEBUG_FIELD         "stderr_debug"
+#define SETTINGS_WRITER_FIELD      "settings_writer"
+
+struct redis_ipc_config
+{
+    int debug_verbosity;
+    int stderr_debug;
+    char *settings_writer;
+};
+
 struct redis_ipc_per_thread
 {
     pid_t tid;                // owning thread
@@ -30,6 +43,7 @@ struct redis_ipc_per_thread
     const char *redis_socket_path;  // path for connection to redis server
     unsigned int command_ctr;   // counter for number of commands sent by thread
     int force_quiet;          // force stderr prints off
+    struct redis_ipc_config config;  // settings cached for this thread
 };
 
 static __thread struct redis_ipc_per_thread *redis_ipc_info = NULL;
@@ -205,6 +219,9 @@ int redis_ipc_init(const char *this_component, const char *this_thread)
 
     redis_ipc_info = new_info;
 
+    // lookup current redis-ipc settings and cache in per-thread struct
+    redis_ipc_config_load();
+
     return RIPC_OK;
 
 redis_ipc_init_failed:
@@ -229,34 +246,69 @@ int redis_ipc_cleanup(pid_t tid)
     return ret;
 }
 
-#define RIPC_COMPONENT             "redis-ipc"
-#define VERBOSITY_FIELD            "verbosity"
-#define STDERR_FIELD               "stderr"
-#define SETTINGS_WRITER_FIELD      "settings-writer"
+char * redis_read_hash_field(const char *hash_path, const char *field_name);
+void redis_ipc_config_load()
+{
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    char setting_hash_path[RIPC_MAX_IPC_PATH_LEN];
+    char *lookup = NULL;
+
+    // set flag to disable stderr debugging when looking up internal config settings
+    thread_info->force_quiet = 1;
+    ipc_path(setting_hash_path, sizeof(setting_hash_path), RPC_TYPE_SETTING, RIPC_COMPONENT, NULL);
+
+    // verbosity level for debug channel
+    thread_info->config.debug_verbosity = RIPC_DEFAULT_DEBUG_VERBOSITY;
+    lookup = redis_read_hash_field(setting_hash_path, DEBUG_VERBOSITY_FIELD);
+    if (lookup)
+        thread_info->config.debug_verbosity = atoi(lookup);
+    safe_free(lookup);
+
+    // whether to enable stderr debug messages
+    thread_info->config.stderr_debug = RIPC_DEFAULT_STDERR_DEBUG;
+    lookup = redis_read_hash_field(setting_hash_path, STDERR_DEBUG_FIELD);
+    if (lookup)
+        thread_info->config.stderr_debug = atoi(lookup);
+    safe_free(lookup);
+
+    // which component is authorized to write settings (or all of them, if wildcard)
+    // Note: intentionally not freeing lookup result, it becomes owned by config struct
+    safe_free(thread_info->config.settings_writer);
+    thread_info->config.settings_writer = strdup(RIPC_DEFAULT_SETTINGS_WRITER);
+    lookup = redis_read_hash_field(setting_hash_path, SETTINGS_WRITER_FIELD);
+    if (lookup)
+        thread_info->config.settings_writer = lookup;
+
+    // clear flag to disable stderr debugging when looking up internal config settings
+    thread_info->force_quiet = 0;
+}
 
 int redis_write_hash_field(const char *hash_path, const char *field_name, const char *field_value);
 static int set_config(const char *field_name, const char *field_value)
 {
     char setting_hash_path[RIPC_MAX_IPC_PATH_LEN];
-    const char *lookup = NULL;
+    int ret = RIPC_FAIL;
 
     ipc_path(setting_hash_path, sizeof(setting_hash_path), RPC_TYPE_SETTING, RIPC_COMPONENT, NULL);
-    lookup = redis_write_hash_field(setting_hash_path, field_name, field_value);
-    return lookup;
+    ret = redis_write_hash_field(setting_hash_path, field_name, field_value);
+    if (ret == RIPC_OK)
+        redis_ipc_config_load();
+
+    return ret;
 }
 
 int redis_ipc_config_debug_verbosity(int verbosity)
 {
     char str_value[10] = {0};
     snprintf(str_value, sizeof(str_value), "%d", verbosity);
-    return set_config(VERBOSITY_FIELD, str_value);
+    return set_config(DEBUG_VERBOSITY_FIELD, str_value);
 }
 
 int redis_ipc_config_stderr_debug(int enable_stderr)
 {
     char str_value[10] = {0};
     snprintf(str_value, sizeof(str_value), "%d", enable_stderr);
-    return set_config(STDERR_FIELD, str_value);
+    return set_config(STDERR_DEBUG_FIELD, str_value);
 }
 
 int redis_ipc_config_settings_writer(const char *writer_component)
@@ -264,43 +316,19 @@ int redis_ipc_config_settings_writer(const char *writer_component)
     return set_config(SETTINGS_WRITER_FIELD, writer_component);
 }
 
-char * redis_read_hash_field(const char *hash_path, const char *field_name);
-static const char *get_config(const char *field_name)
-{
-    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
-    char setting_hash_path[RIPC_MAX_IPC_PATH_LEN];
-    const char *lookup = NULL;
-
-    // set flag to disable stderr debugging when looking up internal config settings
-    thread_info->force_quiet = 1;
-    ipc_path(setting_hash_path, sizeof(setting_hash_path), RPC_TYPE_SETTING, RIPC_COMPONENT, NULL);
-    lookup = redis_read_hash_field(setting_hash_path, field_name);
-    thread_info->force_quiet = 0;
-    return lookup;
-}
-
 int get_debug_verbosity()
 {
-    int verbosity = RIPC_DEFAULT_VERBOSITY;
-    const char *lookup = get_config(VERBOSITY_FIELD);
-    if (lookup) verbosity = atoi(lookup);
-    return verbosity;
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    return thread_info->config.debug_verbosity;
 }
 
 int stderr_debug_is_enabled()
 {
     struct redis_ipc_per_thread *thread_info = get_per_thread_info();
-    int stderr_enabled = RIPC_DEFAULT_STDERR;
-    const char *lookup = NULL;
-
-    // prevent infinite recursion: always say "no" while looking up current config
-    if (thread_info->force_quiet == 1)
+    // force_quiet is used to disable debug while loading redis-ipc config
+    if (thread_info->force_quiet)
         return 0;
-
-    lookup = get_config(STDERR_FIELD);
-
-    if (lookup) stderr_enabled = atoi(lookup);
-    return stderr_enabled;
+    return thread_info->config.stderr_debug;
 }
 
 // check for errors in redis command execution;
@@ -654,7 +682,7 @@ int get_field_count(json_object *obj)
     return num_fields;
 }
 
-int redis_write_hash(const char *hash_path, json_object *obj)
+int redis_write_hash(const char *hash_path, const json_object *obj)
 {
     int argc = 0, num_fields = 0;
     const char **argv = NULL;
@@ -695,14 +723,12 @@ int redis_write_hash(const char *hash_path, json_object *obj)
 
 static int component_can_write_settings(const char *component)
 {
-    const char *lookup = get_config(SETTINGS_WRITER_FIELD);
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     int authorized = 0;
-    if (!lookup)
-    {
-        lookup = RIPC_DEFAULT_SETTINGS_WRITER;
-    }
 
-    authorized = (strcmp(component, lookup) == 0 || strcmp(lookup, RIPC_COMPONENT_ANY) == 0);
+    // ok if writer privs are given to this component OR open to all components
+    authorized = (strcmp(thread_info->config.settings_writer, component) == 0 ||
+                  strcmp(thread_info->config.settings_writer, RIPC_COMPONENT_ANY) == 0);
     if (!authorized)
     {
         stderr_debug("[ERROR] component %s is not authorized to write settings", component);

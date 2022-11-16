@@ -1,13 +1,21 @@
+(web) HGET settings.redis-ipc stderr_debug
+(web) [HASH_FIELD] <non-string result type 4>
+(web) HGET settings.redis-ipc settings_writer
+(web) [HASH_FIELD] <non-string result type 4>
 (web) PSUBSCRIBE channel.events.printer*
 (web) PSUBSCRIBE channel.debug.printer
-(printer) PUBLISH channel.debug.printer { "message": "printer starting to smoke", "level": 1, "channel": "channel.debug.printer", "timestamp": "1668556824.464753", "component": "printer", "thread": "monitor", "tid": 15142 }
-(web) (printer) [MESSAGE] { "message": "printer starting to smoke", "level": 1, "channel": "channel.debug.printer", "timestamp": "1668556824.464753", "component": "printer", "thread": "monitor", "tid": 15142 }PUBLISH channel.debug.printer { "message": "printer on fire!!", "level": 0, "channel": "channel.debug.printer", "timestamp": "1668556824.465350", "component": "printer", "thread": "monitor", "tid": 15142 }
-
-(printer) PUBLISH channel.events.printer.state { "severity": "warning", "message": "printer is down for the count", "channel": "channel.events.printer.state", "timestamp": "1668556824.465616", "component": "printer", "thread": "monitor", "tid": 15142 }
-(web) [MESSAGE] { "message": "printer on fire!!", "level": 0, "channel": "channel.debug.printer", "timestamp": "1668556824.465350", "component": "printer", "thread": "monitor", "tid": 15142 }
+(printer) HGET settings.redis-ipc stderr_debug
+(printer) [HASH_FIELD] <non-string result type 4>
+(printer) HGET settings.redis-ipc settings_writer
+(printer) [HASH_FIELD] <non-string result type 4>
+(printer) PUBLISH channel.debug.printer { "message": "printer starting to smoke", "level": 1, "channel": "channel.debug.printer", "timestamp": "1668565641.611715", "component": "printer", "thread": "monitor", "tid": 25068 }
+(printer) PUBLISH channel.debug.printer { "message": "printer on fire!!", "level": 0, "channel": "channel.debug.printer", "timestamp": "1668565641.611806", "component": "printer", "thread": "monitor", "tid": 25068 }
+(web) [MESSAGE] { "message": "printer starting to smoke", "level": 1, "channel": "channel.debug.printer", "timestamp": "1668565641.611715", "component": "printer", "thread": "monitor", "tid": 25068 }
+(printer) PUBLISH channel.events.printer.state { "severity": "warning", "message": "printer is down for the count", "channel": "channel.events.printer.state", "timestamp": "1668565641.611901", "component": "printer", "thread": "monitor", "tid": 25068 }
+(web) [MESSAGE] { "message": "printer on fire!!", "level": 0, "channel": "channel.debug.printer", "timestamp": "1668565641.611806", "component": "printer", "thread": "monitor", "tid": 25068 }
+(web) [MESSAGE] { "severity": "warning", "message": "printer is down for the count", "channel": "channel.events.printer.state", "timestamp": "1668565641.611901", "component": "printer", "thread": "monitor", "tid": 25068 }
+(printer) PUBLISH channel.events.printer.media { "severity": "alert", "message": "there went our expensive paper", "pages_remaining": 0, "channel": "channel.events.printer.media", "timestamp": "1668565641.611992", "component": "printer", "thread": "monitor", "tid": 25068 }
+(printer) PUBLISH channel.events.printer { "severity": "info", "message": "save trees, go digital", "channel": "channel.events.printer", "timestamp": "1668565641.612066", "component": "printer", "thread": "monitor", "tid": 25068 }
+(web) [MESSAGE] { "severity": "alert", "message": "there went our expensive paper", "pages_remaining": 0, "channel": "channel.events.printer.media", "timestamp": "1668565641.611992", "component": "printer", "thread": "monitor", "tid": 25068 }
 (web) PUNSUBSCRIBE channel.events.*
-(printer) PUBLISH channel.events.printer.media { "severity": "alert", "message": "there went our expensive paper", "pages_remaining": 0, "channel": "channel.events.printer.media", "timestamp": "1668556824.465889", "component": "printer", "thread": "monitor", "tid": 15142 }
-(web) [ERROR] command failed: ERR only (P)SUBSCRIBE / (P)UNSUBSCRIBE / PING / QUIT allowed in this context
-(web) (printer) PUNSUBSCRIBE channel.debug.*PUBLISH channel.events.printer { "severity": "info", "message": "save trees, go digital", "channel": "channel.events.printer", "timestamp": "1668556824.466072", "component": "printer", "thread": "monitor", "tid": 15142 }
-
-(web) [ERROR] command failed: ERR only (P)SUBSCRIBE / (P)UNSUBSCRIBE / PING / QUIT allowed in this context
+(web) PUNSUBSCRIBE channel.debug.*

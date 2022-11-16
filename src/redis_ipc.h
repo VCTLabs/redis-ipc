@@ -53,10 +53,10 @@ enum { RIPC_DBG_ERROR,
 //*********** defaults for settings that can be optionally configured via functions
 
 // default verbosity level for debug channel messages
-#define RIPC_DEFAULT_VERBOSITY 5
+#define RIPC_DEFAULT_DEBUG_VERBOSITY 5
 
 // default stderr debug messages enabled
-#define RIPC_DEFAULT_STDERR 1
+#define RIPC_DEFAULT_STDERR_DEBUG 1
 
 // component allowed to write settings (or "*" if any component is allowed)
 #define RIPC_COMPONENT_ANY "*"
@@ -87,11 +87,16 @@ enum { RIPC_DBG_ERROR,
 // queue -- and we want same results queues to be re-used if component gets
 // restarted (avoid having to garbage-collect stale, abandoned redis queues)
 //
+// Global redis-ipc settings are normally cached in each thread during
+// init, but threads can explicitly ask for a config relead if desired
+// (to pick up changes some other thread made to global settings).
+//
 // Cleanup is done based on thread ID so that main thread can clean up for
 // terminated threads, as long as it is tracking their IDs. For a
 // single-threaded process, tid == pid.
 
 int redis_ipc_init(const char *this_component, const char *this_thread);
+void redis_ipc_config_load(void);
 int redis_ipc_cleanup(pid_t tid);
 
 

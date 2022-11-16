@@ -7,6 +7,7 @@ void spawn_listener_process(void)
 {
   json_object *message;
   pid_t pid = fork();
+  int i;
 
   // parent waits for child to start listening, then returns
   if (pid > 0)
@@ -21,11 +22,11 @@ void spawn_listener_process(void)
   redis_ipc_subscribe_events("printer", NULL);
   redis_ipc_subscribe_debug("printer");
 
-  message = redis_ipc_get_message_blocking();
-  json_object_put(message);
-
-  message = redis_ipc_get_message_blocking();
-  json_object_put(message);
+  for (i = 0; i < 4; i++)
+  {
+      message = redis_ipc_get_message_blocking();
+      json_object_put(message);
+  }
 
   redis_ipc_unsubscribe_events();
   redis_ipc_unsubscribe_debug();
