@@ -20,6 +20,19 @@
 
 #define safe_free(ptr) { if (ptr) free(ptr); ptr = NULL; }
 
+#define RIPC_COMPONENT             "redis-ipc"
+
+#define DEBUG_VERBOSITY_FIELD      "debug_verbosity"
+#define STDERR_DEBUG_FIELD         "stderr_debug"
+#define SETTINGS_WRITER_FIELD      "settings_writer"
+
+struct redis_ipc_config
+{
+    int debug_verbosity;
+    int stderr_debug;
+    char *settings_writer;
+};
+
 struct redis_ipc_per_thread
 {
     pid_t tid;                // owning thread
@@ -29,6 +42,8 @@ struct redis_ipc_per_thread
     redisContext *redis_state;  // state for connection to redis server
     const char *redis_socket_path;  // path for connection to redis server
     unsigned int command_ctr;   // counter for number of commands sent by thread
+    int force_quiet;          // force stderr prints off
+    struct redis_ipc_config config;  // settings cached for this thread
 };
 
 static __thread struct redis_ipc_per_thread *redis_ipc_info = NULL;
@@ -52,6 +67,21 @@ struct redis_ipc_per_thread * get_per_thread_info()
     }
 
     return NULL;
+}
+
+static void stderr_debug(const char *format, ...)
+{
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    va_list argp;
+
+    if (stderr_debug_is_enabled())
+    {
+        fprintf(stderr, "(%s) ", thread_info->component);
+        va_start(argp, format);
+        vfprintf(stderr, format, argp);
+        va_end(argp);
+        fprintf(stderr, "\n");
+    }
 }
 
 // NOTE: keep the following type enum and names array in sync
@@ -189,13 +219,13 @@ int redis_ipc_init(const char *this_component, const char *this_thread)
 
     redis_ipc_info = new_info;
 
+    // lookup current redis-ipc settings and cache in per-thread struct
+    redis_ipc_config_load();
+
     return RIPC_OK;
 
 redis_ipc_init_failed:
-    if (stderr_debug_is_enabled())
-    {
-        fprintf(stderr, "[ERROR] redis_ipc_init failed for thread %s\n", this_thread);
-    }
+    fprintf(stderr, "[ERROR] redis_ipc_init failed for thread %s\n", this_thread);
     cleanup_per_thread_info(new_info);
     safe_free(new_info);
 
@@ -216,16 +246,89 @@ int redis_ipc_cleanup(pid_t tid)
     return ret;
 }
 
-//@@@@ FIXME: debug will be dynamically configurable from a setting or config file
-int get_debug_verbosity()
+char * redis_read_hash_field(const char *hash_path, const char *field_name);
+void redis_ipc_config_load()
 {
-    return 5;
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    char setting_hash_path[RIPC_MAX_IPC_PATH_LEN];
+    char *lookup = NULL;
+
+    // set flag to disable stderr debugging when looking up internal config settings
+    thread_info->force_quiet = 1;
+    ipc_path(setting_hash_path, sizeof(setting_hash_path), RPC_TYPE_SETTING, RIPC_COMPONENT, NULL);
+
+    // verbosity level for debug channel
+    thread_info->config.debug_verbosity = RIPC_DEFAULT_DEBUG_VERBOSITY;
+    lookup = redis_read_hash_field(setting_hash_path, DEBUG_VERBOSITY_FIELD);
+    if (lookup)
+        thread_info->config.debug_verbosity = atoi(lookup);
+    safe_free(lookup);
+
+    // whether to enable stderr debug messages
+    thread_info->config.stderr_debug = RIPC_DEFAULT_STDERR_DEBUG;
+    lookup = redis_read_hash_field(setting_hash_path, STDERR_DEBUG_FIELD);
+    if (lookup)
+        thread_info->config.stderr_debug = atoi(lookup);
+    safe_free(lookup);
+
+    // which component is authorized to write settings (or all of them, if wildcard)
+    // Note: intentionally not freeing lookup result, it becomes owned by config struct
+    safe_free(thread_info->config.settings_writer);
+    thread_info->config.settings_writer = strdup(RIPC_DEFAULT_SETTINGS_WRITER);
+    lookup = redis_read_hash_field(setting_hash_path, SETTINGS_WRITER_FIELD);
+    if (lookup)
+        thread_info->config.settings_writer = lookup;
+
+    // clear flag to disable stderr debugging when looking up internal config settings
+    thread_info->force_quiet = 0;
 }
 
-//@@@@ FIXME: debug will be dynamically configurable from a setting or config file
+int redis_write_hash_field(const char *hash_path, const char *field_name, const char *field_value);
+static int set_config(const char *field_name, const char *field_value)
+{
+    char setting_hash_path[RIPC_MAX_IPC_PATH_LEN];
+    int ret = RIPC_FAIL;
+
+    ipc_path(setting_hash_path, sizeof(setting_hash_path), RPC_TYPE_SETTING, RIPC_COMPONENT, NULL);
+    ret = redis_write_hash_field(setting_hash_path, field_name, field_value);
+    if (ret == RIPC_OK)
+        redis_ipc_config_load();
+
+    return ret;
+}
+
+int redis_ipc_config_debug_verbosity(int verbosity)
+{
+    char str_value[10] = {0};
+    snprintf(str_value, sizeof(str_value), "%d", verbosity);
+    return set_config(DEBUG_VERBOSITY_FIELD, str_value);
+}
+
+int redis_ipc_config_stderr_debug(int enable_stderr)
+{
+    char str_value[10] = {0};
+    snprintf(str_value, sizeof(str_value), "%d", enable_stderr);
+    return set_config(STDERR_DEBUG_FIELD, str_value);
+}
+
+int redis_ipc_config_settings_writer(const char *writer_component)
+{
+    return set_config(SETTINGS_WRITER_FIELD, writer_component);
+}
+
+int get_debug_verbosity()
+{
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    return thread_info->config.debug_verbosity;
+}
+
 int stderr_debug_is_enabled()
 {
-    return 1;
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    // force_quiet is used to disable debug while loading redis-ipc config
+    if (thread_info->force_quiet)
+        return 0;
+    return thread_info->config.stderr_debug;
 }
 
 // check for errors in redis command execution;
@@ -239,22 +342,15 @@ redisReply * validate_redis_reply(redisReply *reply)
     if (reply == NULL)
     {
         // must reconnect to redis server after an error
-        if (stderr_debug_is_enabled())
-        {
-            // coverity[CWE-476] NOT null if redis_ipc_init() ran in this thread
-            fprintf(stderr, "[ERROR] '%s', need to reconnect\n",
-                    thread_info->redis_state->errstr);
-        }
+        // coverity[CWE-476] NOT null if redis_ipc_init() ran in this thread
+        stderr_debug("[ERROR] '%s', need to reconnect", thread_info->redis_state->errstr);
         redisFree(thread_info->redis_state);
         thread_info->redis_state = redisConnectUnix(RIPC_SERVER_PATH);
     }
     // error in command
     else if (reply->type == REDIS_REPLY_ERROR)
     {
-        if (stderr_debug_is_enabled())
-        {
-            fprintf(stderr, "[ERROR] command failed: %s\n", reply->str);
-        }
+        stderr_debug("[ERROR] command failed: %s", reply->str);
         freeReplyObject(validated_reply);
         validated_reply = NULL;
     }
@@ -275,6 +371,7 @@ redisReply * redis_command(const char *format, ...)
     if (stderr_debug_is_enabled())
     {
         va_start(argp, format);
+        fprintf(stderr, "(%s) ", thread_info->component);
         vfprintf(stderr, format, argp);
         fprintf(stderr, "\n");
         va_end(argp);
@@ -304,6 +401,7 @@ redisReply * redis_command_from_list(int argc, const char **argv)
 
     if (stderr_debug_is_enabled())
     {
+        fprintf(stderr, "(%s) ", thread_info->component);
         for (i = 0; i < argc; i++)
         {
             fprintf(stderr, "%s ", argv[i]);
@@ -394,10 +492,7 @@ static json_object * redis_pop(const char *queue_path, unsigned int timeout)
 
     json_text = reply->element[1]->str;
 
-    if (stderr_debug_is_enabled())
-    {
-        fprintf(stderr, "[ENTRY:%s] %s\n", queue_path, json_text);
-    }
+    stderr_debug("[ENTRY:%s] %s", queue_path, json_text);
 
     // parse popped entry back into json object
     entry = json_tokener_parse(json_text);
@@ -587,7 +682,7 @@ int get_field_count(json_object *obj)
     return num_fields;
 }
 
-int redis_write_hash(const char *hash_path, json_object *obj)
+int redis_write_hash(const char *hash_path, const json_object *obj)
 {
     int argc = 0, num_fields = 0;
     const char **argv = NULL;
@@ -626,10 +721,20 @@ int redis_write_hash(const char *hash_path, json_object *obj)
     return ret;
 }
 
-//@@@@ FIXME: name of component(s) allowed to change settings will be in config file
 static int component_can_write_settings(const char *component)
 {
-    return (strcmp(component, "db") == 0);
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    int authorized = 0;
+
+    // ok if writer privs are given to this component OR open to all components
+    authorized = (strcmp(thread_info->config.settings_writer, component) == 0 ||
+                  strcmp(thread_info->config.settings_writer, RIPC_COMPONENT_ANY) == 0);
+    if (!authorized)
+    {
+        stderr_debug("[ERROR] component %s is not authorized to write settings", component);
+    }
+
+    return authorized;
 }
 
 int redis_ipc_write_setting(const char *owner_component, const json_object *fields)
@@ -757,6 +862,7 @@ redis_ipc_write_status_field_finish:
 
 json_object * redis_read_hash(const char *hash_path)
 {
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
     redisReply *reply = NULL;
     json_object *fields = NULL;
     const char *key = NULL, *val = NULL;
@@ -779,7 +885,7 @@ json_object * redis_read_hash(const char *hash_path)
     if (reply->elements % 2)  // need to have name-value pairs
         goto redis_read_hash_finish;
 
-    if (stderr_debug_is_enabled()) fprintf(stderr, "[HASH]");
+    if (stderr_debug_is_enabled()) fprintf(stderr, "(%s) [HASH]", thread_info->component);
     while (i < reply->elements)
     {
         key = reply->element[i++]->str;
@@ -860,18 +966,16 @@ char * redis_read_hash_field(const char *hash_path, const char *field_name)
     // reply should be a string
     if (reply == NULL)
     {
-        if (stderr_debug_is_enabled()) fprintf(stderr, "[HASH_FIELD] <null result>\n");
+        stderr_debug("[HASH_FIELD] <null result>");
         goto redis_read_hash_field_finish;
     }
     if (reply->type != REDIS_REPLY_STRING)
     {
-        if (stderr_debug_is_enabled())
-            fprintf(stderr, "[HASH_FIELD] <non-string result type %d>\n", reply->type);
+        stderr_debug("[HASH_FIELD] <non-string result type %d>", reply->type);
         goto redis_read_hash_field_finish;
     }
     field_value = strdup(reply->str);
-    if (stderr_debug_is_enabled())
-        fprintf(stderr, "[HASH_FIELD] %s='%s'\n", field_name, field_value);
+    stderr_debug("[HASH_FIELD] %s='%s'", field_name, field_value);
 
 redis_read_hash_field_finish:
     if (reply != NULL)
@@ -1268,10 +1372,7 @@ json_object * redis_ipc_get_message_blocking(void)
 
     message_str = reply->element[3]->str;
 
-    if (stderr_debug_is_enabled())
-    {
-        fprintf(stderr, "[MESSAGE] %s\n", message_str);
-    }
+    stderr_debug("[MESSAGE] %s", message_str);
 
     // parse message back into json object
     message = json_tokener_parse(message_str);

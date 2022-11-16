@@ -54,3 +54,4 @@ jobs:
     - name: Run tests with valgrind
       run: |
         tox -e grind
+        tox -e tests

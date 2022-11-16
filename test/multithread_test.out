@@ -1,5 +1,6 @@
-# sample output from multithread_test
-PUBLISH channel.debug.printer { "message": "printer starting to smoke", "level": 1, "channel": "channel.debug.printer", "timestamp": "1401058399.161286", "component": "printer", "thread": "monitor", "tid": 20152 }
-PUBLISH channel.debug.button { "message": "NO don't press that button...", "level": 1, "channel": "channel.debug.button", "timestamp": "1401058399.161285", "component": "button", "thread": "watcher", "tid": 20153 }
-PUBLISH channel.debug.printer { "message": "printer on fire!!", "level": 0, "channel": "channel.debug.printer", "timestamp": "1401058399.161965", "component": "printer", "thread": "monitor", "tid": 20152 }
-PUBLISH channel.debug.button { "message": "I told you not to press it!!", "level": 0, "channel": "channel.debug.button", "timestamp": "1401058399.162194", "component": "button", "thread": "watcher", "tid": 20153 }
+(button) CONFIG SET notify-keyspace-events Kh
+(printer) CONFIG SET notify-keyspace-events Kh
+(button) PUBLISH channel.debug.button { "message": "NO don't press that button...", "level": 1, "channel": "channel.debug.button", "timestamp": "1668592241.554110", "component": "button", "thread": "watcher", "tid": 19190 }
+(printer) PUBLISH channel.debug.printer { "message": "printer starting to smoke", "level": 1, "channel": "channel.debug.printer", "timestamp": "1668592241.554110", "component": "printer", "thread": "monitor", "tid": 19189 }
+(printer) PUBLISH channel.debug.printer { "message": "printer on fire!!", "level": 0, "channel": "channel.debug.printer", "timestamp": "1668592241.554176", "component": "printer", "thread": "monitor", "tid": 19189 }
+(button) PUBLISH channel.debug.button { "message": "I told you not to press it!!", "level": 0, "channel": "channel.debug.button", "timestamp": "1668592241.554177", "component": "button", "thread": "watcher", "tid": 19190 }

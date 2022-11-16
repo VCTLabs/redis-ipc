@@ -1,14 +1,29 @@
-# sample output from settings_status_test
-HMSET status.session open until closed procedure complicated
-HGETALL settings.session
-[HASH]
-HGET settings.session location
-[HASH_FIELD] <non-string result type 4>
-HGETALL status.session
-[HASH] open='until closed' procedure='complicated'
-HMSET settings.printer num_copies until ink runs out paper_type wrinkled
-HSET settings.printer contrast none
-HGETALL settings.printer
-[HASH] num_copies='until ink runs out' paper_type='wrinkled' contrast='none'
-HGET settings.printer paper_type
-[HASH_FIELD] paper_type='wrinkled'
+(session) CONFIG SET notify-keyspace-events Kh
+(session) HMSET status.session open until closed procedure complicated 
+(session) HSET settings.redis-ipc settings_writer db
+** This attempt to write settings should fail...
+(session) [ERROR] component session is not authorized to write settings
+** This attempt to write single setting should fail...
+(session) [ERROR] component session is not authorized to write settings
+(session) HGETALL settings.session
+(session) [HASH]
+(session) HGET settings.session location
+(session) [HASH_FIELD] <non-string result type 4>
+(session) HSET settings.redis-ipc settings_writer session
+** This attempt to write single setting should work...
+(session) HSET settings.session location still right here
+(session) HSET settings.redis-ipc settings_writer db
+(db) CONFIG SET notify-keyspace-events Kh
+(db) HGETALL status.session
+(db) [HASH] open='until closed' procedure='complicated'
+** This attempt to write settings should work...
+(db) HMSET settings.printer num_copies until ink runs out paper_type wrinkled 
+** This attempt to write single setting should work...
+(db) HSET settings.printer contrast none
+(db) HGETALL settings.printer
+(db) [HASH] num_copies='until ink runs out' paper_type='wrinkled' contrast='none'
+(db) HSET settings.redis-ipc stderr_debug 0
+** This attempt to read single setting should *not* print debug...
+** This attempt to read single setting *should* print debug...
+(db) HGET settings.printer paper_type
+(db) [HASH_FIELD] paper_type='wrinkled'

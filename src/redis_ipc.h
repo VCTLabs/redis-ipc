@@ -50,6 +50,19 @@ enum { RIPC_DBG_ERROR,
 #endif
 #define RIPC_SERVER_PATH RIPC_RUNTIME_DIR "/socket"
 
+//*********** defaults for settings that can be optionally configured via functions
+
+// default verbosity level for debug channel messages
+#define RIPC_DEFAULT_DEBUG_VERBOSITY 5
+
+// default stderr debug messages enabled
+#define RIPC_DEFAULT_STDERR_DEBUG 1
+
+// component allowed to write settings (or "*" if any component is allowed)
+#define RIPC_COMPONENT_ANY "*"
+#define RIPC_DEFAULT_SETTINGS_WRITER "db"
+// #define RIPC_DEFAULT_SETTINGS_WRITER RIPC_COMPONENT_ANY
+
 //*************
 // functions
 //*************
@@ -74,11 +87,16 @@ enum { RIPC_DBG_ERROR,
 // queue -- and we want same results queues to be re-used if component gets
 // restarted (avoid having to garbage-collect stale, abandoned redis queues)
 //
+// Global redis-ipc settings are normally cached in each thread during
+// init, but threads can explicitly ask for a config relead if desired
+// (to pick up changes some other thread made to global settings).
+//
 // Cleanup is done based on thread ID so that main thread can clean up for
 // terminated threads, as long as it is tracking their IDs. For a
 // single-threaded process, tid == pid.
 
 int redis_ipc_init(const char *this_component, const char *this_thread);
+void redis_ipc_config_load(void);
 int redis_ipc_cleanup(pid_t tid);
 
 
@@ -124,7 +142,7 @@ json_object * redis_ipc_receive_command_blocking(const char *subqueue,
 int redis_ipc_send_result(const json_object *completed_command, json_object *result);
 
 
-// A component can only write a setting if it has been authorized by redis_ipc.conf,
+// A component can only write a setting if it has been authorized,
 // but it can read any setting.
 //
 // Each setting is a set of fields that are key-value pairs, where both field name and
@@ -225,6 +243,19 @@ int redis_ipc_unsubscribe_debug(void);
 // should have been subscribed before listening for messages.
 
 json_object * redis_ipc_get_message_blocking(void);
+
+// Functions for configuring behavior of redis-ipc itself
+// see RIPC_DEFAULT_* definitions for default values if not called
+
+// configure verbosity level for debug channel
+int redis_ipc_config_debug_verbosity(int verbosity);
+
+// configure whether debug messages will be shown on stderr
+int redis_ipc_config_stderr_debug(int enable_stderr);
+
+// configure which component will be authorized to write settings
+// (RIPC_COMPONENT_ANY works as wildcard for "any")
+int redis_ipc_config_settings_writer(const char *writer_component);
 
 #ifdef __cplusplus
 }
