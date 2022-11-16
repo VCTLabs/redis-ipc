@@ -1,21 +1,15 @@
-(web) HGET settings.redis-ipc stderr_debug
-(web) [HASH_FIELD] <non-string result type 4>
-(web) HGET settings.redis-ipc settings_writer
-(web) [HASH_FIELD] <non-string result type 4>
+(web) CONFIG SET notify-keyspace-events Kh
 (web) PSUBSCRIBE channel.events.printer*
 (web) PSUBSCRIBE channel.debug.printer
-(printer) HGET settings.redis-ipc stderr_debug
-(printer) [HASH_FIELD] <non-string result type 4>
-(printer) HGET settings.redis-ipc settings_writer
-(printer) [HASH_FIELD] <non-string result type 4>
-(printer) PUBLISH channel.debug.printer { "message": "printer starting to smoke", "level": 1, "channel": "channel.debug.printer", "timestamp": "1668565641.611715", "component": "printer", "thread": "monitor", "tid": 25068 }
-(printer) PUBLISH channel.debug.printer { "message": "printer on fire!!", "level": 0, "channel": "channel.debug.printer", "timestamp": "1668565641.611806", "component": "printer", "thread": "monitor", "tid": 25068 }
-(web) [MESSAGE] { "message": "printer starting to smoke", "level": 1, "channel": "channel.debug.printer", "timestamp": "1668565641.611715", "component": "printer", "thread": "monitor", "tid": 25068 }
-(printer) PUBLISH channel.events.printer.state { "severity": "warning", "message": "printer is down for the count", "channel": "channel.events.printer.state", "timestamp": "1668565641.611901", "component": "printer", "thread": "monitor", "tid": 25068 }
-(web) [MESSAGE] { "message": "printer on fire!!", "level": 0, "channel": "channel.debug.printer", "timestamp": "1668565641.611806", "component": "printer", "thread": "monitor", "tid": 25068 }
-(web) [MESSAGE] { "severity": "warning", "message": "printer is down for the count", "channel": "channel.events.printer.state", "timestamp": "1668565641.611901", "component": "printer", "thread": "monitor", "tid": 25068 }
-(printer) PUBLISH channel.events.printer.media { "severity": "alert", "message": "there went our expensive paper", "pages_remaining": 0, "channel": "channel.events.printer.media", "timestamp": "1668565641.611992", "component": "printer", "thread": "monitor", "tid": 25068 }
-(printer) PUBLISH channel.events.printer { "severity": "info", "message": "save trees, go digital", "channel": "channel.events.printer", "timestamp": "1668565641.612066", "component": "printer", "thread": "monitor", "tid": 25068 }
-(web) [MESSAGE] { "severity": "alert", "message": "there went our expensive paper", "pages_remaining": 0, "channel": "channel.events.printer.media", "timestamp": "1668565641.611992", "component": "printer", "thread": "monitor", "tid": 25068 }
+(printer) CONFIG SET notify-keyspace-events Kh
+(printer) PUBLISH channel.debug.printer { "message": "printer starting to smoke", "level": 1, "channel": "channel.debug.printer", "timestamp": "1668592265.505625", "component": "printer", "thread": "monitor", "tid": 19230 }
+(printer) PUBLISH channel.debug.printer { "message": "printer on fire!!", "level": 0, "channel": "channel.debug.printer", "timestamp": "1668592265.505687", "component": "printer", "thread": "monitor", "tid": 19230 }
+(web) [MESSAGE] { "message": "printer starting to smoke", "level": 1, "channel": "channel.debug.printer", "timestamp": "1668592265.505625", "component": "printer", "thread": "monitor", "tid": 19230 }
+(printer) PUBLISH channel.events.printer.state { "severity": "warning", "message": "printer is down for the count", "channel": "channel.events.printer.state", "timestamp": "1668592265.505756", "component": "printer", "thread": "monitor", "tid": 19230 }
+(printer) (web) PUBLISH channel.events.printer.media { "severity": "alert", "message": "there went our expensive paper", "pages_remaining": 0, "channel": "channel.events.printer.media", "timestamp": "1668592265.505815", "component": "printer", "thread": "monitor", "tid": 19230 }[MESSAGE] { "message": "printer on fire!!", "level": 0, "channel": "channel.debug.printer", "timestamp": "1668592265.505687", "component": "printer", "thread": "monitor", "tid": 19230 }
+
+(web) [MESSAGE] { "severity": "warning", "message": "printer is down for the count", "channel": "channel.events.printer.state", "timestamp": "1668592265.505756", "component": "printer", "thread": "monitor", "tid": 19230 }
+(printer) PUBLISH channel.events.printer { "severity": "info", "message": "save trees, go digital", "channel": "channel.events.printer", "timestamp": "1668592265.505935", "component": "printer", "thread": "monitor", "tid": 19230 }
+(web) [MESSAGE] { "severity": "alert", "message": "there went our expensive paper", "pages_remaining": 0, "channel": "channel.events.printer.media", "timestamp": "1668592265.505815", "component": "printer", "thread": "monitor", "tid": 19230 }
 (web) PUNSUBSCRIBE channel.events.*
 (web) PUNSUBSCRIBE channel.debug.*
