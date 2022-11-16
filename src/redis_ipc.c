@@ -1397,7 +1397,7 @@ redis_ipc_unsubscribe_setting_notifications_finish:
 
 // current thread should be subscribed to one or more callers before calling
 // caller is responsible for cleaning up the returned message object
-json_object * redis_ipc_get_message_blocking(void)
+json_object * redis_ipc_get_message_timeout(struct timeval timeout)
 {
     json_object *message = NULL;
     redisReply *reply = NULL;
@@ -1409,7 +1409,8 @@ json_object * redis_ipc_get_message_blocking(void)
     if (thread_info == NULL)
         goto redis_get_channel_message_finish;
 
-    // block until a message is available
+    // block until a message is available or timeout is reached
+    redisSetTimeout(thread_info->redis_state, timeout);
     ret = redisGetReply(thread_info->redis_state, &reply);
     if (ret != REDIS_OK)
     {
@@ -1445,4 +1446,10 @@ redis_get_channel_message_finish:
         freeReplyObject(reply);
 
     return message;
+}
+
+json_object * redis_ipc_get_message_blocking(void)
+{
+    struct timeval infinite_timeout = {0, 0};
+    return redis_ipc_get_message_timeout(infinite_timeout);
 }

@@ -30,6 +30,10 @@ void spawn_listener_process(void)
       json_object_put(message);
   }
 
+  struct timeval timeout = {2, 0};
+  fprintf(stderr, "** This wait for message should time out in 2 sec...\n");
+  message = redis_ipc_get_message_timeout(timeout);
+
   redis_ipc_unsubscribe_events();
   redis_ipc_unsubscribe_debug();
   redis_ipc_unsubscribe_setting_notifications();
