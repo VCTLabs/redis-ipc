@@ -176,6 +176,7 @@ void cleanup_per_thread_info(struct redis_ipc_per_thread *thread_info)
 }
 
 // initialize per-thread state
+redisReply * redis_command(const char *format, ...);
 int redis_ipc_init(const char *this_component, const char *this_thread)
 {
     struct redis_ipc_per_thread *new_info = NULL;
@@ -221,6 +222,9 @@ int redis_ipc_init(const char *this_component, const char *this_thread)
 
     // lookup current redis-ipc settings and cache in per-thread struct
     redis_ipc_config_load();
+
+    // enable HASH update events on redis server, to supprt settings notifications
+    redis_command("CONFIG SET notify-keyspace-events Kh");
 
     return RIPC_OK;
 
@@ -1269,6 +1273,37 @@ redis_ipc_subscribe_debug_finish:
     return ret;
 }
 
+// subscribe to notifications for changes to settings
+#define KEYSPACE_PATTERN "__keyspace*__:"
+#define KEYSPACE_PATTERN_LEN 14
+int redis_ipc_subscribe_setting_notifications()
+{
+    char setting_hash_path[RIPC_MAX_IPC_PATH_LEN];
+    char setting_notifications_pattern[RIPC_MAX_IPC_PATH_LEN + KEYSPACE_PATTERN_LEN];
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    int ret = RIPC_FAIL;
+
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_subscribe_setting_notifications_finish;
+
+    // calculate channel name
+    ret = ipc_path(setting_hash_path, sizeof(setting_hash_path),
+                   RPC_TYPE_SETTING, thread_info->component, NULL);
+    if (ret != RIPC_OK)
+        goto redis_ipc_subscribe_setting_notifications_finish;
+
+    snprintf(setting_notifications_pattern, sizeof(setting_notifications_pattern),
+             KEYSPACE_PATTERN "%s", setting_hash_path);
+
+    // watch for setting change events
+    ret = redis_subscribe(setting_notifications_pattern);
+
+redis_ipc_subscribe_setting_notifications_finish:
+
+    return ret;
+}
+
 static int redis_unsubscribe(char *channel_path)
 {
     redisReply *reply = NULL;
@@ -1328,6 +1363,34 @@ int redis_ipc_unsubscribe_debug()
     ret = redis_unsubscribe(debug_channel_path);
 
 redis_ipc_unsubscribe_debug_finish:
+
+    return ret;
+}
+
+// unsubscribe from setting change notifications
+int redis_ipc_unsubscribe_setting_notifications()
+{
+    char setting_hash_path[RIPC_MAX_IPC_PATH_LEN];
+    char setting_notifications_pattern[RIPC_MAX_IPC_PATH_LEN + KEYSPACE_PATTERN_LEN];
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    int ret = RIPC_FAIL;
+
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_unsubscribe_setting_notifications_finish;
+
+    // calculate channel name
+    ret = ipc_path(setting_hash_path, sizeof(setting_hash_path),
+                   RPC_TYPE_SETTING, thread_info->component, NULL);
+    if (ret != RIPC_OK)
+        goto redis_ipc_unsubscribe_setting_notifications_finish;
+
+    snprintf(setting_notifications_pattern, sizeof(setting_notifications_pattern),
+             KEYSPACE_PATTERN "%s", setting_hash_path);
+
+    ret = redis_unsubscribe(setting_notifications_pattern);
+
+redis_ipc_unsubscribe_setting_notifications_finish:
 
     return ret;
 }
