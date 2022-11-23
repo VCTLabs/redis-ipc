@@ -1,5 +1,5 @@
 (session) CONFIG SET notify-keyspace-events Kh
-(session) HMSET status.session open until closed procedure complicated 
+(session) HMSET status.session open until closed procedure complicated
 (session) HSET settings.redis-ipc settings_writer db
 ** This attempt to write settings should fail...
 (session) [ERROR] component session is not authorized to write settings
@@ -17,7 +17,7 @@
 (db) HGETALL status.session
 (db) [HASH] open='until closed' procedure='complicated'
 ** This attempt to write settings should work...
-(db) HMSET settings.printer num_copies until ink runs out paper_type wrinkled 
+(db) HMSET settings.printer num_copies until ink runs out paper_type wrinkled
 ** This attempt to write single setting should work...
 (db) HSET settings.printer contrast none
 (db) HGETALL settings.printer
