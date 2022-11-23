@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Check for new scan data
       env:
@@ -34,13 +34,13 @@ jobs:
 
     - name: Convert Coverity Results to SARIF
       if: env.HAVE_SCAN_DATA == 'true'
-      uses: gautambaghel/coverity-scan-results-to-sarif@1.0.0
+      uses: gautambaghel/coverity-scan-results-to-sarif@master
       with:
         pipeline-results-json: coverity-results.json
         output-results-sarif: coverity-results.sarif
 
     - name: Upload SARIF file to GitHub UI
       if: env.HAVE_SCAN_DATA == 'true'
-      uses: github/codeql-action/upload-sarif@v1
+      uses: github/codeql-action/upload-sarif@v2
       with:
         sarif_file: coverity-results.sarif

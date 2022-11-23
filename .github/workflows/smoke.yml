@@ -26,9 +26,9 @@ jobs:
             test_cmd: 'bionic'
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v4
       with:
         python-version: '3.9'
 
@@ -56,7 +56,7 @@ jobs:
       run: |
         tox -e "${{ matrix.test_cmd }}"
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       if: matrix.os == 'ubuntu-18.04'
       with:
         name: coverage
@@ -67,7 +67,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs: [build]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
@@ -78,7 +78,7 @@ jobs:
           src
           inc
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: metrics
         path: ./metrics
