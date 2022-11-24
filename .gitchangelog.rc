@@ -196,9 +196,9 @@ shell=False)
 ##        Examples:
 ##           - makotemplate("restructuredtext")
 ##
-#output_engine = rest_py
+output_engine = rest_py
 #output_engine = mustache("restructuredtext")
-output_engine = mustache(".gitchangelog-keepachangelog.tpl")
+#output_engine = mustache(".gitchangelog-keepachangelog.tpl")
 #output_engine = mustache("markdown")
 #output_engine = makotemplate("restructuredtext")
 
