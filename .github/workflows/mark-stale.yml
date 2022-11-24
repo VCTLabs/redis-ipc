@@ -12,7 +12,7 @@ jobs:
 
     steps:
     - name: Mark Stale
-      uses: actions/stale@v4
+      uses: actions/stale@v6
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         exempt-all-milestones: true
