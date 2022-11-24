@@ -1,3 +1,15 @@
+redis-ipc (0.0.6-1ubuntu2) focal; urgency=medium
+
+  * rebuild for focal (no src changes)
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Sun, 21 Nov 2021 13:03:52 -0800
+
+redis-ipc (0.0.6-1ubuntu1) bionic; urgency=medium
+
+  * new upstream release
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Sun, 21 Nov 2021 12:59:00 -0800
+
 redis-ipc (0.0.5-2ubuntu4) focal; urgency=medium
 
   * rebuild for focal (no src changes)
