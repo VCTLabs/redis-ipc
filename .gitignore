@@ -23,6 +23,8 @@ Release/*
 build/
 # Conda
 environment.yml
+# repolite
+ext/
 # coverage files
 test/*.out
 # compilation files
