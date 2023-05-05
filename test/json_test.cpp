@@ -24,6 +24,14 @@ int main(int argc, char **argv)
     cout << "Display whole thing..." << endl;
     cout << snook.dump() << endl;
 
+    double blue = snook.get_field("blueness").to_double();
+    double blue_ratio = blue / 1.5e9;
+    double blue_error = 1.0 - blue_ratio;
+    if (blue_error < 1e-4 && blue_error > -1e-4)
+        cout << "OK double value is close enough" << endl;
+    else
+        cout << "ERROR double value seems fishy" << endl;
+
     if (snook.has_field("betook"))
         cout << "OK this field exists" << endl;
     else

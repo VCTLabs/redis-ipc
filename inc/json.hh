@@ -66,7 +66,7 @@ class json {
     }
 
     double to_double() const {
-        int value = -1;
+        double value = -1;
         if (obj) value = json_object_get_double(obj);
         return value;
     }
