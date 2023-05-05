@@ -18,7 +18,7 @@ class json_missing_field : public std::runtime_error
 class json {
  public:
     // normally want to take reference on underlying json_object*,
-    // except for case of initializing from an exising raw json_object*
+    // except for case of initializing from an existing raw json_object*
     // such as those returned by redis_ipc -- those start out with a reference
     explicit json(bool is_array = false) {
         if (is_array) obj = json_object_new_array();
@@ -52,11 +52,22 @@ class json {
         return !is_same;
     }
 
+    std::string dump(void) const {
+        std::string repr = json_object_to_json_string_ext(obj, JSON_C_TO_STRING_PRETTY);
+        return repr;
+    }
+
     std::string to_string() const {
         std::string value;
         if (obj) value = json_object_get_string(obj);
         // use empty string to represent empty object rather than '{ }'
         if (value == std::string("{ }")) value = std::string("");
+        return value;
+    }
+
+    double to_double() const {
+        int value = -1;
+        if (obj) value = json_object_get_double(obj);
         return value;
     }
 
@@ -115,6 +126,13 @@ class json {
             throw std::runtime_error("Not a hash-type object!");
         json_object *string_obj = json_object_new_string(value);
         json_object_object_add(obj, field_name, string_obj);
+    }
+
+    void set_field(const char *field_name, const double &value) {
+        if (!json_object_is_type(obj, json_type_object))
+            throw std::runtime_error("Not a hash-type object!");
+        json_object *double_obj = json_object_new_double(value);
+        json_object_object_add(obj, field_name, double_obj);
     }
 
     void set_field(const char *field_name, const int &value) {

@@ -16,8 +16,13 @@ int main(int argc, char **argv)
         json wooka = snook;
         cout << wooka.get_field("betook").get_field("baggins").to_string() << endl;
     }
+    snook.set_field("blueness", 1.5e9);
+    cout << "Display individual fields..." << endl;
     cout << snook.get_field("betook").get_field("baggins").to_string() << endl;
     cout << snook.get_field("betook").get_field("bilbo").to_string() << endl;
+    cout << snook.get_field("blueness").to_string() << endl;
+    cout << "Display whole thing..." << endl;
+    cout << snook.dump() << endl;
 
     if (snook.has_field("betook"))
         cout << "OK this field exists" << endl;
