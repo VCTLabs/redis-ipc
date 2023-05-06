@@ -65,4 +65,21 @@ int main(int argc, char **argv)
         cout << "OK these objects don't match" << endl;
     else
         cout << "ERROR these objects were not supposed to match" << endl;
+
+    bool parse_failed = false;
+    try
+    {
+        json bork("\"whatisthis");
+    }
+    catch (json_parse_failure &exc)
+    {
+        parse_failed = true;
+        cout << "OK got exception for invalid JSON text: " << exc.what() << endl;
+    }
+
+    if (!parse_failed)
+    {
+        cout << "ERROR invalid JSON text was not noticed" << endl;
+    }
+
 }

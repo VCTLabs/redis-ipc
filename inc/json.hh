@@ -9,6 +9,12 @@
 #include <string>
 #include <stdexcept>
 
+class json_parse_failure : public std::runtime_error
+{
+ public:
+    explicit json_parse_failure(const std::string &bad_text) : std::runtime_error("failed to parse text=" + bad_text) {}
+};
+
 class json_missing_field : public std::runtime_error
 {
  public:
@@ -28,8 +34,7 @@ class json {
     json(const json &copy) { obj = copy.obj; json_object_get(obj); }
     explicit json(const char *json_text) {
         if (json_text) obj = json_tokener_parse(json_text);
-        else
-            obj = json_object_new_object();
+        if (obj == NULL) throw json_parse_failure(json_text);
     }
     explicit json(json_object *c_obj) : obj(c_obj) {
         if (obj) json_object_get(obj);

@@ -18,3 +18,4 @@ OK these objects match
 OK these objects match
 OK these objects don't match
 OK these objects don't match
+OK got exception for invalid JSON text: failed to parse text="whatisthis
