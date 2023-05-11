@@ -40,11 +40,8 @@ jobs:
     - name: Deps plus PPA/msg bus
       run: |
         sudo apt-get -qq update
-        sudo apt-get install -yqq software-properties-common libhiredis-dev
-        sudo apt-get install -yqq redis-server autoconf automake
-        sudo add-apt-repository -y -s ppa:nerdboy/embedded
-        sudo apt-get -qq update
-        sudo apt-get install -yqq libjson-c-dev libgtest-dev libgmock-dev lcov
+        sudo apt-get install -yqq redis-server autoconf automake lcov
+        sudo apt-get install -yqq libjson-c-dev libhiredis-dev libgtest-dev libgmock-dev
         sudo systemctl stop redis
 
     - name: Add python requirements
