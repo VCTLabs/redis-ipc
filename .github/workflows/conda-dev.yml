@@ -14,10 +14,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-18.04', 'ubuntu-20.04']
+        os: ['ubuntu-22.04', 'ubuntu-20.04']
         python-version: ['3.7', '3.9']
         include:
-          - os: 'ubuntu-18.04'
+          - os: 'ubuntu-22.04'
             generator: 'Ninja'
             build_type: 'Debug'
           - os: 'ubuntu-20.04'

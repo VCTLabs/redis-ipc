@@ -18,11 +18,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04, ubuntu-20.04]
+        os: [ubuntu-22.04, ubuntu-20.04]
         include:
           - os: 'ubuntu-20.04'
             test_cmd: 'auto'
-          - os: 'ubuntu-18.04'
+          - os: 'ubuntu-22.04'
             test_cmd: 'bionic'
 
     steps:
@@ -57,7 +57,7 @@ jobs:
         tox -e "${{ matrix.test_cmd }}"
 
     - uses: actions/upload-artifact@v3
-      if: matrix.os == 'ubuntu-18.04'
+      if: matrix.os == 'ubuntu-22.04'
       with:
         name: coverage
         path: ./coverage
