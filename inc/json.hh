@@ -106,7 +106,6 @@ class json {
             throw std::runtime_error("Not a hash-type object!");
         json_object *field_obj = json_object_object_get(obj, field_name);
         if (field_obj == NULL) throw json_missing_field(field_name);
-        json_object_get(field_obj);
         return json(field_obj);
     }
 
@@ -115,7 +114,6 @@ class json {
             throw std::runtime_error("Not a hash-type object!");
         json_object *field_obj = json_object_object_get(obj, field_name);
         if (field_obj == NULL) throw json_missing_field(field_name);
-        json_object_get(field_obj);
         return json(field_obj);
     }
 
@@ -154,11 +152,12 @@ class json {
         json_object_object_add(obj, field_name, bool_obj);
     }
 
-    // caller must make sure the 'value' object stays alive while it
-    // is still used as a field
     void set_field(const char *field_name, const json &value) {
         if (!json_object_is_type(obj, json_type_object))
             throw std::runtime_error("Not a hash-type object!");
+        // take extra reference so that value object will not be destroyed
+        // just because this object gets destroyed (add does not bump reference count)
+        json_object_get(value.obj);
         json_object_object_add(obj, field_name, value.obj);
     }
 
@@ -167,7 +166,6 @@ class json {
             throw std::runtime_error("Not an array-type object!");
         json_object *element_obj = json_object_array_get_idx(obj, idx);
         if (element_obj == NULL) throw std::runtime_error("No such element!");
-        json_object_get(element_obj);
         return json(element_obj);
     }
 
@@ -176,7 +174,6 @@ class json {
             throw std::runtime_error("Not an array-type object!");
         json_object *element_obj = json_object_array_get_idx(obj, idx);
         if (element_obj == NULL) throw std::runtime_error("No such element!");
-        json_object_get(element_obj);
         return json(element_obj);
     }
 

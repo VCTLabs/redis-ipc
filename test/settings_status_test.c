@@ -6,6 +6,7 @@ int main(int argc, char **argv)
 {
   json_object *setting = NULL;
   json_object *status = NULL;
+  char *field = NULL;
 
   redis_ipc_init("session", "main");
 
@@ -15,6 +16,7 @@ int main(int argc, char **argv)
   json_object_object_add(status, "procedure",
                          json_object_new_string("complicated"));
   redis_ipc_write_status(status);
+  json_object_put(status);
 
   setting = json_object_new_object();
   json_object_object_add(setting, "auto_finalize",
@@ -31,7 +33,8 @@ int main(int argc, char **argv)
   // should come back empty since above write failed
   setting = redis_ipc_read_setting("session");
   json_object_put(setting);
-  redis_ipc_read_setting_field("session", "location");
+  field = redis_ipc_read_setting_field("session", "location");
+  if (field) free(field);
 
   // authorize this component to write settings and try again
   redis_ipc_config_settings_writer("session");
@@ -63,12 +66,14 @@ int main(int argc, char **argv)
   setting = redis_ipc_read_setting("printer");
   json_object_put(setting);
 
-  setting = redis_ipc_config_stderr_debug(0);
+  redis_ipc_config_stderr_debug(0);
   fprintf(stderr, "** This attempt to read single setting should *not* print debug...\n");
-  redis_ipc_read_setting_field("printer", "paper_type");
-  setting = redis_ipc_config_stderr_debug(1);
+  field = redis_ipc_read_setting_field("printer", "paper_type");
+  if (field) free(field);
+  redis_ipc_config_stderr_debug(1);
   fprintf(stderr, "** This attempt to read single setting *should* print debug...\n");
-  redis_ipc_read_setting_field("printer", "paper_type");
+  field = redis_ipc_read_setting_field("printer", "paper_type");
+  if (field) free(field);
 
   redis_ipc_cleanup(getpid());
 

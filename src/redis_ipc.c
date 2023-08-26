@@ -177,6 +177,7 @@ void cleanup_per_thread_info(struct redis_ipc_per_thread *thread_info)
     safe_free(thread_info->component);
     safe_free(thread_info->thread);
     safe_free(thread_info->result_queue_path);
+    safe_free(thread_info->config.settings_writer);
     if (thread_info->redis_state)
     {
         // closes connection and frees memory related to this connection
@@ -187,6 +188,9 @@ void cleanup_per_thread_info(struct redis_ipc_per_thread *thread_info)
         // closes connection and frees memory related to this connection
         redisFree(thread_info->redis_sub_state);
     }
+
+    // finally free the top-level struct
+    safe_free(thread_info);
 }
 
 // initialize per-thread state
@@ -195,6 +199,7 @@ int redis_ipc_init(const char *this_component, const char *this_thread)
 {
     struct redis_ipc_per_thread *new_info = NULL;
     char result_queue_path[RIPC_MAX_IPC_PATH_LEN];
+    redisReply *reply = NULL;
     int ret = RIPC_FAIL;
 
     new_info = calloc(1, sizeof(struct redis_ipc_per_thread));
@@ -242,14 +247,18 @@ int redis_ipc_init(const char *this_component, const char *this_thread)
     redis_ipc_config_load();
 
     // enable HASH update events on redis server, to supprt settings notifications
-    redis_command("CONFIG SET notify-keyspace-events Kh");
+    reply = redis_command("CONFIG SET notify-keyspace-events Kh");
+    if (reply != NULL)
+    {
+        ret = RIPC_OK;
+        freeReplyObject(reply);
+    }
 
-    return RIPC_OK;
+    return ret;
 
 redis_ipc_init_failed:
     fprintf(stderr, "[ERROR] redis_ipc_init failed for thread %s\n", this_thread);
     cleanup_per_thread_info(new_info);
-    safe_free(new_info);
 
     return RIPC_FAIL;
 }
@@ -296,10 +305,11 @@ void redis_ipc_config_load()
     // which component is authorized to write settings (or all of them, if wildcard)
     // Note: intentionally not freeing lookup result, it becomes owned by config struct
     safe_free(thread_info->config.settings_writer);
-    thread_info->config.settings_writer = strdup(RIPC_DEFAULT_SETTINGS_WRITER);
     lookup = redis_read_hash_field(setting_hash_path, SETTINGS_WRITER_FIELD);
     if (lookup)
         thread_info->config.settings_writer = lookup;
+    else
+        thread_info->config.settings_writer = strdup(RIPC_DEFAULT_SETTINGS_WRITER);
 
     // clear flag to disable stderr debugging when looking up internal config settings
     thread_info->force_quiet = 0;
