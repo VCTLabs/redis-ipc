@@ -10,8 +10,6 @@ int main(int argc, char **argv)
 
     json snook(hum), took(de);
     // snook and took should be holding references now, let go of original refs
-    json_object_put(hum);
-    json_object_put(de);
     took.set_field("baggins", 9999);
     took.set_field("bilbo", "hungry");
     snook.set_field("betook", took);
