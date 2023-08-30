@@ -36,16 +36,24 @@ class json {
         if (json_text) obj = json_tokener_parse(json_text);
         if (obj == NULL) throw json_parse_failure(json_text);
     }
+    // NOTE -- this constructor takes over ownership of raw json_object,
+    // do *NOT* manually zero out reference count on parameter object
+    // with json_object_put()
     explicit json(json_object *c_obj) : obj(c_obj) {
-        if (obj) json_object_get(obj);
-        else
-            obj = json_object_new_object();
+        if (obj == NULL) obj = json_object_new_object();
     }
     // release reference on underlying json_object*,
     // if this was last reference it will get freed
     ~json() { json_object_put(obj); }
 
-    json& operator=(const json &copy) { obj = copy.obj; json_object_get(obj); return *this; }
+    json& operator=(const json &copy) {
+        if (obj != NULL) {
+            json_object_put(obj);
+        }
+        obj = copy.obj;
+        json_object_get(obj);
+        return *this;
+    }
 
     bool operator==(const json &other) {
         bool is_same = json_object_equal(this->obj, other.obj);
@@ -154,11 +162,12 @@ class json {
         json_object_object_add(obj, field_name, bool_obj);
     }
 
-    // caller must make sure the 'value' object stays alive while it
-    // is still used as a field
     void set_field(const char *field_name, const json &value) {
         if (!json_object_is_type(obj, json_type_object))
             throw std::runtime_error("Not a hash-type object!");
+        // take extra reference so that value object will not be destroyed
+        // just because this object gets destroyed (add does not bump reference count)
+        json_object_get(value.obj);
         json_object_object_add(obj, field_name, value.obj);
     }
 
