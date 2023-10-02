@@ -1,0 +1,44 @@
+prog_name: repolite
+top_dir: ext  # local directory path for enabled repositories
+pull_with_rebase: false  # use --ff-only if false
+# add new repo_name sections as needed
+repos:
+  - repo_name: hiredis
+    repo_alias: null
+    repo_url: https://github.com/redis/hiredis.git
+    repo_depth: 0
+    repo_remote: origin
+    repo_opts: []
+    repo_branch: v0.14.1
+    repo_hash: null
+    repo_use_rebase: false
+    repo_has_lfs_files: false
+    repo_init_submodules: false
+    repo_install: false
+    repo_enable: true
+  - repo_name: json-c
+    repo_alias: json
+    repo_url: https://github.com/json-c/json-c.git
+    repo_depth: 0
+    repo_remote: origin
+    repo_opts: []
+    repo_branch: json-c-0.16-20220414
+    repo_hash: null
+    repo_use_rebase: false
+    repo_has_lfs_files: false
+    repo_init_submodules: false
+    repo_install: false
+    repo_enable: true
+  - repo_name: redis
+    repo_alias: null
+    repo_url: https://github.com/redis/redis.git
+    repo_depth: 0
+    repo_remote: origin
+    repo_opts: []
+    repo_branch: 6.0.16
+    repo_hash: null
+    repo_use_rebase: false
+    repo_has_lfs_files: false
+    repo_init_submodules: false
+    repo_install: false
+    repo_enable: true
