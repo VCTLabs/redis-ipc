@@ -79,6 +79,9 @@ jobs:
 
       - name: Install dependencies
         run: |
+          sudo apt-get install -yqq redis-server autoconf automake
+          sudo apt-get install -yqq libjson-c-dev libhiredis-dev libgtest-dev libgmock-dev
+          sudo systemctl stop redis
           python -m pip install --upgrade pip wheel
           pip install tox
 
