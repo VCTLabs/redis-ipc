@@ -15,7 +15,7 @@
 (web) [MESSAGE] { "severity": "info", "message": "save trees, go digital", "channel": "channel.events.printer", "timestamp": "1668597828.839953", "component": "printer", "thread": "monitor", "tid": 26522 }
 (printer) HSET settings.redis-ipc settings_writer *
 ** This full setting write should generate 'hset' message...
-(printer) HMSET settings.web colorspace purple and more purple theme boisterous 
+(printer) HMSET settings.web colorspace purple and more purple theme boisterous
 (web) [MESSAGE] hset
 ** This single setting field write should generate 'hset' message...
 (printer) HSET settings.web theme stealth

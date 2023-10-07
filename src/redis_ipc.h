@@ -1,6 +1,7 @@
 // Copyright (c) 2011-2021 Vanguard Computer Technology Labs <answers@vctlabs.com>
 //
 // SPDX-License-Identifier: GPL-2.0-only
+// LINT_C_FILE
 
 #ifndef __REDIS_IPC_H__
 #define __REDIS_IPC_H__
@@ -184,7 +185,7 @@ char * redis_ipc_read_setting_field(const char *owner_component, const char *fie
 int redis_ipc_write_status(const json_object *fields);
 json_object * redis_ipc_read_status(const char *owner_component);
 int redis_ipc_write_status_field(const char *field_name, const char *field_value);
-char * redis_ipc_read_status_field(const char *owner_component, const char *field_name);
+const char * redis_ipc_read_status_field(const char *owner_component, const char *field_name);
 
 
 // Each component can only send event messages to its own event channel(s),

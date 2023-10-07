@@ -4,6 +4,7 @@
 //
 // use the following to suppress false positives
 // coverity[EVENT_TAG_NAME]
+// LINT_C_FILE
 
 #define _GNU_SOURCE  // for gettid()
 #include <unistd.h>
@@ -1078,7 +1079,7 @@ redis_ipc_read_setting_field_finish:
     return field_value;
 }
 
-char * redis_ipc_read_status_field(const char *owner_component, const char *field_name)
+const char * redis_ipc_read_status_field(const char *owner_component, const char *field_name)
 {
     char status_hash_path[RIPC_MAX_IPC_PATH_LEN];
     const char *field_value = NULL;
@@ -1477,7 +1478,7 @@ json_object * redis_ipc_get_message_timeout(struct timeval timeout)
     // block until a message is available or timeout is reached,
     // using special redis context for subscriptions
     redisSetTimeout(thread_info->redis_sub_state, timeout);
-    ret = redisGetReply(thread_info->redis_sub_state, &reply);
+    ret = redisGetReply(thread_info->redis_sub_state, (void *)&reply);
     if (ret != REDIS_OK)
     {
         // must reconnect to redis server after an error
