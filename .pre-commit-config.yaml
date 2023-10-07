@@ -3,14 +3,14 @@
 # To update the pre-commit hooks run:
 #   pre-commit install-hooks
 
-exclude: '^(debian/.*|.tox/)$'
+exclude: '^(debian/.*|.tox/|test/)$'
 repos:
   - repo: meta
     hooks:
       - id: check-useless-excludes
       - id: check-hooks-apply
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.0.1
+    rev: v4.4.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -30,7 +30,7 @@ repos:
         exclude: 'conda/meta.yaml'
 
   - repo: https://github.com/PyCQA/doc8
-    rev: 0.10.1
+    rev: v1.1.1
     hooks:
       - id: doc8
         args:
@@ -39,7 +39,7 @@ repos:
         exclude: ChangeLog\.rst$
 
   - repo: https://github.com/pre-commit/pygrep-hooks
-    rev: v1.9.0
+    rev: v1.10.0
     hooks:
       - id: rst-backticks
         exclude: ChangeLog\.rst$
@@ -70,7 +70,7 @@ repos:
 
 # current cpplint hook ignores top-level CPPLINT.cfg
   - repo: https://github.com/cpplint/cpplint
-    rev: 1.5.5
+    rev: 1.6.1
     hooks:
       - id: cpplint
         args:
@@ -82,6 +82,6 @@ repos:
         files: \.(h|hh|hpp|hxx|h|c|cc|cpp|cxx|c)$
 
   - repo: https://github.com/jorisroovers/gitlint
-    rev: v0.16.0
+    rev: v0.19.1
     hooks:
       - id: gitlint
