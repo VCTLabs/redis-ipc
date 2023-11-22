@@ -38,7 +38,7 @@ jobs:
           key: ${{matrix.os}}-conda-pkgs-${{hashFiles('**/conda/meta.yaml')}}
 
       - name: Get conda
-        uses: conda-incubator/setup-miniconda@v2.2.0
+        uses: conda-incubator/setup-miniconda@v2.3.0
         with:
           python-version: 3.9
           channels: conda-forge
