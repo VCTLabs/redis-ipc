@@ -68,7 +68,7 @@ jobs:
       with:
         fetch-depth: 0
 
-    - uses: sarnold/cccc-action@0.3
+    - uses: sarnold/cccc-action@1.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         source_dirs: |
