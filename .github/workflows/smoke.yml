@@ -18,17 +18,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-20.04]
+        os: [ubuntu-22.04, ubuntu-24.04]
         include:
-          - os: 'ubuntu-20.04'
+          - os: 'ubuntu-24.04'
             test_cmd: 'auto'
           - os: 'ubuntu-22.04'
             test_cmd: 'bionic'
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: '3.9'
 
@@ -53,29 +53,29 @@ jobs:
       run: |
         tox -e "${{ matrix.test_cmd }}"
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: matrix.os == 'ubuntu-22.04'
       with:
-        name: coverage
+        name: coverage_redis-ipc
         path: ./coverage
 
   check:
     name: Collect metrics
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: [build]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
-    - uses: sarnold/cccc-action@0.3
+    - uses: sarnold/cccc-action@855d440abe1a4229896f36b4d01d88decae0a1f2  # v1.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         source_dirs: |
           src
           inc
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
-        name: metrics
+        name: metrics_redis-ipc
         path: ./metrics

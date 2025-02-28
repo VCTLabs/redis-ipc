@@ -4,9 +4,11 @@
 //
 // use the following to suppress false positives
 // coverity[EVENT_TAG_NAME]
-// LINT_C_FILE
 
-#define _GNU_SOURCE  // for gettid()
+#ifndef _GNU_SOURCE
+    #define _GNU_SOURCE  // for gettid()
+#endif
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
