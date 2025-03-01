@@ -7,7 +7,6 @@ on:
       - '*'
 
 jobs:
-  packaging:
   get_version:
     name: Get version info
     runs-on: ubuntu-22.04
@@ -32,6 +31,8 @@ jobs:
   packaging:
     name: ${{ matrix.name }}
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     needs: [get_version]
 
     strategy:
@@ -90,6 +91,8 @@ jobs:
     name: Create Release
     needs: [packaging]
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
 
     steps:
       - name: Get version

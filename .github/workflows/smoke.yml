@@ -8,9 +8,12 @@ on:
     branches: [ master, develop ]
 
 jobs:
-  build:
+  ci_build:
 
     runs-on: ${{ matrix.os }}
+    permissions:
+      actions: read
+      contents: read
     defaults:
       run:
         shell: bash
@@ -21,9 +24,13 @@ jobs:
         os: [ubuntu-22.04, ubuntu-24.04]
         include:
           - os: 'ubuntu-24.04'
+            compiler: gcc
+            version: "13"
             test_cmd: 'auto'
           - os: 'ubuntu-22.04'
-            test_cmd: 'bionic'
+            compiler: clang
+            version: "13"
+            test_cmd: 'clang'
 
     steps:
     - uses: actions/checkout@v4
@@ -40,9 +47,20 @@ jobs:
     - name: Deps plus PPA/msg bus
       run: |
         sudo apt-get -qq update
+        sudo apt-get install -yqq software-properties-common
+        sudo add-apt-repository ppa:ubuntu-toolchain-r/ppa
         sudo apt-get install -yqq redis-server autoconf automake lcov
         sudo apt-get install -yqq libjson-c-dev libhiredis-dev libgtest-dev libgmock-dev
         sudo systemctl stop redis
+        if [ "${{ matrix.compiler }}" = gcc ]; then
+          sudo apt-get install -y g++-${{ matrix.version }} g++-${{ matrix.version }}-multilib libltdl-dev
+          echo "CC=gcc-${{ matrix.version }}" >> $GITHUB_ENV
+          echo "CXX=g++-${{ matrix.version }}" >> $GITHUB_ENV
+        else
+          sudo apt-get install -y clang-${{ matrix.version }} llvm-${{ matrix.version }} lld-${{ matrix.version }} g++-multilib
+          echo "CC=clang-${{ matrix.version }}" >> $GITHUB_ENV
+          echo "CXX=clang++-${{ matrix.version }}" >> $GITHUB_ENV
+        fi
 
     - name: Add python requirements
       run: |
@@ -50,6 +68,9 @@ jobs:
         pip install tox
 
     - name: Test
+      env:
+        CC: ${{ env.CC }}
+        CXX: ${{ env.CXX }}
       run: |
         tox -e "${{ matrix.test_cmd }}"
 
@@ -62,7 +83,10 @@ jobs:
   check:
     name: Collect metrics
     runs-on: ubuntu-22.04
-    needs: [build]
+    permissions:
+      actions: read
+      contents: read
+    needs: [ci_build]
     steps:
     - uses: actions/checkout@v4
       with:
