@@ -3,8 +3,9 @@ option(COVERAGE_TEXT "Show text summary of the coverage" ON)
 option(COVERAGE_LCOV "Export coverage data in lcov trace file" ON)
 option(COVERAGE_HTML "Detailed html report of the coverage" OFF)
 
-set(COVERAGE_EXCLUDE_REGEX "(test/|src/redis_ipc.h)")
+set(COVERAGE_EXCLUDE_REGEX "(test/)")
 set(COVERAGE_PATH ${PROJECT_BINARY_DIR}/coverage)
+set(LLVM_DIRECTORY "$ENV{LLVM_VER_DIR}")
 
 if(COVERAGE_BUILD)
     message(
@@ -12,20 +13,23 @@ if(COVERAGE_BUILD)
             "Source coverage is enabled. TEXT=${COVERAGE_TEXT}, LCOV=${COVERAGE_LCOV}, HTML=${COVERAGE_HTML}"
     )
 
-    find_package(LLVM REQUIRED CONFIG)
-    get_filename_component(LLVM_PREFIX "${LLVM_DIR}" DIRECTORY)
-    message(STATUS "Found llvm directory: ${LLVM_PREFIX}")
+    find_package(
+        LLVM REQUIRED CONFIG
+        HINTS ${LLVM_DIRECTORY}
+    )
+    #get_filename_component(LLVM_PREFIX "${LLVM_DIR}" DIRECTORY)
+    message(STATUS "Using llvm directory: ${LLVM_DIRECTORY}")
 
     find_program(
         LLVM_COV_PATH
         NAMES llvm-cov
-        HINTS ${LLVM_PREFIX}
+        HINTS ${LLVM_DIRECTORY}
         PATH_SUFFIXES bin
     )
     find_program(
         LLVM_PROFDATA_PATH
         NAMES llvm-profdata
-        HINTS ${LLVM_PREFIX}
+        HINTS ${LLVM_DIRECTORY}
         PATH_SUFFIXES bin
     )
 

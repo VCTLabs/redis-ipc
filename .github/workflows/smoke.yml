@@ -23,21 +23,21 @@ jobs:
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04]
         include:
-          - os: 'ubuntu-24.04'
+          - os: ubuntu-24.04
             compiler: gcc
             version: "13"
             test_cmd: 'auto'
-          - os: 'ubuntu-22.04'
+          - os: ubuntu-22.04
             compiler: clang
-            version: "13"
-            test_cmd: 'clang'
+            version: "15"
+            test_cmd: clang
 
     steps:
     - uses: actions/checkout@v4
 
     - uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
+        python-version: '3.11'
 
     - name: Environment
       run: |
@@ -49,6 +49,7 @@ jobs:
         sudo apt-get -qq update
         sudo apt-get install -yqq software-properties-common
         sudo add-apt-repository ppa:ubuntu-toolchain-r/ppa
+        sudo apt-get -qq update
         sudo apt-get install -yqq redis-server autoconf automake lcov
         sudo apt-get install -yqq libjson-c-dev libhiredis-dev libgtest-dev libgmock-dev
         sudo systemctl stop redis
@@ -57,9 +58,10 @@ jobs:
           echo "CC=gcc-${{ matrix.version }}" >> $GITHUB_ENV
           echo "CXX=g++-${{ matrix.version }}" >> $GITHUB_ENV
         else
-          sudo apt-get install -y clang-${{ matrix.version }} llvm-${{ matrix.version }} lld-${{ matrix.version }} g++-multilib
+          sudo apt-get install -y clang-${{ matrix.version }} llvm-${{ matrix.version }} lld-${{ matrix.version }} llvm-${{ matrix.version }}-tools g++-multilib
           echo "CC=clang-${{ matrix.version }}" >> $GITHUB_ENV
           echo "CXX=clang++-${{ matrix.version }}" >> $GITHUB_ENV
+          echo "LLVM_VER_DIR=/usr/lib/llvm-${{ matrix.version }}" >> $GITHUB_ENV
         fi
 
     - name: Add python requirements
@@ -71,14 +73,17 @@ jobs:
       env:
         CC: ${{ env.CC }}
         CXX: ${{ env.CXX }}
+        LLVM_VER_DIR: ${{ env.LLVM_VER_DIR }}
       run: |
-        tox -e "${{ matrix.test_cmd }}"
+        tox -e ${{ matrix.test_cmd }}
 
     - uses: actions/upload-artifact@v4
       if: matrix.os == 'ubuntu-22.04'
       with:
-        name: coverage_redis-ipc
-        path: ./coverage
+        name: src_coverage_data
+        path: |
+          build/coverage/html
+          build/coverage/lcov.info
 
   check:
     name: Collect metrics

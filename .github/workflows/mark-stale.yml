@@ -7,8 +7,10 @@ on:
 
 jobs:
   stale:
-
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
 
     steps:
     - name: Mark Stale

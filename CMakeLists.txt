@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10...3.15)
+cmake_minimum_required(VERSION 3.18)
 
 # Add cmake modules of this project to the module path
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -6,10 +6,6 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 # used for both library and pkgconfig file
 set(PACKAGE_VERSION 0.2.1)
 set(LIBRARY_SOVERSION 0)
-
-if(POLICY CMP0048)
-    cmake_policy(SET CMP0048 NEW)
-endif()
 
 if(SCM_VERSION_INFO)
     set(PACKAGE_VERSION ${SCM_VERSION_INFO})
@@ -19,23 +15,20 @@ set(RIPC_SONAME ${PACKAGE_VERSION})
 
 project(
     redis-ipc
-    VERSION ${PACKAGE_VERSION}
     LANGUAGES C CXX
+    VERSION ${PACKAGE_VERSION}
 )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-include(CTest)
-include(GNUInstallDirs)
-
 if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 11)
+    set(CMAKE_CXX_STANDARD 17)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
     set(CMAKE_CXX_EXTENSIONS OFF)
 endif()
 
-set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_DEBUG_POSTFIX d)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -45,9 +38,31 @@ if(NOT CMAKE_BUILD_TYPE)
     )
 endif()
 
+include(CMakeParseArguments)
+include(CheckCCompilerFlag)
+include(CheckCXXCompilerFlag)
+include(GNUInstallDirs)
+include(CTest)
+
+# LTO requires cmake min version 3.9 and clang LTO requires lld
+if(RIPC_ENABLE_LTO AND CMAKE_BUILD_TYPE MATCHES "Release")
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        find_package(LLVM CONFIG HINTS ENV{LLVM_VER_DIR})
+    endif()
+
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT ipo_supported OUTPUT error)
+
+    if(ipo_supported)
+        message(STATUS "IPO / LTO supported")
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+    else()
+        message(WARNING "IPO / LTO not supported: <${error}>")
+    endif()
+endif()
+
 option(BUILD_SHARED_LIBS "build shared libraries" ON)
 option(BUILD_STATIC_LIBS "Build static libraries" OFF)
-
 option(RIPC_BUILD_TESTING "build and run tests" OFF)
 option(RIPC_DISABLE_SOCK_TESTS "disable tests requiring redis socket" OFF)
 

@@ -144,6 +144,7 @@ jobs:
       coverage: ${{ steps.coverage.outputs.coverage }}
       coverage-rounded-display: ${{ steps.coverage.outputs.coverage-rounded-display }}
     env:
+      LLVM_VER: 17
       PYTHONIOENCODING: utf-8
       PIP_DOWNLOAD_CACHE: ${{ github.workspace }}/../.pip_download_cache
 
@@ -186,9 +187,10 @@ jobs:
         sudo apt-get -qq update
         sudo apt-get install -yqq libjson-c-dev libhiredis-dev libgtest-dev libgmock-dev lcov
         sudo systemctl stop redis
-        sudo apt-get install -y g++-13 g++-13-multilib
-        echo "CC=gcc-13" >> $GITHUB_ENV
-        echo "CXX=g++-13" >> $GITHUB_ENV
+        sudo apt-get install -y clang-${{ env.LLVM_VER }} llvm-${{ env.LLVM_VER }} lld-${{ env.LLVM_VER }} llvm-${{ env.LLVM_VER }}-tools g++-multilib
+        echo "CC=clang-${{ env.LLVM_VER }}" >> $GITHUB_ENV
+        echo "CXX=clang++-${{ env.LLVM_VER }}" >> $GITHUB_ENV
+        echo "LLVM_VER_DIR=/usr/lib/llvm-${{ env.LLVM_VER }}" >> $GITHUB_ENV
 
     - name: Add python requirements
       run: |
@@ -196,8 +198,12 @@ jobs:
         pip install tox
 
     - name: Run tests
+      env:
+        CC: ${{ env.CC }}
+        CXX: ${{ env.CXX }}
+        LLVM_VER_DIR: ${{ env.LLVM_VER_DIR }}
       run: |
-        tox -e tests,cover
+        tox -e clang,lcov
 
     - uses: actions/upload-artifact@v4
       with:
