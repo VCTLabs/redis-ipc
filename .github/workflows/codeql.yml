@@ -11,8 +11,10 @@ on:
 
 jobs:
   analyze:
-    name: Analyze Cpp
+    name: Analyze Code
     runs-on: ubuntu-22.04
+    env:
+      LLVM_VER: 15
     permissions:
       # required for all workflows
       security-events: write
@@ -27,7 +29,7 @@ jobs:
       matrix:
         include:
         - language: c-cpp
-          build-mode: autobuild
+          build-mode: manual
         - language: python
           build-mode: none
         - language: actions
@@ -48,29 +50,41 @@ jobs:
       with:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
+        config-file: ./.github/codeql/codeql-config.yml
 
     - name: Install dependencies
-      if: matrix.language == 'cpp'
+      if: matrix.build-mode == 'manual'
       run: |
         sudo apt-get -qq update
         sudo apt-get install -yqq software-properties-common redis-server
-        sudo add-apt-repository -y -s ppa:nerdboy/embedded
         sudo add-apt-repository -y -s ppa:ubuntu-toolchain-r/ppa
         sudo apt-get -qq update
-        sudo apt-get install -y libhiredis-dev autoconf automake
-        sudo apt-get install -y libjson-c-dev
+        sudo apt-get install -yqq libjson-c-dev libhiredis-dev libgtest-dev libgmock-dev lcov
         sudo systemctl stop redis
-        sudo apt-get install -y g++-11 g++-11-multilib
-        echo "CC=gcc-11" >> $GITHUB_ENV
-        echo "CXX=g++-11" >> $GITHUB_ENV
+        sudo apt-get install -y clang-${{ env.LLVM_VER }} llvm-${{ env.LLVM_VER }} lld-${{ env.LLVM_VER }} llvm-${{ env.LLVM_VER }}-tools g++-multilib
+        echo "CC=clang-${{ env.LLVM_VER }}" >> $GITHUB_ENV
+        echo "CXX=clang++-${{ env.LLVM_VER }}" >> $GITHUB_ENV
+        echo "LLVM_VER_DIR=/usr/lib/llvm-${{ env.LLVM_VER }}" >> $GITHUB_ENV
 
     - if: matrix.build-mode == 'manual'
       uses: actions/setup-python@v5
       with:
-        python-version: "3.10"
+        python-version: "3.11"
 
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v3
+    - if: matrix.build-mode == 'manual'
+      name: Install Tox
+      run: |
+        python -m pip install --upgrade pip
+        pip install tox
+
+    - if: matrix.build-mode == 'manual'
+      name: Build
+      env:
+        CC: ${{ env.CC }}
+        CXX: ${{ env.CXX }}
+        LLVM_VER_DIR: ${{ env.LLVM_VER_DIR }}
+      run: |
+        tox -e clang
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
