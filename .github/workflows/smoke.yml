@@ -85,7 +85,7 @@ jobs:
           build/coverage/html
           build/coverage/lcov.info
 
-  check:
+  ci_metrics:
     name: Collect metrics
     runs-on: ubuntu-22.04
     permissions:

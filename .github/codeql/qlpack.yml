@@ -1,0 +1,3 @@
+name: custom-cpp-query-pack
+version: 1.0.0
+libraryPathDependencies: codeql-cpp

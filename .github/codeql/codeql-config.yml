@@ -1,0 +1,5 @@
+name: "CodeQL config"
+
+queries:
+  - name: Use custom query pack (security-and-quality plus critical minus dev)
+    uses: ./.github/codeql/default.qls

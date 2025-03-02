@@ -1,0 +1,21 @@
+# https://github.com/zbazztian/custom-queries/blob/master/cpp/default.qls
+
+# add standard security and quality query set
+- import: codeql-suites/cpp-security-and-quality.qls
+  from: codeql/cpp-queries
+- exclude:
+    id:
+      - cpp/fixme-comment
+      - cpp/short-global-name
+
+# add non-standard queries, which are normally disabled
+- queries: '.'
+  from: codeql/cpp-queries
+- include:
+    id:
+    - cpp/descriptor-may-not-be-closed
+    - cpp/descriptor-never-closed
+    - cpp/file-may-not-be-closed
+    - cpp/file-never-closed
+    - cpp/memory-may-not-be-freed
+    - cpp/memory-never-freed
