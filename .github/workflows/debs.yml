@@ -1,57 +1,91 @@
 name: Debian packages
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
   workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - master
 
 jobs:
-  build-debs:
+  get_version:
+    name: Get version info
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      version: ${{ steps.git_ver.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get package version
+        id: git_ver
+        run: |
+          version=$(git describe --tags | sed -e "s|v||" -e "s|-g|+g|")
+          echo "Version from git: ${version}"
+          echo "version=${version}" >> $GITHUB_OUTPUT
+
+  build_debs:
     name: ${{ matrix.name }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    needs: [get_version]
 
     strategy:
       fail-fast: false
       matrix:
         name: [
-          x64_buster,
-          x64_bullseye,
-          x64_bookworm
+          x64_bookworm,
+          x64_trixie,
+          x64_sid,
         ]
 
         include:
-          - name: x64_buster
-            dist: buster
-
-          - name: x64_bullseye
-            dist: bullseye
-
           - name: x64_bookworm
             dist: bookworm
 
+          - name: x64_trixie
+            dist: trixie
+
+          - name: x64_sid
+            dist: sid
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Check github variables
+        env:
+          VERSION: ${{ needs.get_version.outputs.version }}
+        run: |
+          echo "Package version from git: ${VERSION}"
+
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Update debian changelog
+      - name: Install deps and update debian changelog
         run: |
           sudo apt-get update
           sudo apt-get install devscripts
-          debchange -v "`git describe --tags | sed -e "s|v||"`-${{ matrix.dist }}" -b -M --distribution ${{ matrix.dist }} "ci build"
+          debchange -v ${{ needs.get_version.outputs.version }}-${{ matrix.dist }} -b -M --distribution ${{ matrix.dist }} "ci build"
 
       - name: Build deb packages
         uses: jtdor/build-deb-action@v1
         env:
           DEB_BUILD_OPTIONS: noautodbgsym
         with:
+          apt-opts: --install-recommends
           docker-image: "debian:${{ matrix.dist }}-slim"
           buildpackage-opts: --build=binary --no-sign
-          extra-build-deps: git
+          extra-build-deps: git cmake
 
       - name: Upload deb files
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: "deb-packages"
+          name: "redis-ipc_${{ needs.get_version.outputs.version }}-${{ matrix.dist }}"
           path: ./debian/artifacts/*.deb

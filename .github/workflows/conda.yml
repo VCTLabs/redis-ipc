@@ -18,9 +18,10 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ubuntu-latest, macos-latest]
-
     runs-on: ${{ matrix.platform }}
-
+    permissions:
+      actions: read
+      contents: read
     # The setup-miniconda action needs this to activate miniconda
     defaults:
       run:

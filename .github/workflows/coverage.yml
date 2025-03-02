@@ -1,8 +1,6 @@
-# internal coverage with PR comment and badge v0.0.5
-# Note this works for public orgs but only for "internal" pull
-# requests. In the case of fork PRs, there needs to be org-level
-# github app with private key => ACCESS_TOKEN, with more job isolation
-# and output passing in this workflow.
+# internal coverage with PR comment and badge v0.0.6
+# Note this works for public orgs but is not guaranteed for all
+# environments.
 #
 # This version has updated actions and coverage value regex, no fork isolation
 # yet. Badge and comment job logic should be tuned for personal vs org use
@@ -20,14 +18,18 @@ on:
 jobs:
   pre_ci:
     name: Prepare CI environment
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
+    permissions:
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
     outputs:
       #commit_message: ${{ steps.get_commit_message.outputs.commit_message }}
       branch: ${{ steps.extract_branch.outputs.branch }}
 
     steps:
     - name: Checkout Project
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         # We need to fetch with a depth of 2 for pull_request so we can do HEAD^2
         fetch-depth: 2
@@ -61,13 +63,17 @@ jobs:
 
   base:
     name: Base coverage
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
+    permissions:
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
     outputs:
       base_branch: ${{ steps.get_base.outputs.base_branch }}
       base_cov: ${{ steps.get_base.outputs.base_cov }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         ref: badges
         path: badges
@@ -101,7 +107,11 @@ jobs:
 
   check:
     name: Pre CI check
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
+    permissions:
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
     needs: [pre_ci, base]
 
     steps:
@@ -120,7 +130,12 @@ jobs:
 
   cov_data:
     name: Generate test coverage data
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
+    permissions:
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
+      pull-requests: write
     needs: [check]
     defaults:
       run:
@@ -129,51 +144,79 @@ jobs:
       coverage: ${{ steps.coverage.outputs.coverage }}
       coverage-rounded-display: ${{ steps.coverage.outputs.coverage-rounded-display }}
     env:
+      LLVM_VER: 17
       PYTHONIOENCODING: utf-8
       PIP_DOWNLOAD_CACHE: ${{ github.workspace }}/../.pip_download_cache
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout repo
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+    - name: Environment
+      run: |
+        bash -c set
 
-    - name: Install deps plus redis
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Set platform server (socket) dir
+      id: set_temp_dirs
+      run: |
+        MKTEMP=$(mktemp -d)
+        echo "Platform temp dir is: ${MKTEMP}"
+        echo "GH CI temp dir is: ${RUNNER_TEMP}"
+        if [ "${ImageOS}" != "ubuntu18" ]
+        then
+            TEMP_DIR="${MKTEMP}"
+        else
+            TEMP_DIR="${RUNNER_TEMP}"
+        fi
+        echo "Setting runtime dir: ${TEMP_DIR}"
+        echo "TEMP_DIR=${TEMP_DIR}" >> $GITHUB_ENV
+        bash -c set
+
+    - name: Deps
       run: |
         sudo apt-get -qq update
-        sudo apt-get install -y software-properties-common
+        sudo apt-get install -yqq software-properties-common redis-server
         sudo add-apt-repository -y -s ppa:nerdboy/embedded
-        sudo apt-get install -y libjson-c-dev
-        sudo apt-get install -y libhiredis-dev lcov
-        sudo apt-get install -yqq redis-server clang-12 lld-12 llvm-12-tools
-        echo "CC=clang-12" >> $GITHUB_ENV
-        echo "CXX=clang++-12" >> $GITHUB_ENV
-        echo "ENV_LLVM_VER=12" >> $GITHUB_ENV
+        sudo add-apt-repository -y -s ppa:ubuntu-toolchain-r/ppa
+        sudo apt-get -qq update
+        sudo apt-get install -yqq libjson-c-dev libhiredis-dev libgtest-dev libgmock-dev lcov
         sudo systemctl stop redis
+        sudo apt-get install -y clang-${{ env.LLVM_VER }} llvm-${{ env.LLVM_VER }} lld-${{ env.LLVM_VER }} llvm-${{ env.LLVM_VER }}-tools g++-multilib
+        echo "CC=clang-${{ env.LLVM_VER }}" >> $GITHUB_ENV
+        echo "CXX=clang++-${{ env.LLVM_VER }}" >> $GITHUB_ENV
+        echo "LLVM_VER_DIR=/usr/lib/llvm-${{ env.LLVM_VER }}" >> $GITHUB_ENV
 
     - name: Add python requirements
       run: |
         python -m pip install --upgrade pip
         pip install tox
 
-    - name: Test (clang source coverage)
+    - name: Run tests
       env:
         CC: ${{ env.CC }}
         CXX: ${{ env.CXX }}
-        ENV_LLVM_VER: ${{ env.ENV_LLVM_VER }}
+        LLVM_VER_DIR: ${{ env.LLVM_VER_DIR }}
       run: |
         tox -e clang,lcov
 
+    - uses: actions/upload-artifact@v4
+      with:
+        name: coverage_data
+        path: coverage.xml
+
     - name: Code Coverage Summary Report (data)
-      uses: irongut/CodeCoverageSummary@v1.3.0
+      uses: irongut/CodeCoverageSummary@51cc3a756ddcd398d447c044c02cb6aa83fdae95  # v1.3.0
       with:
         filename: coverage.xml
         output: 'both'
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: src_coverage_rpts
         path: |
@@ -192,7 +235,7 @@ jobs:
         echo "Current coverage is: ${COVERAGE}%"
 
     - name: Code Coverage Summary Report
-      uses: irongut/CodeCoverageSummary@v1.3.0
+      uses: irongut/CodeCoverageSummary@51cc3a756ddcd398d447c044c02cb6aa83fdae95  # v1.3.0
       if: ${{ github.event_name == 'pull_request' }}
       with:
         filename: coverage.xml
@@ -200,8 +243,8 @@ jobs:
         output: 'both'
 
     - name: Add Coverage PR Comment
-      uses: marocchino/sticky-pull-request-comment@v2
-      if: github.event_name == 'pull_request' && (github.event.pull_request.author_association == 'MEMBER' || github.actor == github.repository_owner)
+      uses: marocchino/sticky-pull-request-comment@52423e01640425a022ef5fd42c6fb5f633a02728  # v2.9.1
+      if: github.event_name == 'pull_request'
       with:
         header: coverage
         recreate: true
@@ -209,8 +252,12 @@ jobs:
 
   test:
     name: Coverage check
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     needs: [cov_data, base]
+    permissions:
+      # required for workflows in private repositories
+      actions: read
+      contents: read
     outputs:
       coverage: ${{ needs.cov_data.outputs.coverage }}
       coverage-base: ${{ needs.base.outputs.base_cov }}
@@ -231,8 +278,13 @@ jobs:
 
   comment_cov_change:
     name: Comment on PR with coverage delta
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     needs: [test, base]
+    permissions:
+      pull-requests: write
+      # required for workflows in private repositories
+      actions: read
+      contents: read
 
     steps:
     - name: Environment
@@ -291,8 +343,8 @@ jobs:
         fi
 
     - name: Comment PR with test coverage delta
-      uses: marocchino/sticky-pull-request-comment@v2
-      if: env.HAVE_BASE_COVERAGE == 'true' && (github.event.pull_request.author_association == 'MEMBER' || github.actor == github.repository_owner)
+      uses: marocchino/sticky-pull-request-comment@52423e01640425a022ef5fd42c6fb5f633a02728  # v2.9.1
+      if: env.HAVE_BASE_COVERAGE == 'true'
       with:
         header: delta
         recreate: true
@@ -309,7 +361,12 @@ jobs:
     #   - This is a pull request event and the pull actor is the same as the repo owner
     #     if: ${{ ( github.event_name == 'pull_request' && github.actor == github.repository_owner ) || github.ref == 'refs/heads/master' }}
     name: Generate badge image with test coverage value
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: write
+      # required for workflows in private repositories
+      actions: read
+      contents: write
     needs: [test, pre_ci]
     if: github.event_name == 'push'
     outputs:
@@ -317,17 +374,17 @@ jobs:
       markdown: ${{ steps.url.outputs.markdown }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         ref: badges
         path: badges
 
     # Use the output from the `coverage` step
     - name: Generate the badge SVG image
-      uses: emibcn/badge-action@v2.0.3
+      uses: emibcn/badge-action@808173dd03e2f30c980d03ee49e181626088eee8  # v2.0.3
       id: badge
       with:
-        label: 'Branch Coverage'
+        label: 'Branch coverage'
         status: ${{ needs.test.outputs.coverage-rounded-display }}
         color: ${{
           needs.test.outputs.coverage > 90 && 'green'              ||
@@ -359,7 +416,7 @@ jobs:
         git commit -m "Add/Update badge" || true
 
     - name: Push badge commit
-      uses: ad-m/github-push-action@master
+      uses: ad-m/github-push-action@d91a481090679876dfc4178fef17f286781251df  # v0.8.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: badges

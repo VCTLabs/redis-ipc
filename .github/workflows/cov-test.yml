@@ -12,7 +12,10 @@ on:
 jobs:
   convert:
     name: Convert and upload coverity results
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
+    permissions:
+      actions: read
+      contents: read
 
     steps:
     - name: Checkout repository

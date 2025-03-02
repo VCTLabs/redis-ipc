@@ -31,8 +31,7 @@ cov:
 	$(LCOV) --config-file $(top_srcdir)/.lcovrc --capture \
 		--directory "$${PWD}/src" \
 		--directory "$${PWD}/test" \
-		--include "$${PWD}/src/redis_ipc.c" \
-		--include "$${PWD}/src/redis_ipc.h" \
+		--include "$${PWD}/src/" \
 		--include "$${PWD}/inc/json.hh" \
 		--output-file $(COV_INFO_FILE) \
 		--gcov-tool $(GCOV)

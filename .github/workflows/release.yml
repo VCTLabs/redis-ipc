@@ -7,59 +7,94 @@ on:
       - '*'
 
 jobs:
+  get_version:
+    name: Get version info
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      version: ${{ steps.git_ver.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get package version
+        id: git_ver
+        run: |
+          version=$(git describe --tags | sed -e "s|v||" -e "s|-g|+g|")
+          echo "Version from git: ${version}"
+          echo "version=${version}" >> $GITHUB_OUTPUT
+
   packaging:
     name: ${{ matrix.name }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    needs: [get_version]
 
     strategy:
       fail-fast: false
       matrix:
         name: [
-          x64_buster,
-          x64_bullseye,
-          x64_bookworm
+          x64_bookworm,
+          x64_trixie,
+          x64_sid,
         ]
 
         include:
-          - name: x64_buster
-            dist: buster
-
-          - name: x64_bullseye
-            dist: bullseye
-
           - name: x64_bookworm
             dist: bookworm
 
+          - name: x64_trixie
+            dist: trixie
+
+          - name: x64_sid
+            dist: sid
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Check github variables
+        env:
+          VERSION: ${{ needs.get_version.outputs.version }}
+        run: |
+          echo "Package version from git: ${VERSION}"
+
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Update debian changelog
+      - name: Install deps and update debian changelog
         run: |
           sudo apt-get update
           sudo apt-get install devscripts
-          debchange -v "`git describe --tags | sed -e "s|v||"`-1${{ matrix.dist }}1" -b -M --distribution ${{ matrix.dist }} "ci build"
+          debchange -v ${{ needs.get_version.outputs.version }}-${{ matrix.dist }} -b -M --distribution ${{ matrix.dist }} "ci build"
 
       - name: Build deb packages
         uses: jtdor/build-deb-action@v1
         env:
           DEB_BUILD_OPTIONS: noautodbgsym
         with:
+          apt-opts: --install-recommends
           docker-image: "debian:${{ matrix.dist }}-slim"
           buildpackage-opts: --build=binary --no-sign
           extra-build-deps: git
 
       - name: Upload deb files
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: packages
+          name: "redis-ipc_${{ needs.get_version.outputs.version }}-${{ matrix.dist }}"
           path: ./debian/artifacts/*.deb
 
   create_release:
     name: Create Release
     needs: [packaging]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
 
     steps:
       - name: Get version
@@ -68,12 +103,12 @@ jobs:
           echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
           echo ${{ env.VERSION }}
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.9
 
@@ -90,7 +125,7 @@ jobs:
           tox -e dist
 
       # download all artifacts to project dir
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
 
       - name: Generate changes file
         uses: sarnold/gitchangelog-action@master
