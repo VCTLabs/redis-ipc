@@ -33,7 +33,7 @@ jobs:
           fetch-depth: 0
 
       - name: Cache conda
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/conda_pkgs_dir
           key: ${{matrix.os}}-conda-pkgs-${{hashFiles('**/conda/meta.yaml')}}
