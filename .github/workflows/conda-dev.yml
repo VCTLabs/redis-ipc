@@ -51,7 +51,7 @@ jobs:
         path: ~/conda_pkgs_dir
         key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment.devenv.yml') }}
 
-    - uses: conda-incubator/setup-miniconda@v3.1.1
+    - uses: conda-incubator/setup-miniconda@v3.2.0
       with:
         auto-update-conda: true
         python-version: ${{ matrix.python-version }}
