@@ -125,7 +125,7 @@ jobs:
           tox -e dist
 
       # download all artifacts to project dir
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
 
       - name: Generate changes file
         uses: sarnold/gitchangelog-action@master
