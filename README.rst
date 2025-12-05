@@ -807,6 +807,6 @@ remember to specify the socket path when running redis-cli ::
     :target: https://github.com/VCTLabs/redis-ipc/releases
     :alt: GitHub tag (latest SemVer, including pre-release)
 
-.. |std| image:: https://img.shields.io/badge/Standards-C++11%20%20C99-00000.svg
-    :target: https://isocpp.org/wiki/faq/cpp11
+.. |std| image:: https://img.shields.io/badge/Standards-C++17%20%20C17-00000.svg
+    :target: https://en.cppreference.com/w/cpp/compiler_support/17.html
     :alt: Other standards

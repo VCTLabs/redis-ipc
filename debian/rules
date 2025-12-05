@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
+include /usr/share/dpkg/buildflags.mk
+
 export DH_VERBOSE = 1
-export V=1  # verbose mode for make
 
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
@@ -17,3 +18,7 @@ override_dh_auto_configure:
 	dh_auto_configure -- \
 		-DBUILD_STATIC_LIBS=ON \
 		-DRIPC_BUILD_TESTING=OFF
+
+override_dh_auto_clean:
+	rm -rf $(CURDIR)/build
+	dh_auto_clean

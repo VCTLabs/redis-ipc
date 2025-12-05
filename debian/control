@@ -3,7 +3,7 @@ Maintainer: Steve Arnold <nerdboy@gentoo.org>
 Section: utils
 Priority: optional
 Standards-Version: 3.9.8
-Build-Depends: debhelper (>= 9),
+Build-Depends: debhelper (>= 10),
     cmake,
     pkg-config,
     libhiredis-dev (>= 0.10),
