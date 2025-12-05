@@ -124,8 +124,16 @@ jobs:
         run: |
           tox -e dist
 
-      # download all artifacts to project dir
+      # download all artifacts to named path
       - uses: actions/download-artifact@v6
+        with:
+          path: packages
+          pattern: redis-ipc*
+          merge-multiple: true
+
+      - name: check artifacts
+        run: |
+          ls -l packages/
 
       - name: Generate changes file
         uses: sarnold/gitchangelog-action@master
