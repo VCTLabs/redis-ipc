@@ -15,9 +15,9 @@ multiarch_path = $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 	dh $@ --buildsystem=cmake --builddirectory=build
 
 override_dh_auto_configure:
-	dh_auto_configure -- \
+	dh_auto_configure -- -DCMAKE_BUILD_TYPE=RelWithDebInfo \
 		-DBUILD_STATIC_LIBS=ON \
-		-DRIPC_BUILD_TESTING=OFF
+		-DBUILD_TESTING=OFF
 
 override_dh_auto_clean:
 	rm -rf $(CURDIR)/build

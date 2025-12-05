@@ -1,3 +1,63 @@
+redis-ipc (0.2.2-1ubuntu1) focal; urgency=medium
+
+  * new upstream release
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Fri, 05 Dec 2025 12:13:48 -0800
+
+redis-ipc (0.2.1-1ubuntu5) noble; urgency=medium
+
+  * rebuild for noble with extra dep
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Thu, 06 Feb 2025 14:52:24 -0800
+
+redis-ipc (0.2.1-1ubuntu3) jammy; urgency=medium
+
+  * rebuild for jammy
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Sat, 07 Oct 2023 13:32:16 -0700
+
+redis-ipc (0.2.1-1ubuntu2) focal; urgency=medium
+
+  * rebuild for focal (no src changes)
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Sat, 07 Oct 2023 13:30:40 -0700
+
+redis-ipc (0.2.1-1ubuntu1) bionic; urgency=medium
+
+  * new upstream release, json and memleak fixes
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Sat, 07 Oct 2023 13:18:42 -0700
+
+redis-ipc (0.2.0-1ubuntu3) jammy; urgency=medium
+
+  * rebuild for jammy and GitHub CI
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Thu, 24 Aug 2023 17:07:03 -0700
+
+redis-ipc (0.2.0-1ubuntu2) focal; urgency=medium
+
+  * rebuild for focal (no src changes)
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Wed, 10 May 2023 21:22:42 -0700
+
+redis-ipc (0.2.0-1ubuntu1) bionic; urgency=medium
+
+  * new upstream release, updated json interface
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Wed, 10 May 2023 21:07:37 -0700
+
+redis-ipc (0.1.0-1ubuntu2) focal; urgency=medium
+
+  * rebuild for focal (no src changes)
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Wed, 23 Nov 2022 19:53:52 -0800
+
+redis-ipc (0.1.0-1ubuntu1) bionic; urgency=medium
+
+  * new upstream release
+
+ -- Stephen L Arnold <nerdboy@gentoo.org>  Wed, 23 Nov 2022 19:47:26 -0800
+
 redis-ipc (0.0.6-1ubuntu2) focal; urgency=medium
 
   * rebuild for focal (no src changes)
