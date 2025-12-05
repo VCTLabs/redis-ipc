@@ -57,8 +57,8 @@
 ## Any commit having its full commit message matching any regexp listed here
 ## will be ignored and won't be reported in the changelog.
 ##
-#ignore_regexps = []
 ignore_regexps = [
+    r'^([cC]i)\s*:',
     r'@minor', r'!minor',
     r'@cosmetic', r'!cosmetic',
     r'@refactor', r'!refactor',
@@ -135,8 +135,6 @@ section_regexps = [
 #body_process = Wrap(regexp=r'\n(?=\w+\s*:)')
 #body_process = noop
 body_process = ReSub(r'((^|\n)[A-Z]\w+(-\w+)*: .*(\n\s+.*)*)+$', r'') | strip
-#body_process = lambda text: ""
-#body_process = ReSub(r'.*', '')
 
 
 ## ``subject_process`` is a callable
@@ -154,17 +152,17 @@ subject_process = (strip |
 ##
 ## Tags that will be used for the changelog must match this regexp.
 ##
-#tag_filter_regexp = r'^v?[0-9]+\.[0-9]+(\.[0-9]+)?$'
-tag_filter_regexp = r"^.*$"
+tag_filter_regexp = r'^v?[0-9]+\.[0-9]+(\.[0-9]+)?$'
+#tag_filter_regexp = r"^.*$"
 
 ## ``unreleased_version_label`` is a string or a callable that outputs a string
 ##
 ## This label will be used as the changelog Title of the last set of changes
 ## between last valid tag and HEAD if any.
-# custom template (.tpl file below) overrides this setting
 unreleased_version_label = lambda: swrap(
     ["git", "describe", "--tags"],
-shell=False)
+    shell=False,
+)
 #unreleased_version_label = "(unreleased)"
 
 
@@ -198,7 +196,6 @@ shell=False)
 ##
 output_engine = rest_py
 #output_engine = mustache("restructuredtext")
-#output_engine = mustache(".gitchangelog-keepachangelog.tpl")
 #output_engine = mustache("markdown")
 #output_engine = makotemplate("restructuredtext")
 
@@ -254,8 +251,7 @@ include_merge = False
 #     r'/(?P<rev>[0-9]+\.[0-9]+(\.[0-9]+)?)\s+\([0-9]+-[0-9]{2}-[0-9]{2}\)\n--+\n/',
 #     idx=lambda m: m.start(1)
 # )
-
-publish = stdout
+#publish = stdout
 
 
 ## ``revs`` is a list of callable or a list of string

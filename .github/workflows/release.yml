@@ -139,7 +139,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ env.VERSION }}
-          name: Release v${{ env.VERSION }}
+          name: Release ${{ env.VERSION }}
           body_path: CHANGES.md
           draft: false
           prerelease: false
