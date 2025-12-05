@@ -2,7 +2,126 @@ Changelog
 =========
 
 
-v0.1.0 (2022-11-23)
+v0.2.2 (2025-12-05)
+-------------------
+
+Changes
+~~~~~~~
+- Bump version files, update changelog/cfg, cleanup release bits.
+  [Stephen L Arnold]
+
+Fixes
+~~~~~
+- Cleanup workflow versions and perms, update cmake and tox files.
+  [Stephen L Arnold]
+
+  * use gcc-13 and gcovr commands in coverage workflow
+  * remove LLVM version requirement from cmake coverage module
+  * update lconv config, remove redundant include in (make) coverage command
+
+
+v0.2.1 (2023-10-07)
+-------------------
+
+New
+~~~
+- Add tox plugin file, cleanup tox envs, add sdist to release. [Stephen
+  L Arnold]
+
+Changes
+~~~~~~~
+- Bump static versions to next patch release. [Stephen L Arnold]
+- Temp workaround for unexpected coverage value from gcov. [Stephen L
+  Arnold]
+
+Fixes
+~~~~~
+- More work on json.hh reference management. [S. Lockwood-Childs]
+
+  * switch back to *not* take an extra reference on json_object ptr
+    that gets passed in, to make things convenient for typical external
+    usage of this constructor. This makes behavior match the exception
+    mentioned in original comment about constructors:
+      // normally want to take reference on underlying json_object*,
+      // except for case of initializing from an existing raw json_object*
+      // such as those returned by redis_ipc -- those start out with a reference
+
+    which means that callers no longer need to remember to call json_object_put()
+    after wrapping a raw json_object with json class
+
+  * add a new comment right above tha constructor highlighting that
+    this constructor wrapping an existing json_object does *not* bump
+    the reference count
+
+  * fix memory leak in operator=() by forgetting to json_object_put()
+    before overwriting with a new value
+- Clean up memory leaks found with valgrind. [S. Lockwood-Childs]
+
+  Get the test apps to pass 'valgrind --leak-check=full' without
+  any leaks detected.
+
+  * redis_ipc.c - add some missing frees
+
+  * json.hh - fix reference management
+    * get_field(): the json constructor of return value will automatically
+      take a reference on the wrapped json_object, so don't need to manually
+      bump reference count with json_object_get()
+    * set_field() with json value: *do* manually take reference so the value
+      object passed in will not be destroyed when the newly assigned
+      parent object gets destroyed, since "add" does not bump reference
+      count but later parent will try to clean it up
+
+Other
+~~~~~
+- Bump to latest upstream badge action inn coverage workflow. [Stephen L
+  Arnold]
+
+  * hopefully this should fix the current CI error
+- Add (temporary) gcov data files to .gitignore. [Stephen L Arnold]
+- Update files with static versions (needs automation) [Stephen L
+  Arnold]
+
+
+v0.2.0 (2023-05-11)
+-------------------
+
+Fixes
+~~~~~
+- Subscribe/unsubscribe commands need separate context from the rest.
+  [S. Lockwood-Childs]
+
+  After using subscribe command from a thread, can start getting errors on
+  other commands
+
+  https://redis.io/commands/subscribe/
+  "Once the client enters the subscribed state it is not supposed to issue
+  any other commands, except for additional SUBSCRIBE, SSUBSCRIBE,
+  PSUBSCRIBE, UNSUBSCRIBE, SUNSUBSCRIBE, PUNSUBSCRIBE, PING, RESET and
+  QUIT commands."
+
+  Prevent problems by maintaining 2 separate redis connections:
+  subscribe/unsubscribe and everything else.
+
+Other
+~~~~~
+- Json.hh: exception for constructing from invalid text. [S. Lockwood-
+  Childs]
+
+  The intention for json class is that wrapped json-c objects will
+  never be null, but this was able to be violated by the constructor
+  that has text string as argument. When the text string was not valid
+  JSON, the obj pointer turned out NULL.
+
+  Throw an exception instead, so this parsing failure case will need to be
+  handled right away instead of causing bugs later from a NULL pointer.
+- Json.hh: fix bug in to_double() [S. Lockwood-Childs]
+- Json.hh: get/set for double floating point values. [S. Lockwood-
+  Childs]
+
+  Also added dump() function to retrieve json text for the whole object
+
+
+v0.1.0 (2022-11-24)
 -------------------
 
 New
@@ -29,86 +148,18 @@ New
   // configure which component will be authorized to write settings
   // (RIPC_COMPONENT_ANY works as wildcard for "any")
   int redis_ipc_config_settings_writer(const char *writer_component);
-- Add dist target to tox cmds, update templates. [Stephen L Arnold]
-
-  * templates: fix UK spellng, update verbiage
-  * add dist target for release workflow
 
 Changes
 ~~~~~~~
-- Remove pull_request from conda-dev workflow (PR speed up) [Stephen L
-  Arnold]
-- Add or-true workaround for valgrind command_check. [Stephen L Arnold]
-
-  * this makes it match the other valgrind checks
-- Update test output files. [S. Lockwood-Childs]
 - Update dependabot config. [Stephen L Arnold]
 
   * use custom prefix in commit msg
   * add label (if found)
   * no need to set target-branch for default
 
-Fixes
-~~~~~
-- Workaround in env workflow, use the same gcovr config in ubuntus.
-  [Stephen L Arnold]
-- Bump workflow action versions, update to latest coverage.yml. [Stephen
-  L Arnold]
-
-  * cleanup github ci warning annotations
-  * revert to upstream lcov_coberura_xml
-- Fix "choke" action in github workflow. [S. Lockwood-Childs]
-
-  if ctest is allowed to run before steps that run the tests
-  under valgrind, the redis server started up in pre-commands
-  will get shut down. Instead run tests via ctest using 'tests'
-  target. Now "choke" action in github should pass.
-- Cache global redis-ipc config in per-thread memory. [S. Lockwood-
-  Childs]
-
-  It's not efficient to be going out to the redis server to look up
-  the current stderr-debug setting... load it once during thread init,
-  and after that only if explicitly called
-
-  Also started printing all 4 of the published messages in pub-sub test,
-  instead of just the first couple.
-- Clean up stderr debugging. [S. Lockwood-Childs]
-
-  Added helper function stderr_debug() for the simple debug calls
-  that check if debugging is enabled then do a single-line print.
-  It adds a prefix ($COMPONENT) to the message, to make debugging
-  flow easier to understand in multi-thread / multi-process apps.
-
-  The debug messages that are printed piece-wise while iterating
-  through a list are not handled by the new helper, so are mostly
-  left alone, aside from adding prefix of component name to the
-  message.
-- Clean up lookup of stderr-debug config setting. [S. Lockwood-Childs]
-
-  Improve strategy for preventing infinite recursion due to calling
-  stderr_debug_is_enabled() in the process of looking up whether or not stderr
-  debug is in fact enabled.
-
-  Use a per-thread "force_quiet" flag to temporarily disable stderr debug
-  during the lookup of the stderr-debug config setting, instead of trying to
-  add "force_quiet" parameter to every function involved in looking up
-  config settings (missed validate_redis_reply() before, and this is cleaner)
-
 Other
 ~~~~~
-- Ci: bump irongut/CodeCoverageSummary from 1.1.0 to 1.3.0.
-  [dependabot[bot]]
-
-  Bumps [irongut/CodeCoverageSummary](https://github.com/irongut/CodeCoverageSummary) from 1.1.0 to 1.3.0.
-  - [Release notes](https://github.com/irongut/CodeCoverageSummary/releases)
-  - [Commits](https://github.com/irongut/CodeCoverageSummary/compare/v1.1.0...v1.3.0)
-
-  ---
-  updated-dependencies:
-  - dependency-name: irongut/CodeCoverageSummary
-    dependency-type: direct:production
-    update-type: version-update:semver-minor
-  ...
+- Update changelog for 0.1.0 release. [Stephen L Arnold]
 - Fix format type (remove stray back-tick) [Stephen L Arnold]
 - Add issue template for automation queue. [Stephen L Arnold]
 - Add dependabot.yml config for gh actions. [Stephen L Arnold]
@@ -124,20 +175,9 @@ New
   [Stephen L Arnold]
 
   * uses/used for non-beta (as of Nov2021) GH project automation
-- Add clang/llvm source coverage module, test with tox. [Stephen L
-  Arnold]
-
-  * use cmake options to enable coverage and set reporting formats
-  * update pr comment action to use hide option
 
 Changes
 ~~~~~~~
-- Switch back to recreate option on PR comments. [Stephen L Arnold]
-
-  * slightly less clutter, basically the same on browser refresh
-- Relax cmake_minimum_required to 3.10. [Stephen L Arnold]
-
-  * use the default version available in bionic/PPA as minimum
 - Bump CodeCoverageSummary action to latest. [Stephen L Arnold]
 - Display paths we found, try llvm_dir path hint with suffix. [Stephen L
   Arnold]
@@ -155,16 +195,10 @@ Changes
 
 Fixes
 ~~~~~
-- Add missing skip-on-push to coverage comment step. [Stephen L Arnold]
 - Use legible/working sed regex for summary rate value. [Stephen L
   Arnold]
 
   * update comment action version, update workflow comments/rev
-- Force clang/llvm-12 for coverage, set version for find_package.
-  [Stephen L Arnold]
-
-  * explicitly set ENV_LLVM_VER, add tail to pick the summary value
-- Un-split ubuntu json-c deps in affected workflows. [Stephen L Arnold]
 
 Other
 ~~~~~
@@ -198,149 +232,23 @@ v0.0.5 (2021-11-13)
 v0.0.4 (2021-11-04)
 -------------------
 
-New
-~~~
-- Add initial pre-commit config. [Stephen L Arnold]
-- Add cmake module to generate coverage data. [Stephen L Arnold]
-
-  * cmake module replicates makefile.am lcov/genhtml commands
-  * tox bionic env updated to generate full coverage
-  * move lcov to common deps in smoke workflow
-  * note full coverage reqiures 2 passes, one with and one without
-    the runtime socket path override (true for both autotools
-    and cmake builds)
-  * enabling cmake coverage also enables building test binaries;
-    both are currently OFF by default
-
-    - WITH_COVERAGE enables RIPC_BUILD_TESTING
-    - enable RIPC_BUILD_TESTING to build test binaries only
-- One more (fast) workflow to test setting path ENV var. [Stephen L
-  Arnold]
-
-  * split env path, build (cmake and autotools) across ubuntu versions
-  * note bionic lcov is too old for autotools, use cmake instead
-- Updates all tox envs, adds valgrind with ci workflow. [Stephen L
-  Arnold]
-
-  * valgrind args are currently hard-coded in tox.ini
-  * uses three of five test executables
-- Test ccache module in conda devenv (not enbaled currently) [Stephen L
-  Arnold]
-
-  * can be used on linux; coughs broken compiler error on macos
-- Add FindJSONC module, update cmake cfg and recipe. [Stephen L Arnold]
-- Add cmake test coverage, checked with ctest build-and-test/gcovr.
-  [Stephen L Arnold]
-- Add cmake module for conda env, disable windows. [Stephen L Arnold]
-- Add conda CI workflow, cleanup cmake options. [Stephen L Arnold]
-- Add local conda build recipe. [Stephen L Arnold]
-- Update cmake to create and install pkgconfig file. [S. Lockwood-
-  Childs]
-
-  Note that library version is still being maintained in 2 places,
-  both CMakeLists.txt and configure.ac -- would be good to move it to
-  a separate version file that both can share, at some point.
-- Update cmake to check for json-c with pkg-config. [S. Lockwood-Childs]
-
-  Use consistent strategy for finding json-c and hiredis dependencies,
-  which might be managed by pkg-config rather than native cmake modules
-- Add cmake build cfg, fix configure version and template typo. [Stephen
-  L Arnold]
-
 Changes
 ~~~~~~~
-- Update pre-commit hooks, bump version for next release. [Stephen L
-  Arnold]
 - Be more explicit with coverage badge. [Stephen L Arnold]
-- Set cmake-format intending to 4 and reformat. [Stephen L Arnold]
 - Add overview of gitchangelog commit message handling. [Stephen L
   Arnold]
-- Apply post-rebase pre-commit format updates. [Stephen L Arnold]
-
-  * disable cmake auto-format around custom coverage command
-- Add some dev docs, add rst doc checks to pre-commit config. [Stephen L
-  Arnold]
-
-  * add doc8 and some pygrep hooks to validate .rst formatting
-  * add some pre-commit dev docs, usage and config hooks
-  * validate docs, reflow some text, fix some warnings
-  * make ChangeLog.rst an actual .rst doc
-- Add pre-commit bash formatter, apply changes. [Stephen L Arnold]
-
-  * update .pre-commit-config.yaml with prettysh
-  * add prettysh to tox -e lint command
-  * commit autogen.sh format changes
 - Add contributing section with pre-commit install steps. [Stephen L
   Arnold]
 - Pre-commit badge and readme cleanup. [Stephen L Arnold]
-- Add runtime path ENV to coverage workflow. [Stephen L Arnold]
-
-  * test coverage results
-- Limit PPA dep installs, add setenv for tox. [Stephen L Arnold]
-
-  * add setenv with override for RIPC_SERVER_PATH (auto,bionic)
-  * reorder dep install commands, limit PPA installs (smoke)
-  * fix bash quoting for nested quotes
-- Use gcovr from pip, update gcovr args for bionic. [Stephen L Arnold]
-
-  * unexpected coverage output between ubuntu versions
-- Let cmake use socket path ENV var or path as build option. [Stephen L
-  Arnold]
-
-  * leave option empty/define unset if not found
-  * prefer path found in env over build option
-  * pass ENV var in tox.ini
 - Add section on tox commands, remove redis-ipc-py section. [Stephen L
   Arnold]
-- Json_test coughs runtime exception on macos, disable for now. [Stephen
-  L Arnold]
-
-  * tested on macos-10/11 in github (macos-10 did not run)
-- Bump action version, remove temporary fix for coverage data. [Stephen
-  L Arnold]
-- Still more coverage refactoring. [Stephen L Arnold]
-
-  * issue https://github.com/irongut/CodeCoverageSummary/issues/9
-- Still has parse error, cleanup misc, disable fix, upload data.
-  [Stephen L Arnold]
-- Upgrade CodeCoverageSummary action to latest, remove DTD. [Stephen L
-  Arnold]
-
-  * add more sed and rename script => fix_cov_file.sh
-- Add required deps, remove cruft (workflows) [Stephen L Arnold]
-- Add coverage workflow, update readme, nuke codecov. [Stephen L Arnold]
-- Test new action branch. [Stephen L Arnold]
 - Remove python/related files => moved to redis-ipc-py repo. [Stephen L
   Arnold]
-- Something amiss with running cccc-action container? [Stephen L Arnold]
-
-  * the same smoke workflow is fine in the pcr repos
-- Remove python-only workflows and badges. [Stephen L Arnold]
-- Disable full conda workflow on PR, add dispatch to cov-test. [Stephen
-  L Arnold]
 - Update readme build steps (add conda) and .gitignore. [Stephen L
   Arnold]
 
   * updates for deps, autotools, cmake, and conda
   * ignore generated environment.yml file
-- Remove ccache; not enough payoff, too much baggage. [Stephen L Arnold]
-- Add coverage/deps for devenv workflow, fix matrix. [Stephen L Arnold]
-- Remove macos until more debug, re-enable ccache on linux. [Stephen L
-  Arnold]
-- Use conda-dev/env setup for conda-dev workflow. [Stephen L Arnold]
-- General build cleanup in cmake cfg and conda recipe. [Stephen L
-  Arnold]
-
-  * disable cmake modules, prefer pkg-config over find_package
-  * adjust conda recipe deps and tests, add extra macos flags
-- Disable conda-dev and try full conda workflow. [Stephen L Arnold]
-- Switch generators, add cmake threads_init, test macos exc. [Stephen L
-  Arnold]
-
-  * json_test coughs an exception on macos, syscall warning
-- Add pkg-config dep and FindPython module. [Stephen L Arnold]
-- Use agnostic build-test command across all platforms. [Stephen L
-  Arnold]
 
 Fixes
 ~~~~~
@@ -352,74 +260,18 @@ Fixes
   * use updated cfg with built-in rest_py for ChangeLog.rst
   * add experimental md template file for release page
   * add initial gitchangelog doc, update readme
-- Pre-commit whitespace/eol cleanup commit. [Stephen L Arnold]
-- Tweak pre-commit cfg, apply cmake/shell changes. [Stephen L Arnold]
-
-  * yaml checks cough parse error on std conda meta.yaml format
-  * cmake-format needs fencing/rulers to mark comments
-  * add excludes and fence markers
-  * restore missing clang toolchain file
 - Local autotools env and small nit in PR coverage xml report names.
   [Stephen L Arnold]
 
   * isolate internal env, override via ENV_RIPC_RUNTIME_DIR
   * define package (internal) env var names using tox defaults
   * move tox env commands to replicate workflow
-- Create both html coverage reports, add inc/ dir to metrics artifact.
-  [Stephen L Arnold]
-
-  * create both html reports, one for functions and one for branches
-  * note each report is created via separate tox cmds
-  * sync up metrics source code with coverage
-  * update conda devenv file, use Ninja generator
-
-  Signed-off-by: Stephen L Arnold <nerdboy@gentoo.org>
-
-  chg: dev: py38/39 is not resolving deps like 37, remove jinja py ver
-
-  * this should really not be necessary, somehow devenv is inconsistent
-  * it should work fine across all python versions 36 => 39
-  * even on macos
-- Cleanup ci cmds (per OS env), add python dep for conda devenv.
-  [Stephen L Arnold]
-
-  * bionic lcov is too old for required include usage
-  * devenv needs jinja python dep per CI version
-- Cleanup coverage flags, upload coverage report. [Stephen L Arnold]
-
-  * speedup: switch coverage workflow to ctest
-  * cleanup: make sure covrage builds are identical
-  * add cov report artifact upload to smoke workflow (no gh-pages branch yet)
-  * add/update coverage cfgs and tox commands
-- Remove stale results until next scan (cov-test workflow) [Stephen L
-  Arnold]
-
-  * add check for data file before triggering convert/upload steps
-- Use local lcov config file for make cov, fix name in ci. [Stephen L
-  Arnold]
-- Refactor coverage generation/reporting, add fix script. [Stephen L
-  Arnold]
-
-  * add autobuild to tox, use lcov => gcovr for report
-  * xml seems more compliant, except for pkg name="."
-  * add fix_pkg_name.sh and run it in coverage workflow
-- Sort out coverage config, enable debug for branches/lines. [Stephen L
-  Arnold]
-- Switch metrics action to latest release => 0.3. [Stephen L Arnold]
-
-  * fixes metrics report artifact uploads
-- Remove action options until gh-pages branch is pushed. [Stephen L
-  Arnold]
-
-  * add readme note about python module move
 - Make sure autotools and cmake use the same soname/version. [Stephen L
   Arnold]
 
   * add missing configure check for pthreads (autotools)
   * allow SCM_VERSION to override static version (cmake)
 - Restore missing target property versions. [Stephen L Arnold]
-- Set recipe soversion, add include guard for unistd.h !win. [Stephen L
-  Arnold]
 
 Other
 ~~~~~
@@ -482,7 +334,7 @@ Other
   [Stephen L Arnold]
 
   * remove temp fix when upstream issue is fixed
-  * limit	metrics	collection to src/ directory only
+  * limit metrics collection to src/ directory only
   * adjust gcovr cmd root/path args, cleanup cruft
 - Updated coverity results from after cleanup commit. [S. Lockwood-
   Childs]
@@ -515,7 +367,6 @@ New
 
 Changes
 ~~~~~~~
-- Add pkconfig.in file, update configure.ac. [Stephen L Arnold]
 - Add readme section for overlay/ppa package installs. [Stephen L
   Arnold]
 

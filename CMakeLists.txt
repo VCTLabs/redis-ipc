@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.18)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # used for both library and pkgconfig file
-set(PACKAGE_VERSION 0.2.1)
+set(PACKAGE_VERSION 0.2.2)
 set(LIBRARY_SOVERSION 0)
 
 if(SCM_VERSION_INFO)
