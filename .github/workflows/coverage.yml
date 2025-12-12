@@ -205,7 +205,7 @@ jobs:
       run: |
         tox -e clang,lcov
 
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v6
       with:
         name: coverage_data
         path: coverage.xml
@@ -216,7 +216,7 @@ jobs:
         filename: coverage.xml
         output: 'both'
 
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v6
       with:
         name: src_coverage_rpts
         path: |
