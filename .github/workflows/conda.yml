@@ -33,13 +33,13 @@ jobs:
           fetch-depth: 0
 
       - name: Cache conda
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/conda_pkgs_dir
           key: ${{matrix.os}}-conda-pkgs-${{hashFiles('**/conda/meta.yaml')}}
 
       - name: Get conda
-        uses: conda-incubator/setup-miniconda@v3.2.0
+        uses: conda-incubator/setup-miniconda@v3.3.0
         with:
           python-version: 3.9
           channels: conda-forge

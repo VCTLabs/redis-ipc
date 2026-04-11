@@ -84,7 +84,7 @@ jobs:
           extra-build-deps: git
 
       - name: Upload deb files
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: "redis-ipc_${{ needs.get_version.outputs.version }}-${{ matrix.dist }}"
           path: ./debian/artifacts/*.deb
@@ -125,7 +125,7 @@ jobs:
           tox -e dist
 
       # download all artifacts to named path
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           path: packages
           pattern: redis-ipc*

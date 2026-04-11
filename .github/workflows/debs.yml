@@ -85,7 +85,7 @@ jobs:
           extra-build-deps: git cmake
 
       - name: Upload deb files
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: "redis-ipc_${{ needs.get_version.outputs.version }}-${{ matrix.dist }}"
           path: ./debian/artifacts/*.deb
