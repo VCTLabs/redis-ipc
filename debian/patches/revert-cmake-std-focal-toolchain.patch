@@ -1,0 +1,30 @@
+Description: need really old cmake std for gcc 9 in focal
+ .
+ redis-ipc (0.2.2-1ubuntu1) focal; urgency=medium
+ .
+   * new upstream release
+Author: Stephen L Arnold <nerdboy@gentoo.org>
+
+---
+
+Origin: upstream
+Forwarded: no
+Last-Update: 2025-12-05
+
+--- redis-ipc-0.2.2.orig/CMakeLists.txt
++++ redis-ipc-0.2.2/CMakeLists.txt
+@@ -23,12 +23,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+ set(CMAKE_VERBOSE_MAKEFILE ON)
+ 
+ if(NOT CMAKE_CXX_STANDARD)
+-    set(CMAKE_CXX_STANDARD 17)
++    set(CMAKE_CXX_STANDARD 14)
+     set(CMAKE_CXX_STANDARD_REQUIRED ON)
+     set(CMAKE_CXX_EXTENSIONS ON)
+ endif()
+ 
+-set(CMAKE_C_STANDARD 17)
++set(CMAKE_C_STANDARD 99)
+ set(CMAKE_C_EXTENSIONS ON)
+ set(CMAKE_DEBUG_POSTFIX d)
+ 
