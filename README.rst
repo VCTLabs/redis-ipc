@@ -21,6 +21,7 @@ to implement the following IPC mechanisms:
 * command queues
 * settings
 * status
+* state
 * event channels
 
 "But, but... redis for *embedded* applications??"
@@ -461,16 +462,17 @@ As mentioned in the intro, redis-ipc implements the following mechanisms:
 * command queues
 * settings
 * status
+* state
 * event channels
 
-Command queues are a method for any component to request an action from
+**Command queues** are a method for any component to request an action from
 another component, and receive a result after the command has been processed.
 Each component that exports actions to other components would own one or
 more command queues. When sending a command, the queue is specified by
 component and "subqueue" to allow components to manage multiple queues
 that are processed with different priorities.
 
-Settings are hashes representing the current configuration of each component.
+**Settings** are hashes representing the current configuration of each component.
 The settings for a single component can all be read atomically and written
 atomically, to avoid bugs where one component gets into an inconsistent state
 by reading settings when partially updates by another component. Note that
@@ -479,10 +481,13 @@ designs where settings consistency depends on updating multiple components at
 the same time would need to implement that separately, e.g. with some form of
 locking.
 
-Status are also hashes, but represent a component's current runtime state
+**Status** are also hashes, but represent a component's current runtime state
 instead of representing how a component has been configured. While settings
 are likely written by a single component, each component maintains its own
 status with any state info that is of interest to one or more other components.
+
+**State** is a single string value representing the currently active state of a
+component that incorporates a state machine.
 
 Event channels are an efficient way to broadcast events from one component to
 any others that might be interested (i.e. "subscribers). At the toplevel,

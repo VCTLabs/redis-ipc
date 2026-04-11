@@ -9,6 +9,7 @@ LIBREDISIPC = $(top_srcdir)/src/.libs/libredis_ipc.la
 BUILT_TESTS = command_result_test \
               json_test \
               multithread_test\
+              active_state_test \
               settings_status_test \
               pub_sub_test
 
@@ -28,6 +29,10 @@ json_test_LDFLAGS = -Wl,--hash-style=gnu -no-install
 multithread_test_SOURCES = multithread_test.c
 multithread_test_LDADD = -lhiredis -ljson-c $(LIBREDISIPC) -lpthread
 multithread_test_LDFLAGS = -Wl,--hash-style=gnu -no-install
+
+active_state_test_SOURCES = active_state_test.c
+active_state_test_LDADD = -lhiredis -ljson-c $(LIBREDISIPC) -lpthread
+active_state_test_LDFLAGS = -Wl,--hash-style=gnu -no-install
 
 pub_sub_test_SOURCES = pub_sub_test.c
 pub_sub_test_LDADD = -lhiredis -ljson-c $(LIBREDISIPC) -lpthread

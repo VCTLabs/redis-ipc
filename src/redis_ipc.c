@@ -101,6 +101,7 @@ static void stderr_debug(const char *format, ...)
 enum redis_ipc_type
 {
     RPC_TYPE_INVALID = 0,
+    RPC_TYPE_ACTIVE_STATE,
     RPC_TYPE_SETTING,
     RPC_TYPE_STATUS,
     RPC_TYPE_COMMAND,
@@ -112,6 +113,7 @@ enum redis_ipc_type
 const char *redis_ipc_type_names[] =
 {
     "INVALID",
+    "active_state",
     "settings",
     "status",
     "queues.commands",
@@ -148,6 +150,7 @@ static int ipc_path(char *buf, size_t buf_len, enum redis_ipc_type type,
 
     switch (type)
     {
+        case RPC_TYPE_ACTIVE_STATE:
         case RPC_TYPE_SETTING:
         case RPC_TYPE_STATUS:
         case RPC_TYPE_COMMAND:
@@ -1104,6 +1107,101 @@ const char * redis_ipc_read_status_field(const char *owner_component, const char
 redis_ipc_read_status_field_finish:
 
     return field_value;
+}
+
+static const char * redis_read_key(const char *key_path)
+{
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    redisReply *reply = NULL;
+    const char *val = NULL;
+
+    // don't forget to free reply later
+    reply = redis_command("GET %s", key_path);
+
+    // extract value from reply object
+    //
+    // reply should be a string
+
+    if (reply == NULL)
+        goto redis_read_key_finish;
+    if (reply->type != REDIS_REPLY_STRING)
+        goto redis_read_key_finish;
+
+    val = strdup(reply->str);
+    if (stderr_debug_is_enabled()) fprintf(stderr, "(%s) %s='%s' [KEY]\n", thread_info->component, key_path, val);
+
+redis_read_key_finish:
+    if (reply != NULL)
+        freeReplyObject(reply);
+
+    return val;
+}
+
+int redis_write_key(const char *key_path, const char *key_value)
+{
+    redisReply *reply = NULL;
+    int ret = RIPC_FAIL;
+
+    // don't forget to free reply later
+    reply = redis_command("SET %s %s", key_path, key_value);
+
+    if (reply != NULL)
+    {
+        ret = RIPC_OK;
+        freeReplyObject(reply);
+    }
+
+    return ret;
+}
+
+int redis_ipc_write_active_state(const char *state)
+{
+    char state_key_path[RIPC_MAX_IPC_PATH_LEN];
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    int ret = RIPC_FAIL;
+
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_write_active_state_finish;
+
+    // calculate name of own state key
+    ret = ipc_path(state_key_path, sizeof(state_key_path),
+                   RPC_TYPE_ACTIVE_STATE, thread_info->component, NULL);
+    if (ret != RIPC_OK)
+        goto redis_ipc_write_active_state_finish;
+
+    // set value of state key
+    ret = redis_write_key(state_key_path, state);
+
+redis_ipc_write_active_state_finish:
+
+    return ret;
+}
+
+
+char * redis_ipc_read_active_state(const char *owner_component)
+{
+    char state_key_path[RIPC_MAX_IPC_PATH_LEN];
+    struct redis_ipc_per_thread *thread_info = get_per_thread_info();
+    const char *val = NULL;
+    int ret = RIPC_FAIL;
+
+    // make sure successful init has been performed
+    if (thread_info == NULL)
+        goto redis_ipc_read_active_state_finish;
+
+    // calculate name of state belonging to specified component
+    ret = ipc_path(state_key_path, sizeof(state_key_path),
+                   RPC_TYPE_ACTIVE_STATE, owner_component, NULL);
+    if (ret != RIPC_OK)
+        goto redis_ipc_read_active_state_finish;
+
+    // get value of state key
+    val = redis_read_key(state_key_path);
+
+redis_ipc_read_active_state_finish:
+
+    return val;
 }
 
 static int redis_publish(const char *channel_path, json_object *obj)
