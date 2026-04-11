@@ -188,6 +188,16 @@ int redis_ipc_write_status_field(const char *field_name, const char *field_value
 const char * redis_ipc_read_status_field(const char *owner_component, const char *field_name);
 
 
+// A component can only write its own state,
+// but it can read the state of any component.
+//
+// Each component can set a single string to indicate its currently active state;
+// more complicated runtime state may be maintained in 'status' instead.
+
+int redis_ipc_write_active_state(const char *state);
+char * redis_ipc_read_active_state(const char *owner_component);
+
+
 // Each component can only send event messages to its own event channel(s),
 // but can subscribe to any (or all) event channels.
 //
