@@ -2,6 +2,27 @@ Changelog
 =========
 
 
+v0.3.0 (2026-04-13)
+-------------------
+
+New
+~~~
+- Add support for per-component 'active_state' [S. Lockwood-Childs]
+
+Changes
+~~~~~~~
+- Update debian files from latest focal builds. [Stephen L Arnold]
+
+Fixes
+~~~~~
+- Bump static versions, cleanup release workflow, update .gitignore.
+  [Stephen L Arnold]
+
+  * avoid using make dist for release workflow until we can add
+    dynamic versioning
+  * update pre-commit hook versions, apply cmake-format updates
+
+
 v0.2.2 (2025-12-05)
 -------------------
 
@@ -640,7 +661,7 @@ Other
   [Stephen L Arnold]
 
   * remove temp fix when upstream issue is fixed
-  * limit metrics collection to src/ directory only
+  * limit	metrics	collection to src/ directory only
   * adjust gcovr cmd root/path args, cleanup cruft
 - Updated coverity results from after cleanup commit. [S. Lockwood-
   Childs]
