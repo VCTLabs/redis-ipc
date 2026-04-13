@@ -5,6 +5,7 @@ Priority: optional
 Standards-Version: 4.5.0
 Build-Depends: debhelper (>= 10),
     cmake,
+    libltdl-dev,
     pkg-config,
     libhiredis-dev (>= 0.10),
     libjson-c-dev (>= 0.9)

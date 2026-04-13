@@ -129,9 +129,10 @@ jobs:
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda  # v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.get_version.outputs.version }}
         with:
-          tag_name: ${{ env.VERSION }}
-          name: Release ${{ env.VERSION }}
+          tag_name: v${VERSION}
+          name: Release v${VERSION}
           body_path: CHANGES.md
           draft: false
           prerelease: false
