@@ -91,38 +91,22 @@ jobs:
 
   create_release:
     name: Create Release
-    needs: [packaging]
+    needs: [packaging, get_version]
     runs-on: ubuntu-22.04
     permissions:
       contents: write
 
     steps:
-      - name: Get version
-        id: get_version
-        run: |
-          echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
-          echo ${{ env.VERSION }}
-
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
-        with:
-          python-version: 3.9
-
-      - name: Install dependencies
+      - name: Check github variables
+        env:
+          VERSION: ${{ needs.get_version.outputs.version }}
         run: |
-          sudo apt-get install -yqq redis-server autoconf automake
-          sudo apt-get install -yqq libjson-c-dev libhiredis-dev libgtest-dev libgmock-dev
-          sudo systemctl stop redis
-          python -m pip install --upgrade pip wheel
-          pip install tox
-
-      - name: Build dist pkg
-        run: |
-          tox -e dist
+          echo "Package version from git: ${VERSION}"
+          git archive --format=tar.gz -o redis-ipc-$VERSION.tar.gz --prefix=redis-ipc-$VERSION/ v${VERSION}
 
       # download all artifacts to named path
       - uses: actions/download-artifact@v8
@@ -136,13 +120,13 @@ jobs:
           ls -l packages/
 
       - name: Generate changes file
-        uses: sarnold/gitchangelog-action@master
+        uses: sarnold/gitchangelog-action@915234f151ceffb7a8c4f76de77e4ae321087b8f  # v1.1.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN}}
 
       - name: Create draft release
         id: create_release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda  # v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

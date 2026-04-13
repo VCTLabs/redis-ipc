@@ -10,7 +10,7 @@ repos:
       - id: check-useless-excludes
       - id: check-hooks-apply
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -30,7 +30,7 @@ repos:
         exclude: 'conda/meta.yaml'
 
   - repo: https://github.com/PyCQA/doc8
-    rev: v1.1.1
+    rev: v2.0.0
     hooks:
       - id: doc8
         args:
@@ -53,12 +53,12 @@ repos:
 #        exclude: 'conda/meta.yaml'
 
   - repo: https://github.com/iconmaster5326/cmake-format-pre-commit-hook
-    rev: v0.6.9
+    rev: v0.6.13
     hooks:
       - id: cmake-format
 
   - repo: https://github.com/lovesegfault/beautysh
-    rev: v6.2.1
+    rev: v6.4.3
     hooks:
       - id: beautysh
 
@@ -70,7 +70,7 @@ repos:
 
 # current cpplint hook ignores top-level CPPLINT.cfg
   - repo: https://github.com/cpplint/cpplint
-    rev: 1.6.1
+    rev: 2.0.2
     hooks:
       - id: cpplint
         args:

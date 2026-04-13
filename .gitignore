@@ -34,10 +34,14 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-
+# dist files
+*.tar.gz
+*.tar.xz
+*.deb
 # coverage files
 test/*.out
 *.gcov
+
 # compilation files
 *.lo
 *.od
