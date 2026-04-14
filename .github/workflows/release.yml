@@ -120,7 +120,7 @@ jobs:
           ls -l packages/
 
       - name: Generate changes file
-        uses: sarnold/gitchangelog-action@915234f151ceffb7a8c4f76de77e4ae321087b8f  # v1.1.1
+        uses: sarnold/gitchangelog-action@bc7e885ba8cf71258fca7810835ee72cdde7382c  # v1.1.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN}}
 
