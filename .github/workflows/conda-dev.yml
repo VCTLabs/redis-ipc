@@ -34,7 +34,7 @@ jobs:
       PYTHONIOENCODING: utf-8
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Setup base python
       uses: actions/setup-python@v6
