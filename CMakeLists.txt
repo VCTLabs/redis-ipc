@@ -57,7 +57,8 @@ endif()
 
 option(BUILD_SHARED_LIBS "build shared libraries" ON)
 option(BUILD_STATIC_LIBS "Build static libraries" OFF)
-option(RIPC_BUILD_TESTING "build and run tests" ON)
+option(RIPC_BUILD_TESTING "build and run tests" OFF)
+option(COVERAGE_BUILD "Enable code coverage" OFF)
 option(WITH_COVERAGE "build with test coverage but no optimization" OFF)
 option(RIPC_DISABLE_SOCK_TESTS "disable tests requiring redis socket" OFF)
 

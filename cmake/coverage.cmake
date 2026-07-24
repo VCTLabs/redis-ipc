@@ -1,4 +1,3 @@
-option(COVERAGE_BUILD "Enable code coverage" OFF)
 option(COVERAGE_TEXT "Show text summary of the coverage" ON)
 option(COVERAGE_LCOV "Export coverage data in lcov trace file" ON)
 option(COVERAGE_HTML "Detailed html report of the coverage" OFF)
