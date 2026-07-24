@@ -20,13 +20,13 @@ if(COVERAGE_BUILD)
     find_program(
         LLVM_COV_PATH
         NAMES llvm-cov
-        HINTS ${LLVM_DIRECTORY}
+        HINTS ${LLVM_DIRECTORY} llvm-${LLVM_DIRECTORY}
         PATH_SUFFIXES bin
     )
     find_program(
         LLVM_PROFDATA_PATH
         NAMES llvm-profdata
-        HINTS ${LLVM_DIRECTORY}
+        HINTS ${LLVM_DIRECTORY} llvm-${LLVM_DIRECTORY}
         PATH_SUFFIXES bin
     )
 
