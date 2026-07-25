@@ -1,4 +1,3 @@
-option(COVERAGE_BUILD "Enable code coverage" OFF)
 option(COVERAGE_TEXT "Show text summary of the coverage" ON)
 option(COVERAGE_LCOV "Export coverage data in lcov trace file" ON)
 option(COVERAGE_HTML "Detailed html report of the coverage" OFF)
@@ -20,13 +19,13 @@ if(COVERAGE_BUILD)
     find_program(
         LLVM_COV_PATH
         NAMES llvm-cov
-        HINTS ${LLVM_DIRECTORY}
+        HINTS ${LLVM_DIRECTORY} llvm-${LLVM_DIRECTORY}
         PATH_SUFFIXES bin
     )
     find_program(
         LLVM_PROFDATA_PATH
         NAMES llvm-profdata
-        HINTS ${LLVM_DIRECTORY}
+        HINTS ${LLVM_DIRECTORY} llvm-${LLVM_DIRECTORY}
         PATH_SUFFIXES bin
     )
 

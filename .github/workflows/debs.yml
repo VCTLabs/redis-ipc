@@ -10,7 +10,7 @@ on:
 jobs:
   get_version:
     name: Get version info
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     defaults:
@@ -33,7 +33,7 @@ jobs:
 
   build_debs:
     name: ${{ matrix.name }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     needs: [get_version]

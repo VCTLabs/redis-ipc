@@ -1,7 +1,8 @@
 set(CMAKE_C_FLAGS "-g -O0 --coverage")
 set(CMAKE_CXX_FLAGS "-g -O0 --coverage")
-set(CMAKE_EXE_LINKER_FLAGS "--coverage")
-set(CMAKE_SHARED_LINKER_FLAGS "--coverage")
+# note coverage flag is already in linker args
+set(CMAKE_EXE_LINKER_FLAGS "")
+set(CMAKE_SHARED_LINKER_FLAGS "")
 
 set(COVERAGE_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/coverage")
 set(TRACEFILE "${CMAKE_SOURCE_DIR}/coverage.info")

@@ -32,13 +32,6 @@ set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_EXTENSIONS ON)
 set(CMAKE_DEBUG_POSTFIX d)
 
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE
-        "RelWithDebInfo"
-        CACHE STRING "Default build type: RelWithDebInfo" FORCE
-    )
-endif()
-
 include(CMakeParseArguments)
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
@@ -65,16 +58,13 @@ endif()
 option(BUILD_SHARED_LIBS "build shared libraries" ON)
 option(BUILD_STATIC_LIBS "Build static libraries" OFF)
 option(RIPC_BUILD_TESTING "build and run tests" OFF)
+option(COVERAGE_BUILD "Enable code coverage" OFF)
+option(WITH_COVERAGE "build with test coverage but no optimization" OFF)
 option(RIPC_DISABLE_SOCK_TESTS "disable tests requiring redis socket" OFF)
 
 set(RIPC_RUNTIME_DIR
     ""
     CACHE PATH "path to directory containing redis server socket"
-)
-
-set(WITH_COVERAGE
-    ""
-    CACHE PATH "build with test coverage enabled"
 )
 
 set(INSTALL_PKGCONFIG_DIR
@@ -149,7 +139,8 @@ elseif(UNIX)
     set(CMAKE_THREAD_PREFER_PTHREAD ON)
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
-    list(APPEND EXTRA_TARGET_LINK_LIBRARIES ${CMAKE_THREAD_LIBS_INIT})
+    # link to the proper target, NOT a variable or hard-coded flag
+    list(APPEND EXTRA_TARGET_LINK_LIBRARIES Threads::Threads)
 endif()
 
 include_directories(
@@ -175,6 +166,14 @@ target_compile_definitions(redis_ipc PRIVATE VERSION_INFO=${PACKAGE_VERSION})
 set_target_properties(
     redis_ipc PROPERTIES VERSION ${RIPC_SONAME} SOVERSION ${LIBRARY_SOVERSION}
 )
+
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE
+        "Debug"
+        CACHE STRING "Default build type: Debug" FORCE
+    )
+endif()
+message("* Current build type is : ${CMAKE_BUILD_TYPE}")
 
 if(RIPC_BUILD_TESTING)
     enable_testing()
