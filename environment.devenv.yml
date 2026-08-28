@@ -1,7 +1,7 @@
-name: redis-ipc-test
+name: test
 
 dependencies:
-  - python ={{ get_env("PY_VER", default="3.7") }}
+  - python={{ get_env("PY_VER", default="3.10") }}
   - cmake>=3.18
   - ninja
   - c-compiler
@@ -11,5 +11,6 @@ dependencies:
   - pkg-config  # [unix]
   - json-c=0.15
   - libhiredis=1.0.0
+  - gtest
   - lcov
   - gcovr
