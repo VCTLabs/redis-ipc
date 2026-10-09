@@ -61,3 +61,4 @@ coverage/
 coverage.xml
 doc/html/
 doc/metrics/
+.version
