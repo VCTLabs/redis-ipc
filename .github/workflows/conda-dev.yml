@@ -2,32 +2,33 @@ name: CondaDev
 
 on:
   workflow_dispatch:
+  pull_request:
   push:
     branches:
       - master
       - develop
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: redis-ipc ${{ matrix.python-version }} ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    permissions:
-      contents: read
     strategy:
       fail-fast: false
       matrix:
+        # does not like windows
         os: ['ubuntu-22.04', 'ubuntu-24.04']
-        python-version: ['3.7', '3.9']
+        python-version: ['3.10', '3.11']
         include:
           - os: 'ubuntu-22.04'
             generator: 'Ninja'
-            build_type: 'Debug'
+            build_type: 'Release'
           - os: 'ubuntu-24.04'
             generator: 'Ninja'
-            build_type: 'RelWithDebInfo'
-          #- os: 'macOS-11'
-          #  generator: 'Ninja'
-          #  build_type: 'Debug'
+            build_type: 'Debug'
+
     env:
       OS: ${{ matrix.os }}
       PYTHON: ${{ matrix.python-version }}
@@ -37,13 +38,18 @@ jobs:
     - uses: actions/checkout@v7
 
     - name: Setup base python
-      uses: actions/setup-python@v7
+      uses: actions/setup-python@v6
       with:
         python-version: '3.x'
 
+    - name: Env
+      run: |
+        echo "CXX=g++" >> $GITHUB_ENV
+        echo "CC=gcc" >> $GITHUB_ENV
+
     - name: Cache conda
       id: cache
-      uses: actions/cache@v6
+      uses: actions/cache@v5
       env:
         # Increase this value to reset cache if environment.devenv.yml has not changed
         CACHE_NUMBER: 1
@@ -51,33 +57,47 @@ jobs:
         path: ~/conda_pkgs_dir
         key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment.devenv.yml') }}
 
-    - uses: conda-incubator/setup-miniconda@v4.1.0
+    - uses: conda-incubator/setup-miniconda@be893c923ea9cf1cf7cd510fbdde27c7e18cbdcb  # v4
       with:
-        auto-update-conda: true
+        #auto-update-conda: true
         python-version: ${{ matrix.python-version }}
-        channels: conda-forge
-        channel-priority: strict
+        miniforge-version: latest
+        channels: conda-forge,defaults
+        channel-priority: flexible
+        conda-remove-defaults: true
         use-only-tar-bz2: true
 
+    - name: Checking Miniconda Environment
+      shell: bash -el {0}
+      run: |
+        conda info
+        conda list
+        conda config --show-sources
+        conda config --show
+        printenv | sort
+
     - name: Configure condadev environment
-      shell: bash -l {0}
+      shell: bash -el {0}
       env:
         PY_VER: ${{ matrix.python-version }}
       run: |
-        conda config --set always_yes yes --set changeps1 no
-        conda config --add channels conda-forge
-        conda install conda-devenv=2.1.1
-        conda devenv
+        conda install conda-devenv
+        conda info --envs
+        conda-devenv || true
+        ls
+        conda create -f environment.yml
 
     - name: Build and test
-      shell: bash -l {0}
+      shell: bash -el {0}
       env:
         PY_VER: ${{ matrix.python-version }}
       run: |
-        source activate redis-ipc-test
-        ctest --build-config "${{ matrix.build_type }}" \
-          --build-generator "${{ matrix.generator }}" \
-          --build-and-test . build \
-          --build-options -DRIPC_DISABLE_SOCK_TESTS=1 \
-          --test-command ctest -V \
-          --build-config "${{ matrix.build_type }}"
+        conda activate ripc-test
+        cmake \
+          -G "${{ matrix.generator }}" -S . -B build \
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+          -DRIPC_BUILD_TESTING=1 -DRIPC_DISABLE_SOCK_TESTS=1 \
+          -DCMAKE_INSTALL_PREFIX:PATH=${CONDA_PREFIX}
+        cmake --build build --target install --parallel 4
+        cmake --build build --target test --parallel 4
+        ctest -V --test-dir build/
