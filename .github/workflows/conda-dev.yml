@@ -20,7 +20,7 @@ jobs:
       matrix:
         # does not like windows
         os: ['ubuntu-22.04', 'ubuntu-24.04']
-        python-version: ['3.9', '3.11']
+        python-version: ['3.10', '3.11']
         include:
           - os: 'ubuntu-22.04'
             generator: 'Ninja'
@@ -35,12 +35,17 @@ jobs:
       PYTHONIOENCODING: utf-8
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Setup base python
       uses: actions/setup-python@v6
       with:
         python-version: '3.x'
+
+    - name: Env
+      run: |
+        echo "CXX=g++" >> $GITHUB_ENV
+        echo "CC=gcc" >> $GITHUB_ENV
 
     - name: Cache conda
       id: cache
@@ -52,39 +57,47 @@ jobs:
         path: ~/conda_pkgs_dir
         key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment.devenv.yml') }}
 
-    - uses: conda-incubator/setup-miniconda@fc2d68f6413eb2d87b895e92f8584b5b94a10167  # v4.1.0
+    - uses: conda-incubator/setup-miniconda@be893c923ea9cf1cf7cd510fbdde27c7e18cbdcb  # v4
       with:
-        auto-update-conda: true
+        #auto-update-conda: true
         python-version: ${{ matrix.python-version }}
+        miniforge-version: latest
         channels: conda-forge,defaults
-        channel-priority: strict
+        channel-priority: flexible
         conda-remove-defaults: true
         use-only-tar-bz2: true
+
+    - name: Checking Miniconda Environment
+      shell: bash -el {0}
+      run: |
+        conda info
+        conda list
+        conda config --show-sources
+        conda config --show
+        printenv | sort
 
     - name: Configure condadev environment
       shell: bash -el {0}
       env:
         PY_VER: ${{ matrix.python-version }}
       run: |
-        conda config --set always_yes yes --set changeps1 no
-        conda config --add channels conda-forge
-        conda activate test
         conda install conda-devenv
-        conda info -a
-        conda env list
-        conda devenv
+        conda info --envs
+        conda-devenv || true
+        ls
+        conda create -f environment.yml
 
     - name: Build and test
       shell: bash -el {0}
       env:
         PY_VER: ${{ matrix.python-version }}
       run: |
-        # conda activate test
+        conda activate ripc-test
         cmake \
           -G "${{ matrix.generator }}" -S . -B build \
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
           -DRIPC_BUILD_TESTING=1 -DRIPC_DISABLE_SOCK_TESTS=1 \
           -DCMAKE_INSTALL_PREFIX:PATH=${CONDA_PREFIX}
         cmake --build build --target install --parallel 4
-        cmake --build build --target tests --parallel 4
+        cmake --build build --target test --parallel 4
         ctest -V --test-dir build/

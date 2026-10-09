@@ -1,11 +1,11 @@
-name: test
+name: ripc-test
 
 dependencies:
   - python={{ get_env("PY_VER", default="3.10") }}
   - cmake>=3.18
   - ninja
-  - c-compiler
-  - cxx-compiler
+  - gcc_linux-64
+  - gxx_linux-64
   - pip
   - make  # [unix]
   - pkg-config  # [unix]
