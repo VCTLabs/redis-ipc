@@ -1,0 +1,33 @@
+#ifndef RIPC_CONFIG_H
+#define RIPC_CONFIG_H
+
+/* Name of package */
+#define PACKAGE "@CMAKE_PROJECT_NAME@"
+
+#define VERSION "@GIT_VERSION@"
+
+/* Define to the address where bug reports for this package should be sent. */
+#define PACKAGE_BUGREPORT "https://github.com/VCTLabs/redis-ipc/issues"
+
+/* Define to the full name of this package. */
+#define PACKAGE_NAME "@CMAKE_PROJECT_NAME@"
+
+/* Define to the full name and version of this package. */
+#define PACKAGE_STRING "@CMAKE_PROJECT_NAME@" " " "@GIT_VERSION@"
+
+/* Define to the one symbol short name of this package. */
+#define PACKAGE_TARNAME "@CMAKE_PROJECT_NAME@"
+
+/* Define to the home page for this package. */
+#define PACKAGE_URL "https://github.com/VCTLabs/redis-ipc/"
+
+/* Define to the version of this package. */
+#define PACKAGE_VERSION "@GIT_VERSION@"
+
+/* Version macros */
+#define RIPC_VERSION_MAJOR ${RIPC_VERSION_MAJOR}
+#define RIPC_VERSION_MINOR ${RIPC_VERSION_MINOR}
+#define RIPC_VERSION_PATCH ${RIPC_VERSION_PATCH}
+#define RIPC_VERSION_TWEAK ${RIPC_VERSION_TWEAK}
+
+#endif // RIPC_CONFIG_H

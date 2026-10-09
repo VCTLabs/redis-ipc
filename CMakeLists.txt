@@ -17,8 +17,6 @@ if(SCM_VERSION_INFO)
     set(PACKAGE_VERSION ${SCM_VERSION_INFO})
 endif()
 
-set(RIPC_SONAME ${PACKAGE_VERSION})
-
 project(
     redis-ipc
     LANGUAGES C CXX
@@ -57,9 +55,10 @@ endif()
 
 # If a GIT_VERSION exists, use it as the version
 if(GIT_VERSION)
-    set(PROJECT_VERSION "${GIT_VERSION}")
+    project(redis-ipc VERSION "${GIT_VERSION}")
     message(STATUS "Using ${PROJECT_NAME} version from git: ${PROJECT_VERSION}")
 else()
+    set(GIT_VERSION "${PROJECT_VERSION}")
     message(
         STATUS
             "Git version not found. Using default project version: ${PROJECT_VERSION}"
@@ -218,11 +217,12 @@ target_link_libraries(redis_ipc ${EXTRA_TARGET_LINK_LIBRARIES})
 
 # SCM_VERSION_INFO can be defined by cmake args and passed into the code as a
 # define here (see PACKAGE_VERSION near the top of this file)
-target_compile_definitions(redis_ipc PRIVATE VERSION_INFO=${PACKAGE_VERSION})
+target_compile_definitions(redis_ipc PRIVATE VERSION_INFO=${GIT_VERSION})
 
 # this looks weird, but needed for correct SOVERSION links
 set_target_properties(
-    redis_ipc PROPERTIES VERSION ${RIPC_SONAME} SOVERSION ${LIBRARY_SOVERSION}
+    redis_ipc PROPERTIES VERSION ${PACKAGE_VERSION} SOVERSION
+                                                    ${LIBRARY_SOVERSION}
 )
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -265,6 +265,16 @@ if(RIPC_BUILD_TESTING)
         add_coverage(json_test)
     endif()
 endif()
+
+# Configuration file
+configure_file(
+    "${PROJECT_SOURCE_DIR}/config.h.in" "${PROJECT_BINARY_DIR}/config.h"
+)
+add_compile_definitions(HAVE_CONFIG_H)
+if(DEV_VERSION_FORMAT)
+    add_compile_definitions(DEV_VERSION_FORMAT)
+endif()
+include_directories("${PROJECT_BINARY_DIR}")
 
 set(RIPC_HEADERS inc/json.hh src/redis_ipc.h)
 
