@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.18)
 
+set(WC_TAG_GLOB
+    "v*"
+    CACHE STRING "Git tag glob pattern to match against"
+)
+message(STATUS "Overriding default WC_TAG_GLOB: ${WC_TAG_GLOB}")
+
 # Add cmake modules of this project to the module path
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -21,6 +27,44 @@ project(
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
+
+find_package(GitInfo REQUIRED)
+git_wc_info(${PROJECT_SOURCE_DIR} RIPC)
+
+message(STATUS "GIT_WC_INFO:")
+message(STATUS "  WC_REVISION_HASH:     ${RIPC_WC_REVISION_HASH}")
+message(STATUS "  WC_REVISION:          ${RIPC_WC_REVISION}")
+message(STATUS "  WC_REVISION_NAME:     ${RIPC_WC_REVISION_NAME}")
+message(STATUS "  WC_URL:               ${RIPC_WC_URL}")
+message(STATUS "  WC_ROOT:              ${RIPC_WC_ROOT}")
+message(STATUS "  WC_LAST_CHANGED_DATE: ${RIPC_WC_LAST_CHANGED_DATE}")
+message(STATUS "  WC_LATEST_TAG:        ${RIPC_WC_LATEST_TAG}")
+message(STATUS "  WC_LATEST_TAG_LONG:   ${RIPC_WC_LATEST_TAG_LONG}")
+
+git_version_info(RIPC)
+message(STATUS "Configuring RIPC version: ${RIPC_VERSION} "
+               "(${RIPC_VERSION_MAJOR}.${RIPC_VERSION_MINOR}"
+               ".${RIPC_VERSION_PATCH}.${RIPC_VERSION_TWEAK})"
+)
+
+if(DEV_VERSION_FORMAT)
+    set(GIT_VERSION "${RIPC_WC_LATEST_TAG_LONG}")
+else()
+    set(GIT_VERSION
+        "${RIPC_VERSION_MAJOR}.${RIPC_VERSION_MINOR}.${RIPC_VERSION_PATCH}.${RIPC_VERSION_TWEAK}"
+    )
+endif()
+
+# If a GIT_VERSION exists, use it as the version
+if(GIT_VERSION)
+    set(PROJECT_VERSION "${GIT_VERSION}")
+    message(STATUS "Using ${PROJECT_NAME} version from git: ${PROJECT_VERSION}")
+else()
+    message(
+        STATUS
+            "Git version not found. Using default project version: ${PROJECT_VERSION}"
+    )
+endif()
 
 if(NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 17)
@@ -53,6 +97,20 @@ if(RIPC_ENABLE_LTO AND CMAKE_BUILD_TYPE MATCHES "Release")
     else()
         message(WARNING "IPO / LTO not supported: <${error}>")
     endif()
+endif()
+
+message(CHECK_START "Checking for C/CXX linker PIE support")
+include(CheckPIESupported)
+check_pie_supported(OUTPUT_VARIABLE output)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+if(CMAKE_C_LINK_PIE_SUPPORTED)
+    message(CHECK_PASS "yes")
+else()
+    message(CHECK_FAIL "no")
+    message(VERBOSE "PIE is not supported at link time:\n${output}"
+            "PIE link options will not be passed to linker."
+    )
 endif()
 
 option(BUILD_SHARED_LIBS "build shared libraries" ON)
