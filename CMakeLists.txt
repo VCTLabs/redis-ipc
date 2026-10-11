@@ -12,6 +12,11 @@ cgv_find_version(redis-ipc)
 
 message(STATUS "LATEST VERSION:         ${redis-ipc_VERSION}")
 message(STATUS "LATEST VERSION STRING:  ${redis-ipc_VERSION_STRING}")
+# cmake does not really tolerate versions with leading/trailing chars as project
+# version, only strict semver with an optional 4th digit works
+if(NOT PACKAGE_VERSION)
+    set(PACKAGE_VERSION "${redis-ipc_VERSION}")
+endif()
 
 if(DEV_VERSION_FORMAT)
     set(GIT_VERSION "${redis-ipc_VERSION_STRING}")
@@ -22,7 +27,7 @@ endif()
 project(
     redis-ipc
     LANGUAGES C CXX
-    VERSION "${redis-ipc_VERSION}"
+    VERSION "${PACKAGE_VERSION}"
 )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -106,6 +111,7 @@ set(INSTALL_PKGCONFIG_DIR
     CACHE PATH "Install directory for pkgconfig (.pc) files"
 )
 set(EXTRA_TARGET_LINK_LIBRARIES)
+set(RIPC_INSTALL_TARGETS)
 
 # accept cmake option -or- environment variable
 if(DEFINED ENV{RIPC_RUNTIME_DIR})
@@ -182,15 +188,24 @@ include_directories(
 )
 
 set(RIPC_SOURCES src/redis_ipc.c)
+list(APPEND RIPC_INSTALL_TARGETS redis_ipc)
 
 if(BUILD_STATIC_LIBS)
     add_library(ripcstatic STATIC ${RIPC_SOURCES})
     set_target_properties(ripcstatic PROPERTIES OUTPUT_NAME redis_ipc)
+    list(APPEND RIPC_INSTALL_TARGETS ripcstatic)
 endif()
 
-add_library(redis_ipc ${RIPC_SOURCES})
+add_library(redis_ipc SHARED ${RIPC_SOURCES})
 add_library(redis_ipc::redis_ipc ALIAS redis_ipc)
-target_link_libraries(redis_ipc ${EXTRA_TARGET_LINK_LIBRARIES})
+target_link_libraries(redis_ipc PUBLIC ${EXTRA_TARGET_LINK_LIBRARIES})
+target_include_directories(
+    redis_ipc SYSTEM
+    INTERFACE $<BUILD_INTERFACE:${redis_ipc_BINARY_DIR}>
+              $<BUILD_INTERFACE:${redis_ipc_SOURCE_DIR}/inc>
+              $<BUILD_INTERFACE:${redis_ipc_SOURCE_DIR}/src>
+              $<INSTALL_INTERFACE:include>
+)
 
 # SCM_VERSION_INFO can be defined by cmake args and passed into the code as a
 # define here (see PACKAGE_VERSION near the top of this file)
@@ -266,8 +281,8 @@ if(BUILD_STATIC_LIBS)
 endif()
 
 install(
-    TARGETS ${RIPC_LIBS}
-    EXPORT redis_ipcConfig
+    TARGETS ${RIPC_INSTALL_TARGETS}
+    EXPORT RIPCTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -276,12 +291,18 @@ install(
 )
 
 install(
-    EXPORT redis_ipcConfig
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/redis_ipc
+    EXPORT RIPCTargets
+    FILE RIPCTargets.cmake
     NAMESPACE redis_ipc::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/redis_ipc
 )
 
-set(RIPC_PC ${CMAKE_CURRENT_BINARY_DIR}/redis-ipc.pc)
-set(prefix ${CMAKE_INSTALL_PREFIX})
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/redis-ipc.pc.in ${RIPC_PC} @ONLY)
-install(FILES ${RIPC_PC} DESTINATION ${INSTALL_PKGCONFIG_DIR})
+# pkg-config configuration file
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/redis-ipc.pc.in
+    ${CMAKE_CURRENT_BINARY_DIR}/redis-ipc.pc @ONLY
+)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/redis-ipc.pc
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/pkgconfig
+)
