@@ -1,6 +1,6 @@
-// Copyright (c) 2011-2021 Vanguard Computer Technology Labs <answers@vctlabs.com>
+// Copyright (c) 2011-2026 Vanguard Computer Technology Labs <answers@vctlabs.com>
 //
-// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef __JSON_HH__
 #define __JSON_HH__
