@@ -1,61 +1,38 @@
 cmake_minimum_required(VERSION 3.18)
 
-set(WC_TAG_GLOB
-    "v*"
-    CACHE STRING "Git tag glob pattern to match against"
-)
-message(STATUS "Overriding default WC_TAG_GLOB: ${WC_TAG_GLOB}")
-
 # Add cmake modules of this project to the module path
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-
-# used for both library and pkgconfig file
-set(PACKAGE_VERSION 0.3.0)
-set(LIBRARY_SOVERSION 0)
 
 if(SCM_VERSION_INFO)
     set(PACKAGE_VERSION ${SCM_VERSION_INFO})
 endif()
 
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/CgvFindVersion.cmake")
+cgv_find_version(redis-ipc)
+
+message(STATUS "LATEST VERSION:         ${redis-ipc_VERSION}")
+message(STATUS "LATEST VERSION STRING:  ${redis-ipc_VERSION_STRING}")
+
+if(DEV_VERSION_FORMAT)
+    set(GIT_VERSION "${redis-ipc_VERSION_STRING}")
+else()
+    set(GIT_VERSION "${redis-ipc_VERSION}")
+endif()
+
 project(
     redis-ipc
     LANGUAGES C CXX
-    VERSION ${PACKAGE_VERSION}
+    VERSION "${redis-ipc_VERSION}"
 )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-find_package(GitInfo REQUIRED)
-git_wc_info(${PROJECT_SOURCE_DIR} RIPC)
-
-message(STATUS "GIT_WC_INFO:")
-message(STATUS "  WC_REVISION_HASH:     ${RIPC_WC_REVISION_HASH}")
-message(STATUS "  WC_REVISION:          ${RIPC_WC_REVISION}")
-message(STATUS "  WC_REVISION_NAME:     ${RIPC_WC_REVISION_NAME}")
-message(STATUS "  WC_URL:               ${RIPC_WC_URL}")
-message(STATUS "  WC_ROOT:              ${RIPC_WC_ROOT}")
-message(STATUS "  WC_LAST_CHANGED_DATE: ${RIPC_WC_LAST_CHANGED_DATE}")
-message(STATUS "  WC_LATEST_TAG:        ${RIPC_WC_LATEST_TAG}")
-message(STATUS "  WC_LATEST_TAG_LONG:   ${RIPC_WC_LATEST_TAG_LONG}")
-
-git_version_info(RIPC)
-message(STATUS "Configuring RIPC version: ${RIPC_VERSION} "
-               "(${RIPC_VERSION_MAJOR}.${RIPC_VERSION_MINOR}"
-               ".${RIPC_VERSION_PATCH}.${RIPC_VERSION_TWEAK})"
-)
-
-if(DEV_VERSION_FORMAT)
-    set(GIT_VERSION "${RIPC_WC_LATEST_TAG_LONG}")
-else()
-    set(GIT_VERSION
-        "${RIPC_VERSION_MAJOR}.${RIPC_VERSION_MINOR}.${RIPC_VERSION_PATCH}.${RIPC_VERSION_TWEAK}"
-    )
-endif()
+# used for both library and pkgconfig file
+set(LIBRARY_SOVERSION 0)
 
 # If a GIT_VERSION exists, use it as the version
 if(GIT_VERSION)
-    project(redis-ipc VERSION "${GIT_VERSION}")
     message(STATUS "Using ${PROJECT_NAME} version from git: ${PROJECT_VERSION}")
 else()
     set(GIT_VERSION "${PROJECT_VERSION}")
@@ -73,7 +50,7 @@ endif()
 
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_EXTENSIONS ON)
-set(CMAKE_DEBUG_POSTFIX d)
+# set(CMAKE_DEBUG_POSTFIX d)
 
 include(CMakeParseArguments)
 include(CheckCCompilerFlag)
@@ -221,7 +198,7 @@ target_compile_definitions(redis_ipc PRIVATE VERSION_INFO=${GIT_VERSION})
 
 # this looks weird, but needed for correct SOVERSION links
 set_target_properties(
-    redis_ipc PROPERTIES VERSION ${PACKAGE_VERSION} SOVERSION
+    redis_ipc PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION
                                                     ${LIBRARY_SOVERSION}
 )
 
