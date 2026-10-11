@@ -26,7 +26,7 @@ jobs:
           - os: ubuntu-24.04
             compiler: gcc
             version: "13"
-            test_cmd: 'auto'
+            test_cmd: 'ctest'
           - os: ubuntu-22.04
             compiler: clang
             version: "15"
@@ -37,7 +37,7 @@ jobs:
 
     - uses: actions/setup-python@v7
       with:
-        python-version: '3.11'
+        python-version: '3.13'
 
     - name: Environment
       run: |
@@ -74,6 +74,7 @@ jobs:
         CC: ${{ env.CC }}
         CXX: ${{ env.CXX }}
         LLVM_VER_DIR: ${{ env.LLVM_VER_DIR }}
+        WITH_COVERAGE: ON
       run: |
         tox -e ${{ matrix.test_cmd }}
 
