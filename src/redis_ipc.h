@@ -1,6 +1,6 @@
-// Copyright (c) 2011-2021 Vanguard Computer Technology Labs <answers@vctlabs.com>
+// Copyright (c) 2011-2026 Vanguard Computer Technology Labs <answers@vctlabs.com>
 //
-// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-License-Identifier: GPL-2.0-or-later
 // LINT_C_FILE
 
 #ifndef __REDIS_IPC_H__
@@ -8,6 +8,9 @@
 
 #include <sys/types.h>
 #include <json-c/json.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,0 +1,36 @@
+version = 1
+
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = [
+    "Copyright (c) 2011 - 2026 Vanguard Computer Technology Labs",
+    "Copyright (c) 2011 - 2026 Stephanie Lockwood-Childs",
+]
+SPDX-License-Identifier = "GPL-2.0-or-later"
+
+[[annotations]]
+path = ["cmake/*", "conda/*", "debian/**", ".github/**", "scripts/*"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = [
+    "Copyright (c) 2017 - 2026 Stephen Arnold",
+]
+SPDX-License-Identifier = "GPL-2.0-or-later"
+
+[[annotations]]
+path = "cmake/CgvFindVersion.cmake"
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright 2021-2025 UT-Battelle, LLC"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "tox.ini"
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright (c) 2026 Stephen Arnold"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = "toxfile.py"
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright (c) 2023 Masen Furer"
+SPDX-License-Identifier = "MIT"

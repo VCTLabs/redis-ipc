@@ -6,6 +6,7 @@ Standards-Version: 4.5.0
 Build-Depends: debhelper (>= 10),
     cmake,
     pkg-config,
+    libltdl-dev,
     libhiredis-dev (>= 0.10),
     libjson-c-dev (>= 0.9)
 

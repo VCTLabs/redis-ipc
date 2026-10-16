@@ -3,24 +3,49 @@ cmake_minimum_required(VERSION 3.18)
 # Add cmake modules of this project to the module path
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-# used for both library and pkgconfig file
-set(PACKAGE_VERSION 0.3.0)
-set(LIBRARY_SOVERSION 0)
-
 if(SCM_VERSION_INFO)
     set(PACKAGE_VERSION ${SCM_VERSION_INFO})
 endif()
 
-set(RIPC_SONAME ${PACKAGE_VERSION})
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/CgvFindVersion.cmake")
+cgv_find_version(redis-ipc)
+
+message(STATUS "LATEST VERSION:         ${redis-ipc_VERSION}")
+message(STATUS "LATEST VERSION STRING:  ${redis-ipc_VERSION_STRING}")
+# cmake does not really tolerate versions with leading/trailing chars as project
+# version, only strict semver with an optional 4th digit works
+if(NOT PACKAGE_VERSION)
+    set(PACKAGE_VERSION "${redis-ipc_VERSION}")
+endif()
+
+if(DEV_VERSION_FORMAT)
+    set(GIT_VERSION "${redis-ipc_VERSION_STRING}")
+else()
+    set(GIT_VERSION "${redis-ipc_VERSION}")
+endif()
 
 project(
     redis-ipc
     LANGUAGES C CXX
-    VERSION ${PACKAGE_VERSION}
+    VERSION "${PACKAGE_VERSION}"
 )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_VERBOSE_MAKEFILE ON)
+
+# used for both library and pkgconfig file
+set(LIBRARY_SOVERSION 0)
+
+# If a GIT_VERSION exists, use it as the version
+if(GIT_VERSION)
+    message(STATUS "Using ${PROJECT_NAME} version from git: ${PROJECT_VERSION}")
+else()
+    set(GIT_VERSION "${PROJECT_VERSION}")
+    message(
+        STATUS
+            "Git version not found. Using default project version: ${PROJECT_VERSION}"
+    )
+endif()
 
 if(NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 17)
@@ -30,7 +55,7 @@ endif()
 
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_EXTENSIONS ON)
-set(CMAKE_DEBUG_POSTFIX d)
+# set(CMAKE_DEBUG_POSTFIX d)
 
 include(CMakeParseArguments)
 include(CheckCCompilerFlag)
@@ -55,6 +80,20 @@ if(RIPC_ENABLE_LTO AND CMAKE_BUILD_TYPE MATCHES "Release")
     endif()
 endif()
 
+message(CHECK_START "Checking for C/CXX linker PIE support")
+include(CheckPIESupported)
+check_pie_supported(OUTPUT_VARIABLE output)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+if(CMAKE_C_LINK_PIE_SUPPORTED)
+    message(CHECK_PASS "yes")
+else()
+    message(CHECK_FAIL "no")
+    message(VERBOSE "PIE is not supported at link time:\n${output}"
+            "PIE link options will not be passed to linker."
+    )
+endif()
+
 option(BUILD_SHARED_LIBS "build shared libraries" ON)
 option(BUILD_STATIC_LIBS "Build static libraries" OFF)
 option(RIPC_BUILD_TESTING "build and run tests" OFF)
@@ -72,6 +111,7 @@ set(INSTALL_PKGCONFIG_DIR
     CACHE PATH "Install directory for pkgconfig (.pc) files"
 )
 set(EXTRA_TARGET_LINK_LIBRARIES)
+set(RIPC_INSTALL_TARGETS)
 
 # accept cmake option -or- environment variable
 if(DEFINED ENV{RIPC_RUNTIME_DIR})
@@ -148,23 +188,33 @@ include_directories(
 )
 
 set(RIPC_SOURCES src/redis_ipc.c)
+list(APPEND RIPC_INSTALL_TARGETS redis_ipc)
 
 if(BUILD_STATIC_LIBS)
     add_library(ripcstatic STATIC ${RIPC_SOURCES})
     set_target_properties(ripcstatic PROPERTIES OUTPUT_NAME redis_ipc)
+    list(APPEND RIPC_INSTALL_TARGETS ripcstatic)
 endif()
 
-add_library(redis_ipc ${RIPC_SOURCES})
+add_library(redis_ipc SHARED ${RIPC_SOURCES})
 add_library(redis_ipc::redis_ipc ALIAS redis_ipc)
-target_link_libraries(redis_ipc ${EXTRA_TARGET_LINK_LIBRARIES})
+target_link_libraries(redis_ipc PUBLIC ${EXTRA_TARGET_LINK_LIBRARIES})
+target_include_directories(
+    redis_ipc SYSTEM
+    INTERFACE $<BUILD_INTERFACE:${redis_ipc_BINARY_DIR}>
+              $<BUILD_INTERFACE:${redis_ipc_SOURCE_DIR}/inc>
+              $<BUILD_INTERFACE:${redis_ipc_SOURCE_DIR}/src>
+              $<INSTALL_INTERFACE:include>
+)
 
 # SCM_VERSION_INFO can be defined by cmake args and passed into the code as a
 # define here (see PACKAGE_VERSION near the top of this file)
-target_compile_definitions(redis_ipc PRIVATE VERSION_INFO=${PACKAGE_VERSION})
+target_compile_definitions(redis_ipc PRIVATE VERSION_INFO=${GIT_VERSION})
 
 # this looks weird, but needed for correct SOVERSION links
 set_target_properties(
-    redis_ipc PROPERTIES VERSION ${RIPC_SONAME} SOVERSION ${LIBRARY_SOVERSION}
+    redis_ipc PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION
+                                                    ${LIBRARY_SOVERSION}
 )
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -208,6 +258,16 @@ if(RIPC_BUILD_TESTING)
     endif()
 endif()
 
+# Configuration file
+configure_file(
+    "${PROJECT_SOURCE_DIR}/config.h.in" "${PROJECT_BINARY_DIR}/config.h"
+)
+add_compile_definitions(HAVE_CONFIG_H)
+if(DEV_VERSION_FORMAT)
+    add_compile_definitions(DEV_VERSION_FORMAT)
+endif()
+include_directories("${PROJECT_BINARY_DIR}")
+
 set(RIPC_HEADERS inc/json.hh src/redis_ipc.h)
 
 install(FILES ${RIPC_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
@@ -221,8 +281,8 @@ if(BUILD_STATIC_LIBS)
 endif()
 
 install(
-    TARGETS ${RIPC_LIBS}
-    EXPORT redis_ipcConfig
+    TARGETS ${RIPC_INSTALL_TARGETS}
+    EXPORT RIPCTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -231,12 +291,18 @@ install(
 )
 
 install(
-    EXPORT redis_ipcConfig
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/redis_ipc
+    EXPORT RIPCTargets
+    FILE RIPCTargets.cmake
     NAMESPACE redis_ipc::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/redis_ipc
 )
 
-set(RIPC_PC ${CMAKE_CURRENT_BINARY_DIR}/redis-ipc.pc)
-set(prefix ${CMAKE_INSTALL_PREFIX})
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/redis-ipc.pc.in ${RIPC_PC} @ONLY)
-install(FILES ${RIPC_PC} DESTINATION ${INSTALL_PKGCONFIG_DIR})
+# pkg-config configuration file
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/redis-ipc.pc.in
+    ${CMAKE_CURRENT_BINARY_DIR}/redis-ipc.pc @ONLY
+)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/redis-ipc.pc
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/pkgconfig
+)
