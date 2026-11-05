@@ -5,17 +5,15 @@
 # # The following are required to submit to the CDash dashboard:
 # ENABLE_TESTING() INCLUDE(CTest)
 
-set(CTEST_PROJECT_NAME redis-ipc-dev)
-set(CTEST_NIGHTLY_START_TIME 00:00:00)
+set(CTEST_PROJECT_NAME redis-ipc)
+set(CTEST_NIGHTLY_START_TIME 00:00:00 UTC)
 
 if(CMAKE_VERSION VERSION_GREATER 3.14)
-    set(CTEST_SUBMIT_URL
-        https://localhost:8080/submit.php?project=redis-ipc-dev
-    )
+    set(CTEST_SUBMIT_URL https://my.cdash.org/submit.php?project=redis-ipc)
 else()
     set(CTEST_DROP_METHOD "https")
-    set(CTEST_DROP_SITE "localhost:8080")
-    set(CTEST_DROP_LOCATION "/submit.php?project=redis-ipc-dev")
+    set(CTEST_DROP_SITE "my.cdash.org")
+    set(CTEST_DROP_LOCATION "/submit.php?project=redis-ipc")
 endif()
 
 set(CTEST_DROP_SITE_CDASH TRUE)
