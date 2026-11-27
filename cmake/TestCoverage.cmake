@@ -21,7 +21,6 @@ add_custom_command(
     --capture
     --directory "${CMAKE_BINARY_DIR}"
     --include "${CMAKE_SOURCE_DIR}/src/redis_ipc.c"
-    --include "${CMAKE_SOURCE_DIR}/src/redis_ipc.h"
     --include "${CMAKE_SOURCE_DIR}/inc/json.hh"
     --output-file "${TRACEFILE}"
 

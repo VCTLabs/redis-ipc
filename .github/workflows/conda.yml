@@ -3,10 +3,10 @@ name: Conda
 on:
   workflow_dispatch:
   #pull_request:
-  #push:
-    #branches:
-      #- master
-      #- develop
+  push:
+    branches:
+      - master
+      - develop
     paths-ignore:
       - '**.md'
       - '**.rst'
@@ -39,19 +39,20 @@ jobs:
           key: ${{matrix.os}}-conda-pkgs-${{hashFiles('**/conda/meta.yaml')}}
 
       - name: Get conda
-        uses: conda-incubator/setup-miniconda@v4.1.0
+        uses: conda-incubator/setup-miniconda@v4
         with:
-          python-version: 3.9
+          auto-update-conda: true
+          python-version: 3.11
           channels: conda-forge
-          channel-priority: strict
-          use-only-tar-bz2: true
-          auto-activate-base: true
+          conda-remove-defaults: "true"
+          channel-priority: true
+          show-channel-urls: true
 
       - name: Prepare
         run: conda install conda-build conda-verify
 
       - name: Build and test
-        run: conda build conda/
+        run: conda-build conda/
 
       - name: Install
         run: conda install -c ${CONDA_PREFIX}/conda-bld/ redis-ipc
